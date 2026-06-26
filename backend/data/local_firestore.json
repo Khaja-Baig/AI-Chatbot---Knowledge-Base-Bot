@@ -1,0 +1,290 @@
+{
+  "sessions": {
+    "test_session_1782393912511": {
+      "sessionId": "test_session_1782393912511",
+      "updatedAt": "2026-06-25T13:25:12.910Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "Tell me about the School of Business.",
+          "timestamp": "2026-06-25T13:25:12.909Z"
+        },
+        {
+          "role": "model",
+          "text": "Our School of Business (SOB) helps students develop practical workplace skills like communication, spreadsheets, data handling, customer support, CRM tools, and business operations. Students are prepared for roles such as Business Operations Associate, Customer Success Associate, CRM Associate, and related positions. Would you like to know more about the course duration or eligibility criteria?",
+          "timestamp": "2026-06-25T13:25:12.910Z"
+        }
+      ]
+    },
+    "test_session_1782393979809": {
+      "sessionId": "test_session_1782393979809",
+      "updatedAt": "2026-06-25T13:26:20.471Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "Tell me about the School of Business.",
+          "timestamp": "2026-06-25T13:26:20.185Z"
+        },
+        {
+          "role": "model",
+          "text": "Our School of Business (SOB) helps students develop practical workplace skills like communication, spreadsheets, data handling, customer support, CRM tools, and business operations. Students are prepared for roles such as Business Operations Associate, Customer Success Associate, CRM Associate, and related positions. Would you like to know more about the course duration or eligibility criteria?",
+          "timestamp": "2026-06-25T13:26:20.186Z"
+        },
+        {
+          "role": "user",
+          "text": "What are the career paths?",
+          "timestamp": "2026-06-25T13:26:20.342Z"
+        },
+        {
+          "role": "model",
+          "text": "Graduates from the School of Business typically step into roles such as Business Operations Associate, CRM Associate, Customer Success Associate, Sales Support Executive, and Data Operations Associate. We provide targeted career preparation to match you with these paths.",
+          "timestamp": "2026-06-25T13:26:20.342Z"
+        },
+        {
+          "role": "user",
+          "text": "placement details batao",
+          "timestamp": "2026-06-25T13:26:20.471Z"
+        },
+        {
+          "role": "model",
+          "text": "Yes, NavGurukul offers dedicated placement support! This includes resume preparation, mock interviews, and hiring opportunities with our partners. We guide students step-by-step to prepare them for the workforce.",
+          "timestamp": "2026-06-25T13:26:20.471Z"
+        }
+      ]
+    },
+    "test_session_1782398723065": {
+      "sessionId": "test_session_1782398723065",
+      "updatedAt": "2026-06-25T14:45:23.936Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "Tell me about the School of Business.",
+          "timestamp": "2026-06-25T14:45:23.596Z"
+        },
+        {
+          "role": "model",
+          "text": "Our School of Business (SOB) helps students develop practical workplace skills like communication, spreadsheets, data handling, customer support, CRM tools, and business operations. Students are prepared for roles such as Business Operations Associate, Customer Success Associate, CRM Associate, and related positions. Would you like to know more about the course duration or eligibility criteria?",
+          "timestamp": "2026-06-25T14:45:23.597Z"
+        },
+        {
+          "role": "user",
+          "text": "What are the career paths?",
+          "timestamp": "2026-06-25T14:45:23.850Z"
+        },
+        {
+          "role": "model",
+          "text": "Graduates from the School of Business typically step into roles such as Business Operations Associate, CRM Associate, Customer Success Associate, Sales Support Executive, and Data Operations Associate. We provide targeted career preparation to match you with these paths.",
+          "timestamp": "2026-06-25T14:45:23.850Z"
+        },
+        {
+          "role": "user",
+          "text": "placement details batao",
+          "timestamp": "2026-06-25T14:45:23.936Z"
+        },
+        {
+          "role": "model",
+          "text": "Yes, NavGurukul offers dedicated placement support! This includes resume preparation, mock interviews, and hiring opportunities with our partners. We guide students step-by-step to prepare them for the workforce.",
+          "timestamp": "2026-06-25T14:45:23.936Z"
+        }
+      ]
+    },
+    "session_1782399384467": {
+      "sessionId": "session_1782399384467",
+      "updatedAt": "2026-06-25T14:56:59.600Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "Whats up?",
+          "timestamp": "2026-06-25T14:56:39.039Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses ke details simple language mein bata sakta hoon.",
+          "timestamp": "2026-06-25T14:56:39.039Z"
+        },
+        {
+          "role": "user",
+          "text": "What's your name?",
+          "timestamp": "2026-06-25T14:56:59.600Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses ke details simple language mein bata sakta hoon.",
+          "timestamp": "2026-06-25T14:56:59.600Z"
+        }
+      ]
+    },
+    "test_session_1782399959535": {
+      "sessionId": "test_session_1782399959535",
+      "updatedAt": "2026-06-25T15:06:00.297Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "Tell me about the School of Business.",
+          "timestamp": "2026-06-25T15:06:00.011Z"
+        },
+        {
+          "role": "model",
+          "text": "Our School of Business (SOB) helps students develop practical workplace skills like communication, spreadsheets, data handling, customer support, CRM tools, and business operations. Students are prepared for roles such as Business Operations Associate, Customer Success Associate, CRM Associate, and related positions. Would you like to know more about the course duration or eligibility criteria?",
+          "timestamp": "2026-06-25T15:06:00.011Z"
+        },
+        {
+          "role": "user",
+          "text": "What are the career paths?",
+          "timestamp": "2026-06-25T15:06:00.170Z"
+        },
+        {
+          "role": "model",
+          "text": "Graduates from the School of Business typically step into roles such as Business Operations Associate, CRM Associate, Customer Success Associate, Sales Support Executive, and Data Operations Associate. We provide targeted career preparation to match you with these paths.",
+          "timestamp": "2026-06-25T15:06:00.170Z"
+        },
+        {
+          "role": "user",
+          "text": "placement details batao",
+          "timestamp": "2026-06-25T15:06:00.297Z"
+        },
+        {
+          "role": "model",
+          "text": "Yes, NavGurukul offers dedicated placement support! This includes resume preparation, mock interviews, and hiring opportunities with our partners. We guide students step-by-step to prepare them for the workforce.",
+          "timestamp": "2026-06-25T15:06:00.297Z"
+        }
+      ]
+    },
+    "session_1782400028980": {
+      "sessionId": "session_1782400028980",
+      "updatedAt": "2026-06-26T06:44:42.498Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "navgurukul kiya hai?",
+          "timestamp": "2026-06-25T15:07:24.402Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses ke details simple language mein bata sakta hoon.",
+          "timestamp": "2026-06-25T15:07:24.402Z"
+        },
+        {
+          "role": "user",
+          "text": "What's up",
+          "timestamp": "2026-06-26T06:44:42.498Z"
+        },
+        {
+          "role": "model",
+          "text": "Hello! I am Guru, your NavGurukul Admissions Counselor. I'm here to help you understand our courses, admissions process, placements, and campus life. How can I help you today?",
+          "timestamp": "2026-06-26T06:44:42.498Z"
+        }
+      ]
+    },
+    "session_1782457340730": {
+      "sessionId": "session_1782457340730",
+      "updatedAt": "2026-06-26T07:04:37.773Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "whats'up?",
+          "timestamp": "2026-06-26T07:02:30.520Z"
+        },
+        {
+          "role": "model",
+          "text": "Hey there! All good on my end, thanks for asking! 😊\n\nHow can I help you today? Are you looking for information about our courses, campuses, eligibility, or anything else about NavGurukul? I'm here to help!",
+          "timestamp": "2026-06-26T07:02:30.520Z"
+        },
+        {
+          "role": "user",
+          "text": "What is NavGurukul?",
+          "timestamp": "2026-06-26T07:02:50.126Z"
+        },
+        {
+          "role": "model",
+          "text": "That's a great question!\n\nIt seems I don't have specific official information about \"What NavGurukul is\" in my current knowledge base.\n\nFor the most accurate and detailed understanding of NavGurukul, its mission, and what it offers, I would highly recommend checking their official website or contacting their admissions team directly. They would be able to give you the complete picture! 😊",
+          "timestamp": "2026-06-26T07:02:50.126Z"
+        },
+        {
+          "role": "user",
+          "text": "What is the screening assessment?",
+          "timestamp": "2026-06-26T07:03:21.039Z"
+        },
+        {
+          "role": "model",
+          "text": "That's a very relevant question!\n\nIt seems I don't have specific official information about the \"screening assessment\" process in my current knowledge base.\n\nFor the most accurate details on what the screening assessment entails, its format, and what to expect, I would highly recommend checking official announcements on the NavGurukul website or contacting the admissions team directly. They'll be able to provide you with all the precise information you need! 😊",
+          "timestamp": "2026-06-26T07:03:21.039Z"
+        },
+        {
+          "role": "user",
+          "text": "How to make omlet?",
+          "timestamp": "2026-06-26T07:04:37.773Z"
+        },
+        {
+          "role": "model",
+          "text": "Haha, that's an interesting question! While I'd love to share a recipe, my role here is to help you with information about NavGurukul – like our courses, campuses, eligibility, and so on. 😊\n\nIs there anything I can help you with regarding NavGurukul today?",
+          "timestamp": "2026-06-26T07:04:37.773Z"
+        }
+      ]
+    },
+    "session_1782458311992": {
+      "sessionId": "session_1782458311992",
+      "updatedAt": "2026-06-26T07:26:23.478Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "Whats up",
+          "timestamp": "2026-06-26T07:18:39.808Z"
+        },
+        {
+          "role": "model",
+          "text": "Hello there! Sab badhiya, aap bataiye kaise hain?\n\nMain NavGurukul se Admissions Counselor hoon. Aapki kya madad kar sakta hoon? Koi course, campus, ya admission process ke baare mein jaanna chahte hain? Feel free to ask! 😊",
+          "timestamp": "2026-06-26T07:18:39.808Z"
+        },
+        {
+          "role": "user",
+          "text": "I want to know about screening test of navgurukul",
+          "timestamp": "2026-06-26T07:19:06.171Z"
+        },
+        {
+          "role": "model",
+          "text": "Sure, I can definitely help you with that! The screening test is actually the very first step to join NavGurukul, aur yeh kaafi important hai.\n\nToh chaliye, main aapko iske baare mein thoda detail mein batata hoon:\n\n1.  **Purpose:** Is test ka main aim students ki aptitude ko check karna hai, taaki hum unhe sahi program ke liye guide kar sakein. Har program ke liye ek alag cut-off hota hai.\n2.  **Format:** Yeh test do tarah se hota hai – **online** aur **offline**.\n    *   **Online:** Zyadaatar students online test dete hain, jo hamari website par available hota hai.\n    *   **Offline:** Kuch remote areas mein jahan internet ya devices ki availability kam hoti hai, wahan hum offline seminars conduct karte hain. Yeh ek paper-and-pencil test hota hai, jismein OMR sheet use hoti hai, aur usko ZipGrade app se scan karke evaluate kiya jaata hai.\n3.  **Duration:** Test ki total duration **90 minutes (yaani 1.5 ghante)** hoti hai.\n4.  **Structure:**\n    *   Ismein total **16 Multiple Choice Questions (MCQs)** hote hain.\n    *   Questions ki difficulty ke hisaab se marks milte hain:\n        *   Easy question: 1 mark\n        *   Medium question: 2 marks\n        *   Hard question: 3 marks\n    *   Total marks **32** hote hain.\n5.  **Concepts Covered & Cut-offs:** Ab, concepts aur cut-off marks aap kis program ke liye apply kar rahe hain, us par depend karta hai:\n    *   **School of Programming (SOP) & BCA:** Ismein Patterns, Percentage, Time and Work, aur Linear Equation se questions aate hain. Iska cut-off **21 marks** hai.\n    *   **School of Business (SOB) & School of Finance (SOF):** Ismein Patterns, Percentage, Profit & Loss, aur Simple Interest se questions hote hain. SOB ka cut-off **11 marks** aur SOF ka cut-off **13 marks** hai.\n6.  **Preparation Help:** Jo students screening test dete hain, unhe hum ek **Learning Video** share karte hain. Agar aap pehli baar mein test clear nahi kar paate, toh aap is video se practice karke dobara test de sakte hain.\n\nYeh test clear karne ke baad hi aap next round, jo ki Learning Round hota hai, usmein jaa paate hain.\n\nKya aap kisi particular program ke screening test ke baare mein aur jaanna chahte hain?",
+          "timestamp": "2026-06-26T07:19:06.171Z"
+        },
+        {
+          "role": "user",
+          "text": "Can you explain me this in short and crisp manner but in simple terms so I can understand everything easily.",
+          "timestamp": "2026-06-26T07:24:08.021Z"
+        },
+        {
+          "role": "model",
+          "text": "Bilkul! Chaliye, main aapko NavGurukul ke screening test ko bilkul seedhe aur aasan shabdon mein samjhata hoon:\n\nYeh NavGurukul mein admission lene ka **pehla kadam** hai.\n\n*   **Kya hai?** Yeh ek basic aptitude test hai.\n*   **Kaise hota hai?** Aap ise **online** ya **offline** de sakte hain.\n*   **Kitna time?** **90 minutes** (dedh ghanta).\n*   **Kitne sawaal?** **16 Multiple Choice Questions (MCQs)** hote hain.\n*   **Kya puchte hain?**\n    *   **Programming (SOP/BCA) ke liye:** Patterns, Percentage, Time & Work, Linear Equation.\n    *   **Business/Finance (SOB/SOF) ke liye:** Patterns, Percentage, Profit & Loss, Simple Interest.\n*   **Pass kaise karein?** Har course ka alag cut-off hota hai (jaise SOP ke liye 21 marks).\n*   **Agar clear na ho?** Hum aapko ek **Learning Video** dete hain, jisse practice karke aap dobara test de sakte hain.\n\nBas itna hi! Yeh test aapki basic samajh ko parkhta hai. Clear karne ke baad hi aap agle round mein jaa paate hain. 😊",
+          "timestamp": "2026-06-26T07:24:08.021Z"
+        },
+        {
+          "role": "user",
+          "text": "What I am going to learn in navgurukul",
+          "timestamp": "2026-06-26T07:25:16.649Z"
+        },
+        {
+          "role": "model",
+          "text": "Bahut achha sawaal hai! NavGurukul mein aap kya seekhenge, yeh is baat par depend karta hai ki aap kaun se school ya program mein admission lete hain. Humne alag-alag career paths ke liye specific schools banaye hain.\n\nToh, chaliye main aapko har school mein kya padhaya jaata hai, uski jaankari deta hoon:\n\n1.  **School of Programming (SOP):**\n    *   Yahan aapko **job-ready software engineer** banaya jaata hai.\n    *   Aap seekhenge:\n        *   Programming basics (logic aur problem-solving)\n        *   Web development (HTML, CSS, JavaScript)\n        *   Backend development (Node.js aur databases)\n        *   Applications mein AI integration\n        *   Clean code likhna aur real projects banana\n        *   Programmer ki tarah sochna aur problems ko debug karna\n\n2.  **School of Finance (SOF):**\n    *   Is school mein aapko **finance aur accounting roles** ke liye train kiya jaata hai.\n    *   Aap seekhenge:\n        *   Accounting basics\n        *   Excel aur financial tools ka use\n        *   Tally (practical accounting software)\n        *   Business finance concepts\n        *   Numbers aur financial data ko analyze karna\n    *   Iska goal aapko finance, accounting, aur analyst roles ke liye taiyaar karna hai.\n\n3.  **School of Business (SOB):**\n    *   Yahan students ko **business aur operations roles** ke liye train kiya jaata hai. (Context mein iske curriculum ki detailed list nahi di gayi hai, but iska focus business aur operations par hai).\n\nToh, aapki interest ke hisaab se, aap inmein se koi bhi school choose kar sakte hain aur us field mein deep learning kar sakte hain!\n\nKya aapko kisi particular school ke baare mein aur jaanna hai?",
+          "timestamp": "2026-06-26T07:25:16.649Z"
+        },
+        {
+          "role": "user",
+          "text": "can you also tell me the career paths of these schools",
+          "timestamp": "2026-06-26T07:26:23.478Z"
+        },
+        {
+          "role": "model",
+          "text": "Bilkul! Yeh jaanna bahut zaroori hai ki har school aapko kis tarah ke career ke liye taiyaar karta hai. Chaliye, main aapko har school ke career paths ke baare mein batata hoon:\n\n1.  **School of Programming (SOP):**\n    *   Is school ka main goal students ko **job-ready software engineers** banana hai. Toh, yahan se padhai poori karne ke baad, aap software development companies mein **full-stack software developer** ya isse related roles mein career bana sakte hain. Aap web development, backend development, aur AI integration jaise areas mein kaam kar sakte hain.\n\n2.  **School of Finance (SOF):**\n    *   School of Finance aapko **finance, accounting, aur analyst roles** ke liye taiyaar karta hai. Toh, aap accounting firms, banks, ya kisi bhi company ke finance department mein **accountant, financial analyst, ya finance executive** jaise positions par kaam kar sakte hain.\n\n3.  **School of Business (SOB):**\n    *   School of Business mein students ko **business aur operations roles** ke liye train kiya jaata hai. Iska matlab hai ki aap business operations, management, ya related fields mein career bana sakte hain, jahan aap business processes ko manage karne aur improve karne mein madad karenge.\n\nToh, aapki interest aur skills ke hisaab se, aap inmein se kisi bhi field mein ek promising career shuru kar sakte hain!",
+          "timestamp": "2026-06-26T07:26:23.478Z"
+        }
+      ]
+    }
+  },
+  "config": {
+    "chatbot": {
+      "counselorName": "Guru",
+      "greetingMessage": "Hello! I am Guru, your NavGurukul Admissions Counselor. I can help you understand our courses, admissions process, eligibility, placements, and campus life. How can I help you today?",
+      "behaviorMode": "warm",
+      "maxHistoryTurns": 10
+    }
+  }
+}
