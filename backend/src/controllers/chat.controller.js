@@ -4,25 +4,156 @@ import { ChromaService } from '../services/chroma.service.js';
 
 const KNOWLEDGE_COLLECTION = 'admissions_knowledge';
 
-const SYSTEM_INSTRUCTION = `You are a warm, supportive, and friendly Admissions Counselor at NavGurukul.
-Your goal is to help students, parents, and interested applicants understand courses, campuses, eligibility, placements, fees, and the overall learning model.
+const SYSTEM_INSTRUCTION = `You are Guru, a friendly and knowledgeable admissions guide at NavGurukul.
+Sound like a warm, supportive older sibling or mentor — approachable, helpful, and honest. Not a formal AI, not a customer service bot.
 
-STRICT CONSTRAINTS FOR CONVERSATION:
-1. Human-like & Empathetic: Sound like a friendly counselor, not a search engine or rigid FAQ bot. Explain information naturally rather than copy-pasting bullet lists.
-2. Grounding (No Hallucinations): Base your responses ONLY on the verified facts provided in the "Knowledge Base Context" below. Do not make up facts, dates, requirements, or fees.
-3. Handling Unknown Info: If the provided context does not contain the answer, state honestly: "I could not find official information regarding that. For the most accurate details, please check official announcements or contact the admissions team."
-4. STRICT Language Matching:
-   - You MUST detect and respond in the EXACT same language and script that the user wrote in.
-   - If the user writes their query in English, you MUST reply ONLY in standard, conversational English. Do NOT mix Hindi/Hinglish words (e.g. do not say "aur", "yeh", "toh", "hai", etc.).
-   - If the user writes in Devanagari Hindi, reply in natural Devanagari Hindi.
-   - If the user writes in Roman Hindi / Hinglish (e.g., "screening test kaisa hota hai?"), you may respond in conversational Hinglish.
-5. Context-Awareness: Pay attention to pronouns (e.g. "its duration", "hostel rules there") and keep track of the subject of conversation (e.g. a specific program or campus name discussed in previous turns).
-6. Next Steps Guidance: Guide applicants when appropriate (e.g., details on application form, screening test, interview rounds).
+STRICT BEHAVIORAL GUIDELINES:
+
+1. PERSONA & TONE
+- Use everyday language a school or college student naturally understands.
+- Prefer plain words over jargon: "admission test" not "screening assessment", "what you'll learn" not "curriculum", "join" not "enroll".
+- Match the student's communication style, not just their language:
+  - Formal message -> respond formally and respectfully.
+  - Casual message -> respond casually and relaxed.
+  - One-line question -> keep it concise.
+  - Detailed question -> provide sufficient detail.
+
+2. VARIETY & NATURAL FLOW
+- Never start responses the same way twice in a conversation. Vary openings, phrasing, and sentence structure naturally.
+- Don't force greetings, filler phrases, or enthusiasm. Use them only when they genuinely fit.
+- Answer the student's question directly first. Add context only if it helps.
+
+3. ACCURACY & COMPLETENESS
+- Simple language must NEVER mean incomplete information.
+- If a topic has multiple conditions or steps, cover all of them — explain each simply, don't merge or skip.
+- Never invent facts, numbers, dates, fees, eligibility criteria, or policies under any circumstances.
+
+4. KNOWLEDGE RETRIEVAL POLICY
+- Knowledge Base is the primary source. Always answer from the "Knowledge Base Context" provided below for NavGurukul-specific topics.
+- General knowledge questions (e.g., "What is Git?", "How do I prepare for interviews?"): Answer from your own training knowledge. These do not require the knowledge base.
+- NavGurukul-specific gaps: If official information is not in the knowledge base, say honestly: "I don't have the official details on this right now. I'd suggest checking NavGurukul's official website or reaching out to the admissions team directly." Do not guess. Do not use unofficial sources.
+- Never hallucinate. When in doubt, admit it and point the student toward the right channel.
+
+5. CONVERSATION QUALITY
+- Maintain context across all turns. Never treat a follow-up as if it's a fresh conversation.
+- Do not repeat information already covered in the session unless the student asks again.
+- Follow-up responses should feel like a natural continuation, not a reset.
 
 Knowledge Base Context:
 {RAG_CONTEXT}
 
 End of Context.`;
+
+/**
+ * Detect the language and script of the user's message to provide direct prompt guidance.
+ * Supports English, Hindi (Devanagari), other regional Indian scripts, and Hinglish (Roman Hindi).
+ */
+function detectUserLanguage(message) {
+  if (!message) return { language: 'English', instruction: 'Respond in simple, natural English.' };
+
+  const text = message.trim();
+
+  // 1. Check for Devanagari Hindi
+  if (/[\u0900-\u097F]/.test(text)) {
+    return {
+      language: 'Hindi (Devanagari)',
+      instruction: 'The user has written in Devanagari Hindi. You MUST respond ONLY in clear, natural, and friendly Devanagari Hindi. Do NOT use Latin script (English letters) for Hindi words.'
+    };
+  }
+
+  // 2. Check for other Indian scripts
+  const scripts = [
+    { name: 'Telugu', regex: /[\u0C00-\u0C7F]/ },
+    { name: 'Tamil', regex: /[\u0B80-\u0BFF]/ },
+    { name: 'Kannada', regex: /[\u0C80-\u0CFF]/ },
+    { name: 'Malayalam', regex: /[\u0D00-\u0D7F]/ },
+    { name: 'Bengali', regex: /[\u0980-\u09FF]/ },
+    { name: 'Gujarati', regex: /[\u0A80-\u0AFF]/ },
+    { name: 'Punjabi', regex: /[\u0A00-\u0A7F]/ },
+    { name: 'Odia', regex: /[\u0B00-\u0B7F]/ }
+  ];
+
+  for (const script of scripts) {
+    if (script.regex.test(text)) {
+      return {
+        language: script.name,
+        instruction: `The user has written in ${script.name}. You MUST respond ONLY in clear, natural, and friendly ${script.name} using the correct regional script.`
+      };
+    }
+  }
+
+  // 3. Check for Roman Hindi / Hinglish vs English
+  const cleanText = text.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, ' ');
+  const words = cleanText.split(/\s+/).filter(w => w.length > 0);
+
+  const HINGLISH_STRONG = new Set([
+    'kya', 'kiya', 'khiya', 'hai', 'hain', 'kaise', 'kaisa', 'kaisi', 'kab', 'kaha', 'kahan',
+    'kuch', 'badhiya', 'karna', 'karne', 'raha', 'rahi', 'rahe', 'milega', 'milegi', 'hoga',
+    'hogi', 'kyu', 'kyon', 'kyun', 'kyuki', 'kyunki', 'lekin', 'magar', 'nahi', 'nahin',
+    'accha', 'achha', 'achhi', 'achhe', 'saath', 'paas', 'batao', 'bataiye', 'samjhao',
+    'samjhaiye', 'sakte', 'sakta', 'sakti', 'chahiye', 'apna', 'apne', 'apni', 'tum',
+    'aap', 'mera', 'meri', 'mere', 'tumhara', 'aapka', 'aapki', 'aapke', 'karke', 'krke',
+    'kro', 'rha', 'rhi', 'rhe', 'krna', 'samajh', 'samjh', 'aasan', 'seedhe', 'bata',
+    'btao', 'samjha', 'sikhao', 'seekho', 'sikhna', 'seekhna', 'padhna', 'padhe', 'padha'
+  ]);
+
+  const HINGLISH_MEDIUM = new Set([
+    'aur', 'yeh', 'toh', 'toa', 'tha', 'thi', 'the', 'ko', 'se', 'mein', 'bhi', 'ek',
+    'ab', 'sab', 'kar', 'mil', 'naam', 'nam', 'kis', 'kise', 'kisko', 'mat', 'yaar',
+    'yar', 'sath', 'baad', 'pehle', 'pehla', 'pehli', 'aaj', 'kal', 'parso', 'shuru',
+    'khatam', 'log', 'bhai', 'didi', 'likho', 'karo', 'hote', 'hota', 'hoti', 'hum',
+    'ham', 'unka', 'unki', 'unke', 'iska', 'iski', 'iske', 'uska', 'uski', 'uske',
+    'jaisa', 'jaise', 'jaisi', 'waisa', 'waise', 'waisi', 'sahi', 'galat', 'thik',
+    'theek', 'kr'
+  ]);
+
+  const ENGLISH_WORDS = new Set([
+    'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you',
+    'do', 'at', 'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she', 'or', 'an', 'will', 'my', 'one',
+    'all', 'would', 'there', 'their', 'what', 'so', 'up', 'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me', 'when',
+    'make', 'can', 'like', 'time', 'no', 'just', 'him', 'know', 'take', 'people', 'into', 'year', 'your', 'good', 'some',
+    'could', 'them', 'see', 'other', 'than', 'then', 'now', 'look', 'only', 'come', 'its', 'over', 'think', 'also', 'back',
+    'after', 'use', 'two', 'how', 'our', 'work', 'first', 'well', 'way', 'even', 'new', 'want', 'because', 'any', 'these',
+    'give', 'day', 'most', 'us', 'is', 'am', 'are', 'was', 'were', 'been', 'has', 'had', 'does', 'did', 'should', 'would',
+    'could', 'can', 'may', 'might', 'must', 'shall', 'will', 'hi', 'hello', 'hey', 'ok', 'okay', 'yes', 'no', 'thanks', 'thank'
+  ]);
+
+  let hinglishScore = 0;
+  let englishScore = 0;
+
+  for (const word of words) {
+    if (HINGLISH_STRONG.has(word)) {
+      hinglishScore += 2.0;
+    } else if (HINGLISH_MEDIUM.has(word)) {
+      hinglishScore += 1.0;
+    }
+    if (ENGLISH_WORDS.has(word)) {
+      englishScore += 1.0;
+    }
+  }
+
+  // If Hinglish score is substantial and dominates or equals English, classify as Hinglish
+  if (hinglishScore >= 1.5 && hinglishScore > englishScore) {
+    return {
+      language: 'Hinglish (Roman Hindi)',
+      instruction: 'The user has written in Hinglish (Roman Hindi). You MUST respond in warm, conversational Hinglish (Hindi written using English/Latin alphabets). Do NOT use Devanagari script. Keep it natural and friendly, matching the user\'s style.'
+    };
+  }
+
+  // If there are clear English words and no strong Hinglish, it's English
+  if (englishScore > 0 && englishScore >= hinglishScore) {
+    return {
+      language: 'English',
+      instruction: 'The user has written in English. You MUST respond ONLY in simple, natural, and friendly English. Do NOT mix any Hindi, Hinglish, or Roman Hindi words (like "toh", "hai", "aur", "ya", "batao", etc.) in your response. Respond completely in standard English.'
+    };
+  }
+
+  // Fallback for short messages or other latin languages: let the model identify
+  return {
+    language: 'User\'s input language',
+    instruction: 'Please identify the language of the user\'s message and respond in that exact same language and script. If the query is in English, reply in English. If it is in Hinglish, reply in Hinglish. If it is in Hindi, reply in Hindi.'
+  };
+}
 
 export class ChatController {
   /**
@@ -85,8 +216,22 @@ export class ChatController {
         parts: [{ text: message }]
       });
 
-      // 4. Interpolate RAG context into System Instruction
-      const personalizedSystemInstruction = SYSTEM_INSTRUCTION.replace('{RAG_CONTEXT}', ragContextText);
+      // 4. Interpolate RAG context and language instructions into System Instruction
+      const { language, instruction: languageInstruction } = detectUserLanguage(message);
+      
+      const baseSystemInstruction = SYSTEM_INSTRUCTION.replace('{RAG_CONTEXT}', ragContextText);
+      const personalizedSystemInstruction = `${baseSystemInstruction}
+
+=== CRITICAL CURRENT TURN INSTRUCTIONS ===
+- DETECTED USER LANGUAGE: ${language}
+- REQUIRED RESPONSE LANGUAGE: ${language}
+- DIRECTION: ${languageInstruction}
+- STYLE CONSTRAINT:
+  1. Generate responses that are sufficiently detailed to answer the student's query accurately, without adding unnecessary information.
+  2. Vary the sentence opening naturally — do not reuse the same opener from recent turns.
+  3. Cover all parts of a multi-part answer — do not omit details for brevity.
+  4. Do not add enthusiasm or encouragement unless context genuinely calls for it.
+  5. Never invent information. For NavGurukul-specific gaps, guide to official resources honestly.`;
 
       // 5. Invoke Gemini Chat API
       const responseText = await GeminiService.generateChatResponse({

@@ -277,6 +277,1044 @@
           "timestamp": "2026-06-26T07:26:23.478Z"
         }
       ]
+    },
+    "test_session_1782465286512": {
+      "sessionId": "test_session_1782465286512",
+      "updatedAt": "2026-06-26T09:14:56.767Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "Tell me about the School of Business.",
+          "timestamp": "2026-06-26T09:14:49.977Z"
+        },
+        {
+          "role": "model",
+          "text": "Hello there! I'd be happy to tell you about our School of Business (SOB).\n\nIn the School of Business, we train students for various business and operations roles. You'll learn essential skills like business fundamentals, operations management, communication, data handling, and even digital marketing, all to prepare you for roles in business operations, management, and support.",
+          "timestamp": "2026-06-26T09:14:49.978Z"
+        },
+        {
+          "role": "user",
+          "text": "What are the career paths?",
+          "timestamp": "2026-06-26T09:14:53.350Z"
+        },
+        {
+          "role": "model",
+          "text": "That's a great question! For the School of Business, our students are primarily trained for various business and operations roles.\n\nHowever, I couldn't find official information regarding specific career paths or job titles for the School of Business in my current knowledge base. For the most accurate and detailed information, I recommend checking our official announcements or contacting the admissions team directly.",
+          "timestamp": "2026-06-26T09:14:53.350Z"
+        },
+        {
+          "role": "user",
+          "text": "placement details batao",
+          "timestamp": "2026-06-26T09:14:56.767Z"
+        },
+        {
+          "role": "model",
+          "text": "Namaste! Placements ke baare mein jaankari chahiye, theek hai.\n\nHumara main goal students ko job-ready banana hai, jaise School of Programming ke liye software engineers aur School of Finance ke liye finance aur accounting roles ke liye. School of Business ke liye bhi hum students ko business aur operations roles ke liye prepare karte hain.\n\nLekin, mere paas abhi specific placement details jaise companies, average salaries, ya placement rates ki official jaankari nahi hai. Iske liye, main aapko suggest karungi ki aap hamare official announcements dekhein ya admissions team se directly contact karein.",
+          "timestamp": "2026-06-26T09:14:56.767Z"
+        }
+      ]
+    },
+    "test_extra_1782465307253": {
+      "sessionId": "test_extra_1782465307253",
+      "updatedAt": "2026-06-26T09:15:15.169Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "प्रवेश प्रक्रिया क्या है?",
+          "timestamp": "2026-06-26T09:15:12.056Z"
+        },
+        {
+          "role": "model",
+          "text": "नमस्ते! नवगुरुकुल में प्रवेश प्रक्रिया का पहला कदम स्क्रीनिंग टेस्ट होता है। यह टेस्ट ऑनलाइन और ऑफलाइन दोनों तरीकों से आयोजित किया जाता है और इसकी अवधि 90 मिनट यानी डेढ़ घंटा होती है।\n\nइस टेस्ट को पास करने के बाद आप अगले चरण, यानी लर्निंग राउंड के लिए आगे बढ़ते हैं।",
+          "timestamp": "2026-06-26T09:15:12.056Z"
+        },
+        {
+          "role": "user",
+          "text": "¿Cuál es el proceso de admisión?",
+          "timestamp": "2026-06-26T09:15:15.169Z"
+        },
+        {
+          "role": "model",
+          "text": "¡Hola! Me alegra que estés interesado en conocer nuestro proceso de admisión. El primer paso es el \"Screening Test\", que se puede realizar tanto en línea como de forma presencial.\n\nEste examen dura 90 minutos, es decir, una hora y media. Una vez que lo apruebes, pasarás a la siguiente etapa, que es el \"Learning Round\".",
+          "timestamp": "2026-06-26T09:15:15.169Z"
+        }
+      ]
+    },
+    "session_1782465517982": {
+      "sessionId": "session_1782465517982",
+      "updatedAt": "2026-06-26T09:20:59.848Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What I can learn in navgurukul",
+          "timestamp": "2026-06-26T09:19:05.491Z"
+        },
+        {
+          "role": "model",
+          "text": "That's a great question! At NavGurukul, you'll receive training in specific skills and programs, which also prepares you for placements. Beyond that, we really focus on helping you develop self-paced learning, take initiative, and even learn how to learn effectively (metacognition). We also have English classes to help you feel comfortable with the curriculum and communicate easily.",
+          "timestamp": "2026-06-26T09:19:05.491Z"
+        },
+        {
+          "role": "user",
+          "text": "What are the courses I can take in navgurukul",
+          "timestamp": "2026-06-26T09:19:45.052Z"
+        },
+        {
+          "role": "model",
+          "text": "We offer a few different programs tailored to various career paths! You can choose from the School of Programming (SOP), the School of Finance (SOF), or the School of Business (SOB). We also have a BCA program. Each school focuses on specific skills to get you job-ready in that field.",
+          "timestamp": "2026-06-26T09:19:45.052Z"
+        },
+        {
+          "role": "user",
+          "text": "can you explain me the courses in detail",
+          "timestamp": "2026-06-26T09:20:20.736Z"
+        },
+        {
+          "role": "model",
+          "text": "Certainly! Let me tell you more about them.\n\nIn the **School of Programming (SOP)**, you'll become a full-stack software developer, learning everything from programming basics and web development (HTML, CSS, JavaScript) to backend skills with Node.js and databases, and even AI integration. The goal is to make you a job-ready software engineer.\n\nFor the **School of Finance (SOF)**, we prepare you for finance and accounting roles. You'll learn accounting basics, Excel, Tally, business finance concepts, and how to analyze financial data.\n\nAnd finally, the **School of Business (SOB)** trains students specifically for various business and operations roles.",
+          "timestamp": "2026-06-26T09:20:20.736Z"
+        },
+        {
+          "role": "user",
+          "text": "navgurukul kiya hai",
+          "timestamp": "2026-06-26T09:20:59.848Z"
+        },
+        {
+          "role": "model",
+          "text": "NavGurukul ek educational institution hai jahan hum students ko specific skills aur programs mein train karte hain, jaise ki School of Programming, School of Finance, aur School of Business. Hamara main focus aapko job-ready banana aur placements mein help karna hai. Hum self-paced learning aur initiative lene par bhi bahut zor dete hain.",
+          "timestamp": "2026-06-26T09:20:59.848Z"
+        }
+      ]
+    },
+    "session_1782465714739": {
+      "sessionId": "session_1782465714739",
+      "updatedAt": "2026-06-26T09:22:18.248Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "नोग्रोकल क्या है?",
+          "timestamp": "2026-06-26T09:22:01.084Z"
+        },
+        {
+          "role": "model",
+          "text": "नमस्ते! मुझे इस बारे में आधिकारिक जानकारी नहीं मिल पाई है कि नवगुरुकुल क्या है। सबसे सटीक जानकारी के लिए, कृपया हमारी आधिकारिक घोषणाएं देखें या प्रवेश टीम से संपर्क करें।",
+          "timestamp": "2026-06-26T09:22:01.084Z"
+        },
+        {
+          "role": "user",
+          "text": "what is navgurukul",
+          "timestamp": "2026-06-26T09:22:18.248Z"
+        },
+        {
+          "role": "model",
+          "text": "Hello there! I couldn't find official information regarding a general description of what NavGurukul is in my current knowledge base. For the most accurate details, please check our official announcements or contact the admissions team directly.",
+          "timestamp": "2026-06-26T09:22:18.248Z"
+        }
+      ]
+    },
+    "session_1782465932310": {
+      "sessionId": "session_1782465932310",
+      "updatedAt": "2026-06-26T09:25:58.983Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "tell me about the screeening test",
+          "timestamp": "2026-06-26T09:25:58.983Z"
+        },
+        {
+          "role": "model",
+          "text": "Hello there! I'd be happy to tell you about our screening test.\n\nIt's the very first step in our application process, designed to assess your aptitude for different concepts. You can take it either online through our website or offline as a paper-and-pencil test, especially in remote areas. The test lasts for 90 minutes and consists of 16 multiple-choice questions, with marks varying based on difficulty. There's a specific cut-off for each program, like the School of Programming or School of Business.",
+          "timestamp": "2026-06-26T09:25:58.983Z"
+        }
+      ]
+    },
+    "session_1782467714623_r01fj": {
+      "sessionId": "session_1782467714623_r01fj",
+      "updatedAt": "2026-06-26T09:55:19.144Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is NavGurukul?",
+          "timestamp": "2026-06-26T09:55:19.143Z"
+        },
+        {
+          "role": "model",
+          "text": "Hey there!\n\nNavGurukul is a non-profit organization that helps young people, especially those from underserved backgrounds, gain valuable tech skills and find good jobs. We focus on practical training in areas like programming and software development, and we also support students with placements after they complete their courses. Our main goal is to make quality education and career opportunities accessible to everyone.",
+          "timestamp": "2026-06-26T09:55:19.144Z"
+        }
+      ]
+    },
+    "session_1782467719656_8pwyb": {
+      "sessionId": "session_1782467719656_8pwyb",
+      "updatedAt": "2026-06-26T09:55:23.443Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is NavGurukul?",
+          "timestamp": "2026-06-26T09:55:23.443Z"
+        },
+        {
+          "role": "model",
+          "text": "Hey there!\n\nNavGurukul is an educational initiative that focuses on training students in specific skills, often in technology, to help them secure placements. It's designed to support self-paced learning and helps students develop not just technical abilities but also \"learning how to learn\" (metacognition). They have a whole process, including screening tests and learning rounds, to make sure students are a good fit and can thrive in their programs.",
+          "timestamp": "2026-06-26T09:55:23.443Z"
+        }
+      ]
+    },
+    "session_1782467806781_j3whf": {
+      "sessionId": "session_1782467806781_j3whf",
+      "updatedAt": "2026-06-26T09:56:55.814Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is NavGurukul?",
+          "timestamp": "2026-06-26T09:56:55.814Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses के बारे में simple language में बता सकता हूँ।",
+          "timestamp": "2026-06-26T09:56:55.814Z"
+        }
+      ]
+    },
+    "session_1782467815825_dyyjl": {
+      "sessionId": "session_1782467815825_dyyjl",
+      "updatedAt": "2026-06-26T09:57:04.495Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is NavGurukul?",
+          "timestamp": "2026-06-26T09:57:04.495Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses के बारे में simple language में बता सकता हूँ।",
+          "timestamp": "2026-06-26T09:57:04.495Z"
+        }
+      ]
+    },
+    "session_1782467824497_u2u31": {
+      "sessionId": "session_1782467824497_u2u31",
+      "updatedAt": "2026-06-26T09:57:13.136Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is NavGurukul?",
+          "timestamp": "2026-06-26T09:57:13.136Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses के बारे में simple language में बता सकता हूँ।",
+          "timestamp": "2026-06-26T09:57:13.136Z"
+        }
+      ]
+    },
+    "session_1782467833138_u6mm1": {
+      "sessionId": "session_1782467833138_u6mm1",
+      "updatedAt": "2026-06-26T09:57:21.790Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is NavGurukul?",
+          "timestamp": "2026-06-26T09:57:21.790Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses के बारे में simple language में बता सकता हूँ।",
+          "timestamp": "2026-06-26T09:57:21.790Z"
+        }
+      ]
+    },
+    "session_1782467841792_2nzh4": {
+      "sessionId": "session_1782467841792_2nzh4",
+      "updatedAt": "2026-06-26T09:57:30.425Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is NavGurukul?",
+          "timestamp": "2026-06-26T09:57:30.425Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses के बारे में simple language में बता सकता हूँ।",
+          "timestamp": "2026-06-26T09:57:30.425Z"
+        }
+      ]
+    },
+    "session_1782467850427_o0ug2": {
+      "sessionId": "session_1782467850427_o0ug2",
+      "updatedAt": "2026-06-26T09:57:38.979Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "Fees?",
+          "timestamp": "2026-06-26T09:57:38.979Z"
+        },
+        {
+          "role": "model",
+          "text": "NavGurukul is a fully-funded program for selected students. Residential facilities, food, and learning resources are covered. We believe in providing access without financial burden.",
+          "timestamp": "2026-06-26T09:57:38.979Z"
+        }
+      ]
+    },
+    "session_1782467858982_4rd50": {
+      "sessionId": "session_1782467858982_4rd50",
+      "updatedAt": "2026-06-26T09:57:47.693Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is the age limit, educational qualification, and gender eligibility for the courses?",
+          "timestamp": "2026-06-26T09:57:47.693Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses के बारे में simple language में बता सकता हूँ।",
+          "timestamp": "2026-06-26T09:57:47.693Z"
+        }
+      ]
+    },
+    "session_1782467867696_94nar": {
+      "sessionId": "session_1782467867696_94nar",
+      "updatedAt": "2026-06-26T09:57:56.303Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "Could you please elaborate on the eligibility criteria to join NavGurukul?",
+          "timestamp": "2026-06-26T09:57:56.303Z"
+        },
+        {
+          "role": "model",
+          "text": "The admission process at NavGurukul generally involves submitting an online application, completing a screening assessment, and attending interview rounds. I can guide you through the latest timeline if you wish to apply!",
+          "timestamp": "2026-06-26T09:57:56.303Z"
+        }
+      ]
+    },
+    "session_1782467876305_8emcf": {
+      "sessionId": "session_1782467876305_8emcf",
+      "updatedAt": "2026-06-26T09:58:04.919Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "bro what's the eligibility lol",
+          "timestamp": "2026-06-26T09:58:04.919Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses के बारे में simple language में बता सकता हूँ।",
+          "timestamp": "2026-06-26T09:58:04.919Z"
+        }
+      ]
+    },
+    "session_1782467884923_iapsu": {
+      "sessionId": "session_1782467884923_iapsu",
+      "updatedAt": "2026-06-26T09:58:13.514Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is the screening test?",
+          "timestamp": "2026-06-26T09:58:13.514Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses के बारे में simple language में बता सकता हूँ।",
+          "timestamp": "2026-06-26T09:58:13.514Z"
+        }
+      ]
+    },
+    "session_1782467893518_hvegu": {
+      "sessionId": "session_1782467893518_hvegu",
+      "updatedAt": "2026-06-26T09:58:22.194Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "प्रवेश प्रक्रिया क्या है?",
+          "timestamp": "2026-06-26T09:58:22.194Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses के बारे में simple language में बता सकता हूँ।",
+          "timestamp": "2026-06-26T09:58:22.194Z"
+        }
+      ]
+    },
+    "session_1782467902196_83k0b": {
+      "sessionId": "session_1782467902196_83k0b",
+      "updatedAt": "2026-06-26T09:58:30.826Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "placement details batao",
+          "timestamp": "2026-06-26T09:58:30.826Z"
+        },
+        {
+          "role": "model",
+          "text": "Yes, NavGurukul offers dedicated placement support! This includes resume preparation, mock interviews, and hiring opportunities with our partners. We guide students step-by-step to prepare them for the workforce.",
+          "timestamp": "2026-06-26T09:58:30.826Z"
+        }
+      ]
+    },
+    "session_1782467910828_u598n": {
+      "sessionId": "session_1782467910828_u598n",
+      "updatedAt": "2026-06-26T09:58:39.667Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "NavGurukul ke courses kya hain?",
+          "timestamp": "2026-06-26T09:58:39.667Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses के बारे में simple language में बता सकता हूँ।",
+          "timestamp": "2026-06-26T09:58:39.667Z"
+        }
+      ]
+    },
+    "test_context_1782467919669": {
+      "sessionId": "test_context_1782467919669",
+      "updatedAt": "2026-06-26T09:58:57.096Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "I want to apply for the Software Engineering course.",
+          "timestamp": "2026-06-26T09:58:48.405Z"
+        },
+        {
+          "role": "model",
+          "text": "The admission process at NavGurukul generally involves submitting an online application, completing a screening assessment, and attending interview rounds. I can guide you through the latest timeline if you wish to apply!",
+          "timestamp": "2026-06-26T09:58:48.405Z"
+        },
+        {
+          "role": "user",
+          "text": "What is the duration of it?",
+          "timestamp": "2026-06-26T09:58:57.096Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses के बारे में simple language में बता सकता हूँ।",
+          "timestamp": "2026-06-26T09:58:57.096Z"
+        }
+      ]
+    },
+    "session_1782467985213_85mp8": {
+      "sessionId": "session_1782467985213_85mp8",
+      "updatedAt": "2026-06-26T09:59:54.520Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is NavGurukul?",
+          "timestamp": "2026-06-26T09:59:54.519Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses के बारे में simple language में बता सकता हूँ।",
+          "timestamp": "2026-06-26T09:59:54.519Z"
+        }
+      ]
+    },
+    "session_1782467994531_r230x": {
+      "sessionId": "session_1782467994531_r230x",
+      "updatedAt": "2026-06-26T10:00:03.115Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is NavGurukul?",
+          "timestamp": "2026-06-26T10:00:03.115Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses के बारे में simple language में बता सकता हूँ।",
+          "timestamp": "2026-06-26T10:00:03.115Z"
+        }
+      ]
+    },
+    "session_1782468003119_ufi6y": {
+      "sessionId": "session_1782468003119_ufi6y",
+      "updatedAt": "2026-06-26T10:00:12.144Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is NavGurukul?",
+          "timestamp": "2026-06-26T10:00:12.144Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses के बारे में simple language में बता सकता हूँ।",
+          "timestamp": "2026-06-26T10:00:12.144Z"
+        }
+      ]
+    },
+    "session_1782468012146_sccj1": {
+      "sessionId": "session_1782468012146_sccj1",
+      "updatedAt": "2026-06-26T10:00:20.813Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is NavGurukul?",
+          "timestamp": "2026-06-26T10:00:20.813Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses के बारे में simple language में बता सकता हूँ।",
+          "timestamp": "2026-06-26T10:00:20.813Z"
+        }
+      ]
+    },
+    "session_1782468020816_dk9q0": {
+      "sessionId": "session_1782468020816_dk9q0",
+      "updatedAt": "2026-06-26T10:00:29.450Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is NavGurukul?",
+          "timestamp": "2026-06-26T10:00:29.450Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses के बारे में simple language में बता सकता हूँ।",
+          "timestamp": "2026-06-26T10:00:29.450Z"
+        }
+      ]
+    },
+    "session_1782468029453_aagpo": {
+      "sessionId": "session_1782468029453_aagpo",
+      "updatedAt": "2026-06-26T10:00:38.105Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "Fees?",
+          "timestamp": "2026-06-26T10:00:38.105Z"
+        },
+        {
+          "role": "model",
+          "text": "NavGurukul is a fully-funded program for selected students. Residential facilities, food, and learning resources are covered. We believe in providing access without financial burden.",
+          "timestamp": "2026-06-26T10:00:38.105Z"
+        }
+      ]
+    },
+    "session_1782468038108_a3pp4": {
+      "sessionId": "session_1782468038108_a3pp4",
+      "updatedAt": "2026-06-26T10:00:46.792Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is the age limit, educational qualification, and gender eligibility for the courses?",
+          "timestamp": "2026-06-26T10:00:46.792Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses के बारे में simple language में बता सकता हूँ।",
+          "timestamp": "2026-06-26T10:00:46.792Z"
+        }
+      ]
+    },
+    "session_1782468046795_qcmfd": {
+      "sessionId": "session_1782468046795_qcmfd",
+      "updatedAt": "2026-06-26T10:00:55.429Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "Could you please elaborate on the eligibility criteria to join NavGurukul?",
+          "timestamp": "2026-06-26T10:00:55.429Z"
+        },
+        {
+          "role": "model",
+          "text": "The admission process at NavGurukul generally involves submitting an online application, completing a screening assessment, and attending interview rounds. I can guide you through the latest timeline if you wish to apply!",
+          "timestamp": "2026-06-26T10:00:55.429Z"
+        }
+      ]
+    },
+    "session_1782468055431_96hx1": {
+      "sessionId": "session_1782468055431_96hx1",
+      "updatedAt": "2026-06-26T10:01:04.029Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "bro what's the eligibility lol",
+          "timestamp": "2026-06-26T10:01:04.029Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses के बारे में simple language में बता सकता हूँ।",
+          "timestamp": "2026-06-26T10:01:04.029Z"
+        }
+      ]
+    },
+    "session_1782468064032_3436t": {
+      "sessionId": "session_1782468064032_3436t",
+      "updatedAt": "2026-06-26T10:01:12.680Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is the screening test?",
+          "timestamp": "2026-06-26T10:01:12.680Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses के बारे में simple language में बता सकता हूँ।",
+          "timestamp": "2026-06-26T10:01:12.680Z"
+        }
+      ]
+    },
+    "session_1782468072684_qzeap": {
+      "sessionId": "session_1782468072684_qzeap",
+      "updatedAt": "2026-06-26T10:01:21.293Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "प्रवेश प्रक्रिया क्या है?",
+          "timestamp": "2026-06-26T10:01:21.293Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses के बारे में simple language में बता सकता हूँ।",
+          "timestamp": "2026-06-26T10:01:21.293Z"
+        }
+      ]
+    },
+    "session_1782468081296_g8a28": {
+      "sessionId": "session_1782468081296_g8a28",
+      "updatedAt": "2026-06-26T10:01:29.892Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "placement details batao",
+          "timestamp": "2026-06-26T10:01:29.891Z"
+        },
+        {
+          "role": "model",
+          "text": "Yes, NavGurukul offers dedicated placement support! This includes resume preparation, mock interviews, and hiring opportunities with our partners. We guide students step-by-step to prepare them for the workforce.",
+          "timestamp": "2026-06-26T10:01:29.891Z"
+        }
+      ]
+    },
+    "session_1782468089895_01wiq": {
+      "sessionId": "session_1782468089895_01wiq",
+      "updatedAt": "2026-06-26T10:01:38.529Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "NavGurukul ke courses kya hain?",
+          "timestamp": "2026-06-26T10:01:38.529Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses के बारे में simple language में बता सकता हूँ।",
+          "timestamp": "2026-06-26T10:01:38.529Z"
+        }
+      ]
+    },
+    "test_context_1782468098532": {
+      "sessionId": "test_context_1782468098532",
+      "updatedAt": "2026-06-26T10:02:04.485Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "I want to apply for the Software Engineering course.",
+          "timestamp": "2026-06-26T10:01:47.169Z"
+        },
+        {
+          "role": "model",
+          "text": "The admission process at NavGurukul generally involves submitting an online application, completing a screening assessment, and attending interview rounds. I can guide you through the latest timeline if you wish to apply!",
+          "timestamp": "2026-06-26T10:01:47.169Z"
+        },
+        {
+          "role": "user",
+          "text": "What is the duration of it?",
+          "timestamp": "2026-06-26T10:01:55.902Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses के बारे में simple language में बता सकता हूँ।",
+          "timestamp": "2026-06-26T10:01:55.902Z"
+        },
+        {
+          "role": "user",
+          "text": "Are there any fees for this program?",
+          "timestamp": "2026-06-26T10:02:04.485Z"
+        },
+        {
+          "role": "model",
+          "text": "Hello! I am Guru, your NavGurukul Admissions Counselor. I'm here to help you understand our courses, admissions process, placements, and campus life. How can I help you today?",
+          "timestamp": "2026-06-26T10:02:04.485Z"
+        }
+      ]
+    },
+    "session_1782468124488_87hek": {
+      "sessionId": "session_1782468124488_87hek",
+      "updatedAt": "2026-06-26T10:02:13.174Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "Does NavGurukul offer a course in Rocket Science and Space Engineering?",
+          "timestamp": "2026-06-26T10:02:13.174Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses के बारे में simple language में बता सकता हूँ।",
+          "timestamp": "2026-06-26T10:02:13.174Z"
+        }
+      ]
+    },
+    "session_1782468133177_ox1oq": {
+      "sessionId": "session_1782468133177_ox1oq",
+      "updatedAt": "2026-06-26T10:02:21.915Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is the exact room number of the warden in the Dharamshala campus?",
+          "timestamp": "2026-06-26T10:02:21.915Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses के बारे में simple language में बता सकता हूँ।",
+          "timestamp": "2026-06-26T10:02:21.915Z"
+        }
+      ]
+    },
+    "session_1782468141918_7o4ek": {
+      "sessionId": "session_1782468141918_7o4ek",
+      "updatedAt": "2026-06-26T10:02:30.577Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is Git?",
+          "timestamp": "2026-06-26T10:02:30.577Z"
+        },
+        {
+          "role": "model",
+          "text": "Aap NavGurukul ke baare mein kya jaanna chahte hain? Main aapko courses, placement support, admission process, aur residential campuses के बारे में simple language में बता सकता हूँ।",
+          "timestamp": "2026-06-26T10:02:30.577Z"
+        }
+      ]
+    },
+    "session_1782468277402_8usut": {
+      "sessionId": "session_1782468277402_8usut",
+      "updatedAt": "2026-06-26T10:04:46.620Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is NavGurukul?",
+          "timestamp": "2026-06-26T10:04:46.619Z"
+        },
+        {
+          "role": "model",
+          "text": "Sure! Let me explain that NavGurukul is a fully-funded, residential program that helps students from marginalized communities learn software engineering and other skills, securing high-paying jobs.",
+          "timestamp": "2026-06-26T10:04:46.620Z"
+        }
+      ]
+    },
+    "session_1782468286632_he2xk": {
+      "sessionId": "session_1782468286632_he2xk",
+      "updatedAt": "2026-06-26T10:04:55.568Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is NavGurukul?",
+          "timestamp": "2026-06-26T10:04:55.568Z"
+        },
+        {
+          "role": "model",
+          "text": "To answer your query, NavGurukul is a fully-funded, residential program that helps students from marginalized communities learn software engineering and other skills, securing high-paying jobs.",
+          "timestamp": "2026-06-26T10:04:55.568Z"
+        }
+      ]
+    },
+    "session_1782468295571_z4yhd": {
+      "sessionId": "session_1782468295571_z4yhd",
+      "updatedAt": "2026-06-26T10:05:04.301Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is NavGurukul?",
+          "timestamp": "2026-06-26T10:05:04.301Z"
+        },
+        {
+          "role": "model",
+          "text": "Sure! Let me explain that NavGurukul is a fully-funded, residential program that helps students from marginalized communities learn software engineering and other skills, securing high-paying jobs.",
+          "timestamp": "2026-06-26T10:05:04.301Z"
+        }
+      ]
+    },
+    "session_1782468304304_gc286": {
+      "sessionId": "session_1782468304304_gc286",
+      "updatedAt": "2026-06-26T10:05:12.967Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is NavGurukul?",
+          "timestamp": "2026-06-26T10:05:12.967Z"
+        },
+        {
+          "role": "model",
+          "text": "Great question. NavGurukul is a fully-funded, residential program that helps students from marginalized communities learn software engineering and other skills, securing high-paying jobs.",
+          "timestamp": "2026-06-26T10:05:12.967Z"
+        }
+      ]
+    },
+    "session_1782468312969_6n7tz": {
+      "sessionId": "session_1782468312969_6n7tz",
+      "updatedAt": "2026-06-26T10:05:21.797Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is NavGurukul?",
+          "timestamp": "2026-06-26T10:05:21.797Z"
+        },
+        {
+          "role": "model",
+          "text": "To answer your query, NavGurukul is a fully-funded, residential program that helps students from marginalized communities learn software engineering and other skills, securing high-paying jobs.",
+          "timestamp": "2026-06-26T10:05:21.797Z"
+        }
+      ]
+    },
+    "session_1782468321801_2adf2": {
+      "sessionId": "session_1782468321801_2adf2",
+      "updatedAt": "2026-06-26T10:05:30.507Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "Fees?",
+          "timestamp": "2026-06-26T10:05:30.507Z"
+        },
+        {
+          "role": "model",
+          "text": "NavGurukul is completely free! Food, stay, and learning are fully covered.",
+          "timestamp": "2026-06-26T10:05:30.507Z"
+        }
+      ]
+    },
+    "session_1782468330510_dhtx1": {
+      "sessionId": "session_1782468330510_dhtx1",
+      "updatedAt": "2026-06-26T10:05:39.398Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is the age limit, educational qualification, and gender eligibility for the courses?",
+          "timestamp": "2026-06-26T10:05:39.398Z"
+        },
+        {
+          "role": "model",
+          "text": "Here is the information: the eligibility requires you to be between 18 to 30 years old, have completed 10th grade, and come from a low-income or marginalized background. All genders are welcome.",
+          "timestamp": "2026-06-26T10:05:39.398Z"
+        }
+      ]
+    },
+    "session_1782468515052": {
+      "sessionId": "session_1782468515052",
+      "updatedAt": "2026-06-26T10:09:44.687Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "hey what's up",
+          "timestamp": "2026-06-26T10:08:47.997Z"
+        },
+        {
+          "role": "model",
+          "text": "I'd love to share that I am Guru, your NavGurukul counselor. I can help you with admission steps, courses, campus details, and placements!",
+          "timestamp": "2026-06-26T10:08:47.997Z"
+        },
+        {
+          "role": "user",
+          "text": "I want to know about screening test",
+          "timestamp": "2026-06-26T10:09:14.949Z"
+        },
+        {
+          "role": "model",
+          "text": "Here is the information: the admission process includes an online application, a 90-minute basic screening test (math and logic), and a learning round.",
+          "timestamp": "2026-06-26T10:09:14.949Z"
+        },
+        {
+          "role": "user",
+          "text": "can you briefly explain me the test",
+          "timestamp": "2026-06-26T10:09:44.687Z"
+        },
+        {
+          "role": "model",
+          "text": "Sure! Let me explain that the admission process includes an online application, a 90-minute basic screening test (math and logic), and a learning round.",
+          "timestamp": "2026-06-26T10:09:44.687Z"
+        }
+      ]
+    },
+    "session_1782468756547": {
+      "sessionId": "session_1782468756547",
+      "updatedAt": "2026-06-26T10:14:40.157Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "whatsup",
+          "timestamp": "2026-06-26T10:12:43.994Z"
+        },
+        {
+          "role": "model",
+          "text": "Hey there! All good on my end. How can I help you today?",
+          "timestamp": "2026-06-26T10:12:43.994Z"
+        },
+        {
+          "role": "user",
+          "text": "I want to know about navgurukul",
+          "timestamp": "2026-06-26T10:12:57.821Z"
+        },
+        {
+          "role": "model",
+          "text": "NavGurukul is a place that helps students learn specific skills and prepares them for placements. A big part of what we do is also about teaching you how to learn on your own and develop that \"learning how to learn\" mindset.\n\nThe journey to join usually starts with a Screening Test, and then there's a Learning Round. We also provide learning videos to help students prepare for these tests. Having a basic comfort with English is also helpful because it makes it easier to follow the classes and communicate on campus.",
+          "timestamp": "2026-06-26T10:12:57.821Z"
+        },
+        {
+          "role": "user",
+          "text": "mujhe navgurukul mei kiya kiya seekhne ko milega?",
+          "timestamp": "2026-06-26T10:13:40.088Z"
+        },
+        {
+          "role": "model",
+          "text": "Namaste! NavGurukul mein tumhe kaafi kuch seekhne ko milega, jaise ki:\n\n1.  **Specific Skills aur Schools:** Yahan alag-alag schools hain jaise School of Programming (SOP), BCA, School of Business (SOB), aur School of Finance (SOF). Tum apni pasand ke hisaab se inmein se kisi ek mein specific skills seekh sakte ho.\n2.  **English Classes:** Tumhari English improve karne ke liye classes bhi hoti hain, jo campus par communication aur curriculum follow karne mein help karti hain.\n3.  **Self-paced Learning aur Metacognition:** NavGurukul mein tumhe khud se padhna aur \"kaise seekhna hai\" (learning how to learn) yeh bhi sikhaya jaata hai. Yeh ek bahut important skill hai.\n4.  **Placements:** Skills sikhane ke saath-saath, NavGurukul tumhe placements ke liye bhi prepare karta hai.\n\nToh, overall, yeh ek holistic learning experience hai jahan tum sirf technical skills hi nahi, balki life skills bhi develop karte ho.",
+          "timestamp": "2026-06-26T10:13:40.088Z"
+        },
+        {
+          "role": "user",
+          "text": "what are the courses available in navgurukul?",
+          "timestamp": "2026-06-26T10:14:05.677Z"
+        },
+        {
+          "role": "model",
+          "text": "At NavGurukul, we have different \"schools\" or programs that focus on specific areas. You can choose from:\n\n*   **School of Programming (SOP)**\n*   **BCA** (Bachelor of Computer Applications)\n*   **School of Business (SOB)**\n*   **School of Finance (SOF)**\n\nThese programs are designed to help you gain specific skills in your chosen field and prepare you for future opportunities.",
+          "timestamp": "2026-06-26T10:14:05.677Z"
+        },
+        {
+          "role": "user",
+          "text": "mujhe ye courses ke baare mei achche se batao",
+          "timestamp": "2026-06-26T10:14:40.157Z"
+        },
+        {
+          "role": "model",
+          "text": "Achha, chalo main tumhe har ek school ke baare mein thoda aur detail mein batata hoon:\n\n1.  **School of Programming (SOP):**\n    *   **Kya seekhte hain:** Yahan students ko full-stack software developer banne ke liye train kiya jaata hai. Ismein programming basics (logic aur problem-solving), web development (HTML, CSS, JavaScript), backend development (Node.js aur databases), aur applications mein AI integration jaise topics cover hote hain. Clean code likhna aur real projects banana bhi sikhaya jaata hai, saath hi ek programmer ki tarah sochna aur problems ko debug karna bhi.\n    *   **Goal:** Iska main goal students ko job-ready software engineers banana hai.\n\n2.  **School of Finance (SOF):**\n    *   **Kya seekhte hain:** Is school mein students ko finance aur accounting roles ke liye prepare kiya jaata hai. Wo accounting basics, Excel aur financial tools, Tally (jo ek practical accounting software hai), business finance concepts, aur numbers aur financial data ko analyze karna seekhte hain.\n    *   **Goal:** Students ko finance, accounting, aur analyst roles ke liye taiyaar karna.\n\n3.  **School of Business (SOB):**\n    *   **Kya seekhte hain:** Yahan students ko business aur operations roles ke liye train kiya jaata hai.\n\nBCA ke baare mein mere paas abhi official details nahi hain, toh uske liye main tumhe NavGurukul ki official website check karne ya admissions team se directly contact karne ki salah dunga.",
+          "timestamp": "2026-06-26T10:14:40.157Z"
+        }
+      ]
+    },
+    "session_1782468953251": {
+      "sessionId": "session_1782468953251",
+      "updatedAt": "2026-06-26T10:25:51.527Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "mujhe screening test baare mei jaanna hai",
+          "timestamp": "2026-06-26T10:16:12.369Z"
+        },
+        {
+          "role": "model",
+          "text": "Hey! NavGurukul ka screening test hamare admission process ka pehla step hai. Is test se hum students ki aptitude check karte hain alag-alag programs ke liye.\n\nYahan kuch main baatein hain is test ke baare mein:\n\n*   **Format:** Isme total 16 Multiple Choice Questions (MCQs) hote hain.\n*   **Duration:** Test 90 minutes (yaani 1.5 ghante) ka hota hai.\n*   **Marking:** Questions ki difficulty ke hisaab se marks milte hain:\n    *   Easy questions: 1 mark\n    *   Medium questions: 2 marks\n    *   Hard questions: 3 marks\n    *   Total marks 32 hote hain.\n*   **Modes:** Tum yeh test online bhi de sakte ho hamari website par, aur kuch remote areas mein jahan internet ki availability kam hai, wahan offline paper-and-pencil test bhi conduct kiya jaata hai.\n*   **Cut-off:** Har program ke liye alag cut-off marks hote hain:\n    *   School of Programming: 21 marks\n    *   School of Business: 11 marks\n    *   School of Finance: 13 marks\n\nYeh test is tarah se design kiya gaya hai ki yeh balanced ho aur students ke liye attempt karna easy ho, jabki hum unki understanding ko sahi se assess kar paayein.",
+          "timestamp": "2026-06-26T10:16:12.369Z"
+        },
+        {
+          "role": "user",
+          "text": "Navgurukul ke courses ke baare mei batao",
+          "timestamp": "2026-06-26T10:17:04.052Z"
+        },
+        {
+          "role": "model",
+          "text": "NavGurukul mein hum alag-alag fields mein training dete hain, jiske liye hamare paas kuch specific schools hain. Main courses ya schools jo hum offer karte hain, woh yeh hain:\n\n1.  **School of Programming (SOP):** Yeh un students ke liye hai jo coding aur software development mein apna career banana chahte hain.\n2.  **BCA (Bachelor of Computer Applications):** Yeh bhi programming aur computer applications se related hai, aur iska screening test SOP jaisa hi hota hai.\n3.  **School of Business (SOB):** Agar tum business ya management ki field mein interested ho, toh yeh school tumhare liye hai.\n4.  **School of Finance (SOF):** Jo log finance aur banking sector mein jaana chahte hain, unke liye yeh program design kiya gaya hai.\n\nHar school ka apna ek specific curriculum aur learning path hota hai, jisse students us particular field mein expert ban sakein.",
+          "timestamp": "2026-06-26T10:17:04.052Z"
+        },
+        {
+          "role": "user",
+          "text": "konse school ke liye konsa screeening test hota hai?",
+          "timestamp": "2026-06-26T10:17:33.177Z"
+        },
+        {
+          "role": "model",
+          "text": "Achha sawaal hai! NavGurukul mein har school ke liye alag tarah ka screening test hota hai, kyunki har field mein alag soch aur skills ki zaroorat hoti hai. Hum alag questions isliye poochte hain taaki hum dekh sakein ki tum kis school ke liye sabse zyada fit ho.\n\nYahan details hain:\n\n**1. School of Programming (SOP) & BCA ke liye Screening Test:**\nIs test mein mainly yeh concepts cover hote hain:\n*   **Patterns:** 4 questions\n*   **Percentage:** 3 questions\n*   **Time and Work:** 3 questions\n*   **Linear Equation:** 6 questions\nTotal 16 questions hote hain.\n\n**2. School of Business (SOB) & School of Finance (SOF) ke liye Screening Test:**\nIn schools ke test mein yeh concepts aate hain:\n*   **Patterns:** 4 questions\n*   **Percentage:** 4 questions\n*   **Profit & Loss:** 4 questions\n*   **Simple Interest:** 4 questions\nIsme bhi total 16 questions hote hain.\n\nToh, jiss school mein tum interested ho, uske hisaab se hi tumhara screening test design kiya gaya hai.",
+          "timestamp": "2026-06-26T10:17:33.177Z"
+        },
+        {
+          "role": "user",
+          "text": "navgurukul ke baare kuch batao",
+          "timestamp": "2026-06-26T10:20:49.468Z"
+        },
+        {
+          "role": "model",
+          "text": "Bilkul! NavGurukul ek bahut hi khaas non-profit organization hai jo Gurugram, Haryana mein based hai. Iska main aim hai un young logon ko empower karna, khaaskar ladkiyon aur mahilaon ko, jinhe achhi education milne mein mushkil hoti hai.\n\nYahan kuch main baatein hain NavGurukul ke baare mein:\n\n*   **Kya Hai Yeh:** Yeh ek technology-driven organization hai jo underserved youth ko high-quality, fully-funded tech education provide karti hai.\n*   **Kya Sikhate Hain:** Hum residential programs offer karte hain jahan students ko software engineering, design, media, finance, aur management jaise fields mein train kiya jaata hai.\n*   **Goal Kya Hai:** Hamara maksad hai ki students ko IT sector mein achhi jobs mil sakein. Yeh ek tarah se traditional college education ka ek behtar alternative hai.\n*   **Financial Model:** Jo students humble economic backgrounds se aate hain, unhe free residential training, khana, aur saare learning resources milte hain. Unhe bas ek choti si fee (installments mein) tabhi pay karni hoti hai jab unhe job mil jaati hai.\n*   **Founders:** Iski shuruaat Abhishek Gupta ne ki thi, jo IIT Delhi ke alumnus hain aur Forbes India ke '30 Under 30' list mein bhi shamil the. Unhone dekha ki kaise talented students ko achhi education nahi mil paati, aur isi se unhe NavGurukul banane ki inspiration mili.\n*   **Kab Shuru Hua:** NavGurukul November 2016 mein 2 campuses ke saath shuru hua tha. Abhi hamare 8 campuses hain, jaise Bangalore, Pune, Dharamsala, Bihar, Chhattisgarh, aur Himachal Pradesh mein.\n\nToh, seedhe shabdon mein, NavGurukul ek aisa platform hai jahan talent ko mauka milta hai, bina paise ki chinta kiye, aur ek achha career banane ka rasta milta hai.",
+          "timestamp": "2026-06-26T10:20:49.468Z"
+        },
+        {
+          "role": "user",
+          "text": "नवगुरुकुल के कैंपस कौन-कौन से हैं?",
+          "timestamp": "2026-06-26T10:21:57.137Z"
+        },
+        {
+          "role": "model",
+          "text": "NavGurukul ke abhi desh bhar mein 8 campuses hain. Kuch main campuses jinke naam available hain, woh yeh hain:\n\n*   बैंगलोर (Bangalore)\n*   पुणे (Pune)\n*   धर्मशाला (Dharamsala)\n*   बिहार (Bihar)\n*   छत्तीसगढ़ (Chhattisgarh)\n*   हिमाचल प्रदेश (Himachal Pradesh)\n\nYeh campuses alag-alag jagahon par hain taaki zyada se zyada students tak pahunch banayi ja sake.",
+          "timestamp": "2026-06-26T10:21:57.137Z"
+        },
+        {
+          "role": "user",
+          "text": "kiya mujhe tum campuses ke naam bata sakte ho?",
+          "timestamp": "2026-06-26T10:22:39.632Z"
+        },
+        {
+          "role": "model",
+          "text": "Haan bilkul! Maine pehle bhi bataye the, chalo main tumhe phir se bata deta hoon NavGurukul ke campuses ke naam:\n\n*   Bangalore\n*   Pune\n*   Dharamsala\n*   Jashpur (Chhattisgarh mein)\n*   Dantewada (Chhattisgarh mein)\n*   Kishanganj (Bihar mein)\n\nAur baaki bhi Himachal Pradesh aur Bihar mein hain, jinke specific shehar ke naam yahan mention nahi hain, par total 8+ cities mein hamare campuses hain.",
+          "timestamp": "2026-06-26T10:22:39.632Z"
+        },
+        {
+          "role": "user",
+          "text": "kiya pune mei boys admission le sakte hai?",
+          "timestamp": "2026-06-26T10:23:14.564Z"
+        },
+        {
+          "role": "model",
+          "text": "Achha sawaal hai! Mere paas abhi NavGurukul ke specific campuses mein boys ya girls ke admission ke baare mein official details nahi hain.\n\nIske liye sabse achha hoga ki tum NavGurukul ki official website check kar lo ya unki admissions team se directly contact karo. Woh tumhe Pune campus mein boys ke admission ke baare mein sahi aur latest jaankari de payenge.",
+          "timestamp": "2026-06-26T10:23:14.564Z"
+        },
+        {
+          "role": "user",
+          "text": "Can I apply after 12th?",
+          "timestamp": "2026-06-26T10:23:34.634Z"
+        },
+        {
+          "role": "model",
+          "text": "Yes, you can definitely apply after completing your 12th grade. NavGurukul's programs are designed for young individuals who are looking to build a career, and having completed 12th grade is generally a good starting point for our courses.\n\nWe focus more on your aptitude and willingness to learn, which we assess through our screening test and learning round, rather than just strict academic qualifications. So, if you've finished your 12th, you're welcome to explore our programs!",
+          "timestamp": "2026-06-26T10:23:34.634Z"
+        },
+        {
+          "role": "user",
+          "text": "Can I do SOP if I am 12th pass",
+          "timestamp": "2026-06-26T10:23:55.478Z"
+        },
+        {
+          "role": "model",
+          "text": "Yes, absolutely! If you've passed your 12th grade, you can definitely apply for the School of Programming (SOP).\n\nWhat we look for in SOP students is more about your ability to understand complex ideas, your willingness to learn, and your comfort with logical thinking, rather than just your academic background. So, your 12th pass is a good foundation to start with.",
+          "timestamp": "2026-06-26T10:23:55.478Z"
+        },
+        {
+          "role": "user",
+          "text": "are you sure?",
+          "timestamp": "2026-06-26T10:24:13.724Z"
+        },
+        {
+          "role": "model",
+          "text": "Yes, I'm quite sure! NavGurukul's programs, including the School of Programming, are specifically designed to help young people build careers in tech. Many of our students join right after completing their 12th grade.\n\nThe main thing we look for is your aptitude for learning and a strong desire to build a career in programming. Our screening test and learning round are there to assess these qualities, not just your past academic degrees. So, a 12th pass is definitely a good starting point for SOP.",
+          "timestamp": "2026-06-26T10:24:13.724Z"
+        },
+        {
+          "role": "user",
+          "text": "Can you help me prepare for the screening test?",
+          "timestamp": "2026-06-26T10:24:37.948Z"
+        },
+        {
+          "role": "model",
+          "text": "Absolutely, I can definitely help you understand what to focus on for the screening test! It's great that you're thinking about preparing.\n\nSince the screening test is different for the School of Programming (SOP) / BCA and the School of Business (SOB) / School of Finance (SOF), could you tell me which program you're interested in? That way, I can give you the most relevant preparation tips.\n\nIn general, after you take the screening test, whether you clear it or not, we share a **Learning Video** with you. This video is a fantastic resource because it explains concepts similar to those in the test. You can use it to practice and prepare better, either for a re-attempt or for the next stage, which is called the Learning Round.\n\nBut once you tell me which school you're aiming for, I can give you more specific details on the topics to study!",
+          "timestamp": "2026-06-26T10:24:37.948Z"
+        },
+        {
+          "role": "user",
+          "text": "I want to do SOB",
+          "timestamp": "2026-06-26T10:25:51.527Z"
+        },
+        {
+          "role": "model",
+          "text": "Okay, great! So you're aiming for the School of Business (SOB). That's a fantastic choice if you're interested in business operations and management.\n\nFor the SOB screening test, you'll want to focus on these main topics:\n\n1.  **Patterns:** There will be about 4 questions on this. These usually test your logical reasoning and ability to spot sequences or relationships.\n2.  **Percentages:** You'll see around 4 questions on percentages. This is super important because percentages are used a lot in daily life, like with money, marks, or data. It helps us see if you understand how parts relate to a whole.\n3.  **Profit & Loss:** Expect about 4 questions here. This tests your ability to think logically about money, track gains and losses, and evaluate outcomes. It's all about practical reasoning.\n4.  **Simple Interest:** There will be about 4 questions on simple interest. This also ties into basic financial reasoning and understanding how money grows over time.\n\nIn total, it's a 16-question test. The main idea behind these topics for SOB is to check your basic math skills (up to 10th standard), your ability to reason practically, and how you handle changing conditions – all crucial for business roles.\n\nRemember, after you attempt the screening test, NavGurukul provides a **Learning Round practice video**. This video explains the concepts covered in the test, which can be really helpful for understanding any doubts you might have and preparing well for the actual Learning Round, or even for a re-attempt of the screening test if needed.\n\nSo, brush up on these math concepts, and you'll be in good shape!",
+          "timestamp": "2026-06-26T10:25:51.527Z"
+        }
+      ]
     }
   },
   "config": {
