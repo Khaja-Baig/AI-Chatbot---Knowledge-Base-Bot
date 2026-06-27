@@ -174,8 +174,21 @@ class MockFirestore {
 // Initialize standard Firebase Admin App first so it's always available (e.g. for Auth)
 try {
   if (admin.apps.length === 0) {
+    // Resolve credential path absolutely from config file location so it works
+    // regardless of which directory the command is run from
+    const credEnvPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    let credential;
+    if (credEnvPath) {
+      const resolvedCredPath = path.resolve(__dirname, '../../', credEnvPath.replace(/^\.\//,''));
+      if (fs.existsSync(resolvedCredPath)) {
+        credential = admin.credential.cert(resolvedCredPath);
+      } else {
+        console.warn(`⚠️ Service account key not found at: ${resolvedCredPath}`);
+      }
+    }
     admin.initializeApp({
-      projectId: projectId
+      projectId: projectId,
+      ...(credential ? { credential } : {})
     });
     console.log(`Initialized Firebase Admin App for project: ${projectId}`);
   }
