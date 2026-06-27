@@ -376,6 +376,7 @@ export class ChatController {
         sessions.push({
           sessionId: doc.id,
           chatId: doc.id,
+          title: data.title || null,
           updatedAt: data.updatedAt,
           messageCount: data.messages ? data.messages.length : 0,
           lastMessage: data.messages && data.messages.length > 0 
@@ -391,6 +392,29 @@ export class ChatController {
     } catch (error) {
       console.error('Error listing sessions:', error);
       return res.status(500).json({ error: 'Failed to list sessions.' });
+    }
+  }
+
+  /**
+   * Update (rename) a chat session.
+   */
+  static async updateSession(req, res) {
+    const { sessionId } = req.params;
+    const { title } = req.body;
+    try {
+      const chatCol = ChatController.getChatCollection(req);
+      const sessionDocRef = chatCol.doc(sessionId);
+      
+      const sessionSnap = await sessionDocRef.get();
+      if (!sessionSnap.exists) {
+        return res.status(404).json({ error: 'Session not found.' });
+      }
+
+      await sessionDocRef.set({ title, updatedAt: new Date().toISOString() }, { merge: true });
+      return res.status(200).json({ success: true, message: `Session ${sessionId} updated.` });
+    } catch (error) {
+      console.error('Error updating session:', error);
+      return res.status(500).json({ error: 'Failed to update session.' });
     }
   }
 

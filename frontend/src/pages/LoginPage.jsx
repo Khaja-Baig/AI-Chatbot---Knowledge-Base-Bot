@@ -133,7 +133,7 @@ export default function LoginPage() {
         
         {/* Title */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 600, color: 'white', marginBottom: '8px', marginTop: 0 }}>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px', marginTop: 0 }}>
             {isForgotMode ? 'Reset Password' : 'Welcome Back'}
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', margin: 0 }}>
@@ -191,7 +191,7 @@ export default function LoginPage() {
                   backgroundColor: 'var(--bg-primary)',
                   border: '1px solid var(--border-color)',
                   borderRadius: '8px',
-                  color: 'white',
+                  color: 'var(--text-primary)',
                   padding: '12px 16px',
                   fontSize: '0.9rem',
                   outline: 'none',
@@ -260,7 +260,7 @@ export default function LoginPage() {
                     backgroundColor: 'var(--bg-primary)',
                     border: '1px solid var(--border-color)',
                     borderRadius: '8px',
-                    color: 'white',
+                    color: 'var(--text-primary)',
                     padding: '12px 16px',
                     fontSize: '0.9rem',
                     outline: 'none',
@@ -305,7 +305,7 @@ export default function LoginPage() {
                     backgroundColor: 'var(--bg-primary)',
                     border: '1px solid var(--border-color)',
                     borderRadius: '8px',
-                    color: 'white',
+                    color: 'var(--text-primary)',
                     padding: '12px 16px',
                     fontSize: '0.9rem',
                     outline: 'none',
@@ -361,7 +361,7 @@ export default function LoginPage() {
                 gap: '12px',
                 backgroundColor: 'white',
                 color: '#1f2937',
-                border: 'none',
+                border: '1px solid var(--border-color)',
                 borderRadius: '8px',
                 padding: '12px',
                 fontSize: '0.95rem',

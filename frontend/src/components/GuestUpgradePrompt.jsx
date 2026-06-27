@@ -40,7 +40,7 @@ export default function GuestUpgradePrompt({ onDismiss }) {
           💬
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <h4 style={{ color: 'white', fontWeight: 600, fontSize: '0.95rem', margin: 0 }}>
+          <h4 style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.95rem', margin: 0 }}>
             Your conversation is worth saving
           </h4>
           <p style={{ color: 'var(--text-secondary, #9ca3af)', fontSize: '0.85rem', lineHeight: '1.4', margin: 0 }}>
@@ -52,19 +52,7 @@ export default function GuestUpgradePrompt({ onDismiss }) {
       <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
         <button
           onClick={onDismiss}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'var(--text-secondary, #9ca3af)',
-            fontSize: '0.85rem',
-            fontWeight: 500,
-            cursor: 'pointer',
-            padding: '8px 12px',
-            borderRadius: '6px',
-            transition: 'background-color 0.2s'
-          }}
-          onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.04)'}
-          onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+          className="guest-upgrade-dismiss-btn"
         >
           Continue as Guest
         </button>

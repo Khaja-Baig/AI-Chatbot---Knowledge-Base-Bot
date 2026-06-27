@@ -15,11 +15,33 @@ export default function ChatPage() {
   const [guestMessageCount, setGuestMessageCount] = useState(0);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
 
+  // New UI features states
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('sidebar-collapsed') === 'true');
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
   const [config, setConfig] = useState({
     counselorName: 'Guru',
     greetingMessage: 'Hello! I am Guru, your NavGurukul Admissions Counselor. I can help you understand our courses, admissions process, eligibility, placements, and campus life. How can I help you today?',
     behaviorMode: 'warm'
   });
+
+  // Handle light/dark theme class/attributes
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    if (theme === 'light') {
+      document.body.classList.add('light-theme');
+    } else {
+      document.body.classList.remove('light-theme');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  // Save sidebar collapse choice
+  useEffect(() => {
+    localStorage.setItem('sidebar-collapsed', isSidebarCollapsed);
+  }, [isSidebarCollapsed]);
 
   useEffect(() => {
     const handleAuthTransition = async () => {
@@ -133,6 +155,37 @@ export default function ChatPage() {
     }
   };
 
+  const handleRenameSession = async (sessionId, newTitle) => {
+    // Optimistically update sessions list
+    setSessions(prev => prev.map(s => {
+      if (s.sessionId === sessionId) {
+        return { ...s, title: newTitle };
+      }
+      return s;
+    }));
+
+    if (user) {
+      try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (user?.token) {
+          headers['Authorization'] = `Bearer ${user.token}`;
+        }
+        const res = await fetch(`http://localhost:5001/api/chat/sessions/${sessionId}`, {
+          method: 'PATCH',
+          headers,
+          body: JSON.stringify({ title: newTitle })
+        });
+        if (!res.ok) {
+          console.error('Failed to rename session on server');
+          fetchSessions();
+        }
+      } catch (err) {
+        console.error('Error renaming session:', err);
+        fetchSessions();
+      }
+    }
+  };
+
   const handleMessageSent = (sessionId) => {
     fetchSessions();
     if (!activeSessionId) {
@@ -176,6 +229,12 @@ export default function ChatPage() {
           setIsSidebarOpen(false);
         }}
         onDeleteSession={handleDeleteSession}
+        onRenameSession={handleRenameSession}
+        isCollapsed={isSidebarCollapsed}
+        setIsCollapsed={setIsSidebarCollapsed}
+        user={user}
+        onOpenSettings={() => setShowSettingsModal(true)}
+        onLogoutClick={() => setShowLogoutModal(true)}
       />
 
       <div className="chat-area" style={{ position: 'relative' }}>
@@ -191,59 +250,21 @@ export default function ChatPage() {
           </div>
           
           <div className="header-right-group" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            {user ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                  Hello, <strong style={{ color: 'white' }}>{user.displayName || user.email.split('@')[0]}</strong>
-                </span>
-                {user.role === 'admin' && (
-                  <button
-                    onClick={() => navigate('/admin')}
-                    style={{
-                      backgroundColor: 'rgba(79, 70, 229, 0.2)',
-                      border: '1px solid var(--accent-color, #4f46e5)',
-                      color: 'white',
-                      borderRadius: '6px',
-                      padding: '6px 12px',
-                      fontSize: '0.8rem',
-                      fontWeight: 500,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Dashboard
-                  </button>
-                )}
-                <button
-                  onClick={logout}
-                  style={{
-                    backgroundColor: 'transparent',
-                    border: '1px solid var(--border-color)',
-                    color: 'var(--text-secondary)',
-                    borderRadius: '6px',
-                    padding: '6px 12px',
-                    fontSize: '0.8rem',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Logout
-                </button>
-              </div>
-            ) : (
+            {user?.role === 'admin' && (
               <button
-                onClick={() => navigate('/login')}
+                onClick={() => navigate('/admin')}
                 style={{
-                  backgroundColor: 'var(--accent-color, #4f46e5)',
-                  color: 'white',
-                  border: 'none',
+                  backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                  border: '1px solid var(--accent-color, #4f46e5)',
+                  color: 'var(--text-primary)',
                   borderRadius: '6px',
-                  padding: '8px 16px',
-                  fontSize: '0.85rem',
+                  padding: '6px 12px',
+                  fontSize: '0.8rem',
                   fontWeight: 500,
-                  cursor: 'pointer',
-                  boxShadow: '0 2px 4px rgba(79, 70, 229, 0.2)'
+                  cursor: 'pointer'
                 }}
               >
-                Log In
+                Dashboard
               </button>
             )}
           </div>
@@ -260,6 +281,81 @@ export default function ChatPage() {
           <GuestUpgradePrompt onDismiss={handleDismissUpgrade} />
         )}
       </div>
+
+      {/* Settings Modal */}
+      {showSettingsModal && (
+        <div className="modal-backdrop" onClick={() => setShowSettingsModal(false)}>
+          <div className="settings-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="settings-modal-header">
+              <h2>Settings</h2>
+              <button className="close-modal-btn" onClick={() => setShowSettingsModal(false)}>✕</button>
+            </div>
+            <div className="settings-modal-body">
+              <div className="settings-modal-sidebar">
+                <button className="settings-tab-btn active">
+                  Appearance
+                </button>
+              </div>
+              <div className="settings-modal-content">
+                <div className="setting-section">
+                  <h3>Appearance Settings</h3>
+                  <div className="setting-row">
+                    <div className="setting-info">
+                      <div className="setting-label">Theme Mode</div>
+                      <div className="setting-desc">Switch between light and dark modes.</div>
+                    </div>
+                    <div className="theme-options">
+                      <button 
+                        className={`theme-opt-btn ${theme === 'light' ? 'active' : ''}`}
+                        onClick={() => setTheme('light')}
+                      >
+                        <div className="theme-opt-preview light"></div>
+                        <span>Light</span>
+                      </button>
+                      <button 
+                        className={`theme-opt-btn ${theme === 'dark' ? 'active' : ''}`}
+                        onClick={() => setTheme('dark')}
+                      >
+                        <div className="theme-opt-preview dark"></div>
+                        <span>Dark</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="modal-backdrop" onClick={() => setShowLogoutModal(false)}>
+          <div className="confirmation-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="confirmation-modal-title">Confirm Logout</h3>
+            <p className="confirmation-modal-text">Are you sure you want to log out?</p>
+            <div className="confirmation-modal-actions">
+              <button 
+                className="btn-secondary" 
+                onClick={() => setShowLogoutModal(false)}
+                style={{ padding: '8px 16px', borderRadius: '6px', fontSize: '0.85rem' }}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn-danger" 
+                onClick={async () => {
+                  setShowLogoutModal(false);
+                  await logout();
+                }}
+                style={{ padding: '8px 16px', borderRadius: '6px', fontSize: '0.85rem' }}
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

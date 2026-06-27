@@ -183,7 +183,7 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
           {messages.length === 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '50vh', color: 'var(--text-secondary)', textAlign: 'center', padding: '24px' }}>
               <div style={{ fontSize: '2.5rem', marginBottom: '16px' }}>👋</div>
-              <h3 style={{ marginBottom: '8px', color: 'white', fontWeight: 500 }}>Guru</h3>
+              <h3 style={{ marginBottom: '8px', color: 'var(--text-primary)', fontWeight: 500 }}>Guru</h3>
               <p style={{ maxWidth: '440px', fontSize: '0.85rem', lineHeight: '1.6', color: 'var(--text-secondary)' }}>
                 {config.greetingMessage || 'I am here to help you understand our courses, admissions process, placements, and campus life. Go ahead and ask me anything!'}
               </p>

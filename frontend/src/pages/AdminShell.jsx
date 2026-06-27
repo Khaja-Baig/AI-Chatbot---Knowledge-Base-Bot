@@ -104,7 +104,7 @@ export default function AdminShell() {
             🤖
           </div>
           <div>
-            <h3 style={{ color: 'white', fontSize: '1rem', fontWeight: 600, margin: 0 }}>Guru Admin</h3>
+            <h3 style={{ color: 'var(--text-primary)', fontSize: '1rem', fontWeight: 600, margin: 0 }}>Guru Admin</h3>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', margin: 0 }}>Admissions Controls</p>
           </div>
         </div>
@@ -121,8 +121,8 @@ export default function AdminShell() {
               padding: '12px 16px',
               border: 'none',
               borderRadius: '8px',
-              backgroundColor: activeTab === 'dashboard' ? 'rgba(79, 70, 229, 0.15)' : 'transparent',
-              color: activeTab === 'dashboard' ? 'white' : 'var(--text-secondary)',
+              backgroundColor: activeTab === 'dashboard' ? 'var(--bg-active-tab)' : 'transparent',
+              color: activeTab === 'dashboard' ? 'var(--text-primary)' : 'var(--text-secondary)',
               fontWeight: activeTab === 'dashboard' ? 600 : 500,
               fontSize: '0.9rem',
               textAlign: 'left',
@@ -143,8 +143,8 @@ export default function AdminShell() {
               padding: '12px 16px',
               border: 'none',
               borderRadius: '8px',
-              backgroundColor: activeTab === 'chat' ? 'rgba(79, 70, 229, 0.15)' : 'transparent',
-              color: activeTab === 'chat' ? 'white' : 'var(--text-secondary)',
+              backgroundColor: activeTab === 'chat' ? 'var(--bg-active-tab)' : 'transparent',
+              color: activeTab === 'chat' ? 'var(--text-primary)' : 'var(--text-secondary)',
               fontWeight: activeTab === 'chat' ? 600 : 500,
               fontSize: '0.9rem',
               textAlign: 'left',
@@ -165,8 +165,8 @@ export default function AdminShell() {
               padding: '12px 16px',
               border: 'none',
               borderRadius: '8px',
-              backgroundColor: activeTab === 'analytics' ? 'rgba(79, 70, 229, 0.15)' : 'transparent',
-              color: activeTab === 'analytics' ? 'white' : 'var(--text-secondary)',
+              backgroundColor: activeTab === 'analytics' ? 'var(--bg-active-tab)' : 'transparent',
+              color: activeTab === 'analytics' ? 'var(--text-primary)' : 'var(--text-secondary)',
               fontWeight: activeTab === 'analytics' ? 600 : 500,
               fontSize: '0.9rem',
               textAlign: 'left',
@@ -220,7 +220,7 @@ export default function AdminShell() {
           gap: '20px'
         }}>
           <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-            Logged in as: <strong style={{ color: 'white' }}>{user?.email}</strong>
+            Logged in as: <strong style={{ color: 'var(--text-primary)' }}>{user?.email}</strong>
           </span>
           <button
             onClick={logout}
@@ -300,7 +300,7 @@ export default function AdminShell() {
               color: 'var(--text-secondary)'
             }}>
               <span style={{ fontSize: '3rem', marginBottom: '16px' }}>📊</span>
-              <h3 style={{ margin: '0 0 8px 0', color: 'white' }}>Analytics Dashboard</h3>
+              <h3 style={{ margin: '0 0 8px 0', color: 'var(--text-primary)' }}>Analytics Dashboard</h3>
               <p style={{ margin: 0 }}>User interactions, conversation statistics, and query analysis coming soon.</p>
             </div>
           )}

@@ -539,7 +539,7 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
               </p>
             ) : (
               testResults.map((chunk, idx) => (
-                <div key={chunk.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', padding: '12px', borderRadius: '6px' }}>
+                <div key={chunk.id} style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', padding: '12px', borderRadius: '6px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
                     <strong>Match #{idx + 1} ({chunk.metadata.source})</strong>
                     <span>Diff: {chunk.distance?.toFixed(3) || 'N/A'}</span>

@@ -10,5 +10,6 @@ router.post('/message', ChatController.sendMessage);
 router.get('/sessions', ChatController.listSessions);
 router.get('/sessions/:sessionId', ChatController.getHistory);
 router.delete('/sessions/:sessionId', ChatController.deleteSession);
+router.patch('/sessions/:sessionId', ChatController.updateSession);
 
 export default router;

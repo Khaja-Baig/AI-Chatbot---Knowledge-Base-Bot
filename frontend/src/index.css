@@ -12,7 +12,34 @@
   --text-muted: #555566;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --max-width-content: 760px;
+  --bg-input: #18181c;
+  --text-bubble-user: #ffffff;
+  --bg-hover: rgba(255, 255, 255, 0.04);
+  --bg-active: rgba(255, 255, 255, 0.07);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.05);
+  --bg-active-tab: rgba(79, 70, 229, 0.15);
+  color-scheme: dark;
 }
+
+[data-theme='light'] {
+  --bg-primary: #f8fafc;
+  --bg-sidebar: #f1f5f9;
+  --bg-bubble-model: #ffffff;
+  --bg-bubble-user: #e0e7ff;
+  --border-color: rgba(0, 0, 0, 0.08);
+  --accent-color: #4f46e5;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --bg-input: #ffffff;
+  --text-bubble-user: #1e293b;
+  --bg-hover: rgba(0, 0, 0, 0.04);
+  --bg-active: rgba(0, 0, 0, 0.07);
+  --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --bg-active-tab: rgba(79, 70, 229, 0.1);
+  color-scheme: light;
+}
+
 
 * {
   box-sizing: border-box;
@@ -70,14 +97,14 @@ body {
 .logo-icon {
   font-weight: 700;
   font-size: 1.1rem;
-  color: white;
+  color: var(--text-primary);
 }
 
 .logo-text {
   font-weight: 600;
   font-size: 1rem;
   letter-spacing: -0.2px;
-  color: white;
+  color: var(--text-primary);
 }
 
 .sidebar-close-btn {
@@ -92,8 +119,8 @@ body {
 }
 
 .sidebar-close-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: white;
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
 
 .new-chat-btn {
@@ -132,7 +159,7 @@ body {
 
 .session-list::-webkit-scrollbar-thumb,
 .chat-messages::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--scrollbar-thumb);
   border-radius: 4px;
 }
 
@@ -246,7 +273,7 @@ body {
 .counselor-info h2 {
   font-size: 0.95rem;
   font-weight: 500;
-  color: white;
+  color: var(--text-primary);
 }
 
 .counselor-info p {
@@ -272,8 +299,8 @@ body {
 }
 
 .tab-btn.active {
-  background: rgba(255, 255, 255, 0.05);
-  color: white;
+  background: var(--bg-active);
+  color: var(--text-primary);
 }
 
 /* Chat Content Centering */
@@ -306,7 +333,7 @@ body {
 .message-bubble.user {
   align-self: flex-end;
   background-color: var(--bg-bubble-user);
-  color: white;
+  color: var(--text-bubble-user);
   border-bottom-right-radius: 2px;
 }
 
@@ -335,11 +362,11 @@ body {
 
 .chat-input {
   width: 100%;
-  background: #18181c;
+  background: var(--bg-input);
   border: 1px solid var(--border-color);
   border-radius: 24px;
   padding: 14px 56px 14px 20px;
-  color: white;
+  color: var(--text-primary);
   font-size: 0.9rem;
   outline: none;
   transition: border-color 0.2s ease;
@@ -368,8 +395,8 @@ body {
 }
 
 .send-btn:hover {
-  color: white;
-  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  background: var(--bg-hover);
 }
 
 .send-btn:disabled {
@@ -421,11 +448,11 @@ body {
 }
 
 .form-control {
-  background: #18181c;
+  background: var(--bg-input);
   border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 10px 12px;
-  color: white;
+  color: var(--text-primary);
   font-size: 0.85rem;
   outline: none;
 }
@@ -465,7 +492,7 @@ body {
 }
 
 .stat-item {
-  background: #18181c;
+  background: var(--bg-input);
   border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 14px;
@@ -647,9 +674,9 @@ body {
 }
 
 .suggestion-chip:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: white;
+  background: var(--bg-hover);
+  border-color: var(--border-color);
+  color: var(--text-primary);
 }
 
 /* Drag and Drop Dropzone */
@@ -837,3 +864,594 @@ body {
   gap: 14px;
   margin-top: 16px;
 }
+
+/* ==================================================
+   UPGRADED UI STYLING & SIDEBAR TOGGLE (COLLAPSE/EXPAND)
+   ================================================== */
+
+/* Smooth Transitions for Sidebar */
+.sidebar {
+  width: 260px;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.sidebar.collapsed {
+  width: 68px;
+  padding: 20px 14px;
+}
+
+/* Hide all descriptive labels in collapsed mode */
+.sidebar.collapsed .logo-container,
+.sidebar.collapsed .logo-text,
+.sidebar.collapsed .new-chat-btn-text,
+.sidebar.collapsed .session-meta,
+.sidebar.collapsed .session-preview,
+.sidebar.collapsed .session-actions,
+.sidebar.collapsed .user-details,
+.sidebar.collapsed .profile-chevron,
+.sidebar.collapsed .recent-title {
+  display: none !important;
+}
+
+.sidebar.collapsed .new-chat-btn {
+  justify-content: center;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin: 0 auto;
+}
+
+.sidebar.collapsed .new-chat-btn .btn-icon {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.sidebar.collapsed .session-list {
+  align-items: center;
+}
+
+.sidebar.collapsed .session-item {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  padding: 0;
+  margin: 0 auto;
+}
+
+.sidebar.collapsed .session-item-inner {
+  justify-content: center;
+  gap: 0;
+}
+
+/* Sidebar Toggle Panel Button */
+.sidebar-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.sidebar-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+body.light-theme .sidebar-toggle-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Toggle button position when sidebar is collapsed */
+.sidebar.collapsed .sidebar-toggle-btn {
+  margin: 0 auto 16px auto;
+}
+
+/* ==================================================
+   USER PROFILE SECTION (BOTTOM OF SIDEBAR)
+   ================================================== */
+.user-profile-container {
+  position: relative;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+.user-profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.user-profile-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+body.light-theme .user-profile-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.sidebar.collapsed .user-profile-btn {
+  justify-content: center;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  margin: 0 auto;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent-color);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.user-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-username {
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-primary);
+}
+
+.profile-chevron {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+/* Dropdown Menu styling */
+.profile-dropdown {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  width: 100%;
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+  padding: 4px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+body.light-theme .profile-dropdown {
+  background: #ffffff;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+/* If sidebar collapsed, position dropdown on the right side */
+.sidebar.collapsed .profile-dropdown {
+  left: 52px;
+  bottom: 0;
+  width: 180px;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+body.light-theme .dropdown-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* ==================================================
+   CHAT SESSIONS RENAME & EDIT/DELETE ACTIONS
+   ================================================== */
+.session-item {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.session-item-inner {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 10px;
+}
+
+.session-icon {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.session-content-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.session-preview {
+  padding-right: 54px; /* Ensure space for actions */
+}
+
+/* Actions Container */
+.session-actions {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%) translateX(10px);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transition: all 0.15s ease;
+}
+
+.session-item:hover .session-actions {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+.action-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.action-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+body.light-theme .action-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.action-btn.delete:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Rename Inline Input */
+.rename-session-input {
+  width: 100%;
+  background: var(--bg-primary);
+  border: 1px solid var(--accent-color);
+  border-radius: 4px;
+  padding: 2px 6px;
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  outline: none;
+  font-family: inherit;
+}
+
+/* ==================================================
+   SETTINGS MODAL & CONFIRMATION MODALS
+   ================================================== */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Modal Content Box */
+.settings-modal {
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+  animation: scaleIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+body.light-theme .settings-modal {
+  background: #ffffff;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+}
+
+.settings-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.settings-modal-header h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.close-modal-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.close-modal-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+body.light-theme .close-modal-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.settings-modal-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.settings-modal-sidebar {
+  width: 160px;
+  border-right: 1px solid var(--border-color);
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme .settings-modal-sidebar {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.settings-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.settings-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+body.light-theme .settings-tab-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.settings-tab-btn.active {
+  background: rgba(79, 70, 229, 0.15);
+  color: var(--accent-color);
+}
+
+.settings-modal-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.setting-section h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-top: 0;
+  margin-bottom: 16px;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.setting-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.setting-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.setting-desc {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+/* Theme selector buttons */
+.theme-options {
+  display: flex;
+  gap: 12px;
+}
+
+.theme-opt-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-secondary);
+}
+
+.theme-opt-btn:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
+
+.theme-opt-btn.active {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+  background: rgba(79, 70, 229, 0.05);
+}
+
+.theme-opt-preview {
+  width: 40px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+}
+
+.theme-opt-preview.dark {
+  background: #121214;
+}
+
+.theme-opt-preview.light {
+  background: #f9fafb;
+}
+
+/* Confirmation Modal (Logout) */
+.confirmation-modal {
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  padding: 24px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+  animation: scaleIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+body.light-theme .confirmation-modal {
+  background: #ffffff;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+}
+
+.confirmation-modal-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.confirmation-modal-text {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.confirmation-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.btn-danger:hover {
+  opacity: 0.9;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
