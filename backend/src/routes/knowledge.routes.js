@@ -1,7 +1,11 @@
 import express from 'express';
 import { KnowledgeController } from '../controllers/knowledge.controller.js';
+import { requireAdmin } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
+
+// All knowledge management routes are admin-only
+router.use(requireAdmin);
 
 router.post('/ingest', KnowledgeController.ingest);
 router.get('/status', KnowledgeController.getStatus);

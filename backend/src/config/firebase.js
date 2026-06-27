@@ -125,7 +125,19 @@ class MockFirestore {
   }
 }
 
-// Check environment to decide if we initialize standard Firebase or Mock
+// Initialize standard Firebase Admin App first so it's always available (e.g. for Auth)
+try {
+  if (admin.apps.length === 0) {
+    admin.initializeApp({
+      projectId: projectId
+    });
+    console.log(`Initialized Firebase Admin App for project: ${projectId}`);
+  }
+} catch (error) {
+  console.warn('⚠️ Failed to initialize Firebase Admin App:', error.message);
+}
+
+// Check environment to decide if we initialize standard Firestore or Mock
 if (process.env.USE_MOCK_DATABASE === 'true' || (!process.env.FIRESTORE_EMULATOR_HOST && !process.env.GOOGLE_APPLICATION_CREDENTIALS)) {
   console.log('ℹ️ Firebase credentials or emulator host not fully configured in environment.');
   console.log('🔄 Automatically falling back to local JSON database for storage...');
@@ -133,17 +145,12 @@ if (process.env.USE_MOCK_DATABASE === 'true' || (!process.env.FIRESTORE_EMULATOR
   db = new MockFirestore(localDbPath);
   isMock = true;
 } else {
-  // Setup standard firebase admin
+  // Setup standard firebase admin firestore
   try {
-    if (admin.apps.length === 0) {
-      admin.initializeApp({
-        projectId: projectId
-      });
-    }
     db = admin.firestore();
-    console.log(`Initialized Firebase Admin SDK targeting Project: ${projectId}`);
+    console.log(`Initialized Firebase Admin Firestore targeting Project: ${projectId}`);
   } catch (error) {
-    console.warn('⚠️ Failed to initialize standard Firebase Admin. Falling back to local JSON database...', error.message);
+    console.warn('⚠️ Failed to initialize standard Firebase Firestore. Falling back to local JSON database...', error.message);
     const localDbPath = path.join(__dirname, '../../data/local_firestore.json');
     db = new MockFirestore(localDbPath);
     isMock = true;

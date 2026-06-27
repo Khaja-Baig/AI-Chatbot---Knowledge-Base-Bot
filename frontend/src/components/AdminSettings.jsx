@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-export default function AdminSettings({ config, onUpdateConfig }) {
+export default function AdminSettings({ config, onUpdateConfig, authToken }) {
   const [counselorName, setCounselorName] = useState(config.counselorName || '');
   const [greetingMessage, setGreetingMessage] = useState(config.greetingMessage || '');
   const [behaviorMode, setBehaviorMode] = useState(config.behaviorMode || 'warm');
@@ -38,7 +38,11 @@ export default function AdminSettings({ config, onUpdateConfig }) {
 
   const fetchStatus = async () => {
     try {
-      const res = await fetch('http://localhost:5001/api/knowledge/status');
+      const res = await fetch('http://localhost:5001/api/knowledge/status', {
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        }
+      });
       if (res.ok) {
         const data = await res.json();
         setStatus(data);
@@ -62,7 +66,10 @@ export default function AdminSettings({ config, onUpdateConfig }) {
     setIngestResult('Syncing database...');
     try {
       const res = await fetch('http://localhost:5001/api/knowledge/ingest', {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        }
       });
       const data = await res.json();
       if (res.ok) {
@@ -110,7 +117,10 @@ export default function AdminSettings({ config, onUpdateConfig }) {
         try {
           const res = await fetch('http://localhost:5001/api/knowledge/upload', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${authToken}`
+            },
             body: JSON.stringify({
               fileName: file.name,
               fileContent: base64Content
@@ -174,7 +184,10 @@ export default function AdminSettings({ config, onUpdateConfig }) {
     try {
       const res = await fetch('http://localhost:5001/api/knowledge/faq', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
         body: JSON.stringify({
           question: faqQuestion,
           answer: faqAnswer
@@ -208,7 +221,10 @@ export default function AdminSettings({ config, onUpdateConfig }) {
     try {
       const res = await fetch('http://localhost:5001/api/knowledge/delete', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
         body: JSON.stringify({ fileName })
       });
 
@@ -234,7 +250,10 @@ export default function AdminSettings({ config, onUpdateConfig }) {
     try {
       const res = await fetch('http://localhost:5001/api/knowledge/query', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
         body: JSON.stringify({ queryText: testQuery, limit: 2 })
       });
       if (res.ok) {

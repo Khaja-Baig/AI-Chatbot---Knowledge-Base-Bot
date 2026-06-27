@@ -1315,6 +1315,98 @@
           "timestamp": "2026-06-26T10:25:51.527Z"
         }
       ]
+    },
+    "session_guest_1782543447522": {
+      "sessionId": "session_guest_1782543447522",
+      "updatedAt": "2026-06-27T06:59:25.111Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "Hey what's up ",
+          "timestamp": "2026-06-27T06:57:36.655Z"
+        },
+        {
+          "role": "model",
+          "text": "Hey there! Not much, just here to help you out with any questions you have about NavGurukul. What's on your mind?",
+          "timestamp": "2026-06-27T06:57:36.655Z"
+        },
+        {
+          "role": "user",
+          "text": "what is ST",
+          "timestamp": "2026-06-27T06:57:49.783Z"
+        },
+        {
+          "role": "model",
+          "text": "\"ST\" stands for \"Screening Test.\" It's an important part of the admissions process at NavGurukul, designed to evaluate students.\n\nIt used to be a common test for all programs, but now it's been redesigned to better fit what each school teaches. So, there are two different Screening Tests:\n\n*   One for the School of Programming (SOP) and BCA.\n*   And another for the School of Business (SOB) and School of Finance (SOF).\n\nEach test focuses on concepts most relevant to that specific learning path. If you don't clear it, you get a learning video to practice and can re-attempt it. If you do clear it, that same video helps you prepare for the next stage, called the Learning Round.",
+          "timestamp": "2026-06-27T06:57:49.783Z"
+        },
+        {
+          "role": "user",
+          "text": "Do you get placement support?",
+          "timestamp": "2026-06-27T06:58:11.534Z"
+        },
+        {
+          "role": "model",
+          "text": "Yes, absolutely! NavGurukul does offer placement support as part of its programs. It's not just about the training in specific skills; they also focus on helping students with placements after they complete their learning.\n\nWhile I know that placement support is provided, I don't have all the specific details on how that process works or the types of companies they partner with right now. For the most accurate and detailed information, I'd recommend checking NavGurukul's official website or reaching out to their admissions team directly. They'll be able to give you all the ins and outs!",
+          "timestamp": "2026-06-27T06:58:11.534Z"
+        },
+        {
+          "role": "user",
+          "text": "Which companies hire from NavGurukul?",
+          "timestamp": "2026-06-27T06:58:23.257Z"
+        },
+        {
+          "role": "model",
+          "text": "That's a great question about where NavGurukul alumni end up!\n\nWhile I know that NavGurukul provides a guaranteed pathway to aspirational employment in the IT sector and has a good track record with over 1500 students placed, I don't have a list of the specific companies that hire from them right now.\n\nFor the most up-to-date information on their hiring partners and placement success stories, I'd definitely recommend checking NavGurukul's official website or getting in touch with their admissions team directly. They'll have all those details for you!",
+          "timestamp": "2026-06-27T06:58:23.257Z"
+        },
+        {
+          "role": "user",
+          "text": "Can you gimme learning round video",
+          "timestamp": "2026-06-27T06:58:47.965Z"
+        },
+        {
+          "role": "model",
+          "text": "I understand you're looking for the learning round video!\n\nThe \"Learning Video\" is actually shared with students who clear the initial Screening Test. It's designed to help them prepare really well for the next stage, which is the Learning Round (LR). The questions in the Learning Round are similar to what's explained in that video.\n\nSince I can't directly share the video with you here, you'll receive it once you've successfully cleared the Screening Test.",
+          "timestamp": "2026-06-27T06:58:47.965Z"
+        },
+        {
+          "role": "user",
+          "text": "Is the program free of cost?",
+          "timestamp": "2026-06-27T06:59:13.272Z"
+        },
+        {
+          "role": "model",
+          "text": "I'd love to share that NavGurukul is a 100% free, fully-funded program. There are no fees for the courses, residential stay, food, or learning resources. Everything is covered for selected students.",
+          "timestamp": "2026-06-27T06:59:13.272Z"
+        },
+        {
+          "role": "user",
+          "text": "BCA also?",
+          "timestamp": "2026-06-27T06:59:25.111Z"
+        },
+        {
+          "role": "model",
+          "text": "Here is the information: I am Guru, your NavGurukul counselor. I can help you with admission steps, courses, campus details, and placements!",
+          "timestamp": "2026-06-27T06:59:25.111Z"
+        }
+      ]
+    },
+    "session_user_1782543672794": {
+      "sessionId": "session_user_1782543672794",
+      "updatedAt": "2026-06-27T07:01:28.308Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "My name is Sukuna",
+          "timestamp": "2026-06-27T07:01:28.308Z"
+        },
+        {
+          "role": "model",
+          "text": "Hey Sukuna, nice to meet you! What can I help you with today?",
+          "timestamp": "2026-06-27T07:01:28.308Z"
+        }
+      ]
     }
   },
   "config": {

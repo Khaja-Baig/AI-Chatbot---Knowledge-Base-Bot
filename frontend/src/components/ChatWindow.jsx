@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 function parseMarkdown(text) {
   if (!text) return '';
@@ -53,6 +54,7 @@ function parseMarkdown(text) {
 }
 
 export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
+  const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -78,7 +80,11 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
 
   const fetchHistory = async () => {
     try {
-      const res = await fetch(`http://localhost:5001/api/chat/sessions/${activeSessionId}`);
+      const headers = {};
+      if (user?.token) {
+        headers['Authorization'] = `Bearer ${user.token}`;
+      }
+      const res = await fetch(`http://localhost:5001/api/chat/sessions/${activeSessionId}`, { headers });
       if (res.ok) {
         const data = await res.json();
         setMessages(data.messages || []);
@@ -122,12 +128,17 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
     setIsTyping(true);
 
     try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (user?.token) {
+        headers['Authorization'] = `Bearer ${user.token}`;
+      }
       const res = await fetch('http://localhost:5001/api/chat/message', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           message: text,
-          sessionId: activeSessionId
+          sessionId: activeSessionId,
+          userId: user?.uid
         })
       });
 
