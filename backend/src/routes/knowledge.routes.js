@@ -13,5 +13,7 @@ router.post('/query', KnowledgeController.query);
 router.post('/upload', KnowledgeController.uploadDocument);
 router.post('/faq', KnowledgeController.createFaq);
 router.delete('/delete', KnowledgeController.deleteDocument);
+router.get('/sources/:sourceName', KnowledgeController.getSourceContent);
+router.put('/sources/:sourceName', KnowledgeController.updateSourceContent);
 
 export default router;

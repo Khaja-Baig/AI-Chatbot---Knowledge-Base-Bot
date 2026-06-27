@@ -29,6 +29,13 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
   const [testResults, setTestResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
 
+  // View / Edit Source States
+  const [editingDocName, setEditingDocName] = useState(null);
+  const [editingDocContent, setEditingDocContent] = useState('');
+  const [isLoadingContent, setIsLoadingContent] = useState(false);
+  const [isSavingContent, setIsSavingContent] = useState(false);
+  const [editStatus, setEditStatus] = useState({ type: '', message: '' });
+
   useEffect(() => {
     fetchStatus();
     setCounselorName(config.counselorName || '');
@@ -100,9 +107,11 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
   const processFile = async (file) => {
     if (!file) return;
     
-    // Only accept PDF for manual uploads per requirement
-    if (!file.name.toLowerCase().endsWith('.pdf')) {
-      setUploadStatus({ type: 'error', message: 'Only PDF documents are supported for file uploads.' });
+    // Only accept supported extensions
+    const supportedExtensions = ['.pdf', '.docx', '.txt', '.md', '.csv', '.json'];
+    const fileExt = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+    if (!supportedExtensions.includes(fileExt)) {
+      setUploadStatus({ type: 'error', message: 'Supported formats are: PDF, DOCX, TXT, MD, CSV, JSON.' });
       return;
     }
 
@@ -269,9 +278,72 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
 
   // Helper to determine badge type
   const getFileType = (fileName) => {
-    if (fileName.toLowerCase().endsWith('.pdf')) return 'pdf';
+    const ext = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
+    if (ext === '.pdf') return 'pdf';
+    if (ext === '.docx') return 'docx';
+    if (ext === '.csv') return 'csv';
+    if (ext === '.json') return 'json';
+    if (ext === '.md') return 'md';
     if (fileName.toLowerCase().includes('faq')) return 'faq';
     return 'txt';
+  };
+
+  const handleViewEditSource = async (docName) => {
+    setEditingDocName(docName);
+    setIsLoadingContent(true);
+    setEditStatus({ type: '', message: '' });
+    try {
+      const res = await fetch(`http://localhost:5001/api/knowledge/sources/${encodeURIComponent(docName)}`, {
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setEditingDocContent(data.content || '');
+      } else {
+        alert('Failed to retrieve document contents.');
+        setEditingDocName(null);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error fetching document contents.');
+      setEditingDocName(null);
+    } finally {
+      setIsLoadingContent(false);
+    }
+  };
+
+  const handleSaveDocContent = async () => {
+    setIsSavingContent(true);
+    setEditStatus({ type: 'success', message: 'Saving and re-indexing...' });
+    try {
+      const res = await fetch(`http://localhost:5001/api/knowledge/sources/${encodeURIComponent(editingDocName)}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({ content: editingDocContent })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setEditStatus({ type: 'success', message: 'Document updated successfully!' });
+        fetchStatus(); // Refresh active sources table since name or chunk count might change
+        setTimeout(() => {
+          setEditingDocName(null);
+          setEditingDocContent('');
+        }, 1500);
+      } else {
+        const data = await res.json();
+        setEditStatus({ type: 'error', message: data.error || 'Failed to save changes.' });
+      }
+    } catch (err) {
+      console.error(err);
+      setEditStatus({ type: 'error', message: 'Connection to server failed.' });
+    } finally {
+      setIsSavingContent(false);
+    }
   };
 
   return (
@@ -356,7 +428,7 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
                   <tr>
                     <th>Document Source</th>
                     <th style={{ width: '80px' }}>Type</th>
-                    <th style={{ width: '60px', textAlign: 'center' }}>Actions</th>
+                    <th style={{ width: '100px', textAlign: 'center' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -369,7 +441,18 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
                             {getFileType(doc)}
                           </span>
                         </td>
-                        <td style={{ textAlign: 'center' }}>
+                        <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                          <button
+                            onClick={() => handleViewEditSource(doc)}
+                            className="btn-delete"
+                            title="View / Edit Content"
+                            style={{ marginRight: '8px', color: 'var(--accent-color)' }}
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                              <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"></path>
+                            </svg>
+                          </button>
                           <button
                             onClick={() => handleDeleteSource(doc)}
                             className="btn-delete"
@@ -408,13 +491,13 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
             {/* Upload PDF Section */}
             <div>
               <h4 style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', textTransform: 'uppercase' }}>
-                Upload PDF Document
+                Upload Knowledge Document
               </h4>
               
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".pdf"
+                accept=".pdf,.docx,.txt,.md,.csv,.json"
                 onChange={handleFileChange}
                 style={{ display: 'none' }}
               />
@@ -433,10 +516,10 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
                   <line x1="12" y1="3" x2="12" y2="15"></line>
                 </svg>
                 <div className="dropzone-text">
-                  {isUploading ? 'Uploading and indexing...' : 'Drag & Drop PDF or click to browse'}
+                  {isUploading ? 'Uploading and indexing...' : 'Drag & Drop file or click to browse'}
                 </div>
                 <div className="dropzone-hint">
-                  Supports .pdf documents
+                  Supports PDF, DOCX, TXT, MD, CSV, JSON
                 </div>
               </div>
 
@@ -553,6 +636,66 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
           </div>
         </div>
       </div>
+
+      {/* Document View / Edit Modal */}
+      {editingDocName && (
+        <div className="modal-backdrop" onClick={() => !isSavingContent && setEditingDocName(null)}>
+          <div className="settings-modal" onClick={(e) => e.stopPropagation()} style={{ width: '80%', maxWidth: '900px', height: '80%', display: 'flex', flexDirection: 'column' }}>
+            <div className="settings-modal-header">
+              <h2>View / Edit Source - {editingDocName}</h2>
+              <button className="close-modal-btn" onClick={() => !isSavingContent && setEditingDocName(null)}>✕</button>
+            </div>
+            <div className="settings-modal-body" style={{ display: 'flex', flexDirection: 'column', padding: '20px', gap: '16px', overflow: 'hidden', flex: 1 }}>
+              {isLoadingContent ? (
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
+                  Loading document contents...
+                </div>
+              ) : (
+                <>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: 0 }}>
+                    💡 Editing this document will overwrite the text contents and re-index the vector database.
+                    { (editingDocName.toLowerCase().endsWith('.pdf') || editingDocName.toLowerCase().endsWith('.docx')) && (
+                      <strong style={{ color: '#d97706', display: 'block', marginTop: '4px' }}>
+                        ⚠️ Note: This is a binary file ({editingDocName.substring(editingDocName.lastIndexOf('.'))}). Saving modifications will convert it to a plain text file (.txt) to store your edits.
+                      </strong>
+                    )}
+                  </p>
+                  <textarea
+                    className="form-control"
+                    style={{ flex: 1, minHeight: '300px', fontFamily: 'monospace', fontSize: '0.85rem', resize: 'none', lineHeight: '1.5' }}
+                    value={editingDocContent}
+                    onChange={(e) => setEditingDocContent(e.target.value)}
+                    disabled={isSavingContent}
+                  />
+                  {editStatus.message && (
+                    <div className={`notification ${editStatus.type}`} style={{ margin: 0 }}>
+                      {editStatus.message}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>
+                    <button
+                      className="btn-secondary"
+                      onClick={() => setEditingDocName(null)}
+                      disabled={isSavingContent}
+                      style={{ padding: '8px 16px', borderRadius: '6px', fontSize: '0.85rem' }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className="btn-primary"
+                      onClick={handleSaveDocContent}
+                      disabled={isSavingContent}
+                      style={{ padding: '8px 16px', borderRadius: '6px', fontSize: '0.85rem' }}
+                    >
+                      {isSavingContent ? 'Saving...' : 'Save Changes'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

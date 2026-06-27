@@ -6,5 +6,7 @@ const router = express.Router();
 
 router.get('/', ConfigController.getConfig);
 router.post('/', requireAdmin, ConfigController.updateConfig);
+router.get('/ai-config', requireAdmin, ConfigController.getAIConfig);
+router.post('/ai-config', requireAdmin, ConfigController.updateAIConfig);
 
 export default router;

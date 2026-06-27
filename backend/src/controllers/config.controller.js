@@ -50,4 +50,111 @@ export class ConfigController {
       return res.status(500).json({ error: 'Failed to update chatbot configuration.' });
     }
   }
+
+  /**
+   * Helper to mask API keys before sending to client.
+   */
+  static maskKey(key) {
+    if (!key) return '';
+    if (key.length <= 8) return '••••••••';
+    return '••••••••' + key.substring(key.length - 4);
+  }
+
+  /**
+   * Get the current dynamic AI configurations (masked).
+   */
+  static async getAIConfig(req, res) {
+    try {
+      const docRef = db.collection('config').doc('ai_settings');
+      const snap = await docRef.get();
+
+      const defaultSettings = {
+        activeProvider: 'gemini',
+        apiKey_gemini: '',
+        apiKey_openai: '',
+        apiKey_claude: ''
+      };
+
+      if (!snap.exists) {
+        return res.status(200).json(defaultSettings);
+      }
+
+      const data = snap.data();
+      return res.status(200).json({
+        activeProvider: data.activeProvider || 'gemini',
+        apiKey_gemini: ConfigController.maskKey(data.apiKey_gemini),
+        apiKey_openai: ConfigController.maskKey(data.apiKey_openai),
+        apiKey_claude: ConfigController.maskKey(data.apiKey_claude)
+      });
+    } catch (error) {
+      console.error('Error getting dynamic AI settings:', error);
+      return res.status(500).json({ error: 'Failed to fetch AI configuration.' });
+    }
+  }
+
+  /**
+   * Update the dynamic AI configuration.
+   */
+  static async updateAIConfig(req, res) {
+    const { activeProvider, apiKey_gemini, apiKey_openai, apiKey_claude } = req.body;
+    try {
+      const docRef = db.collection('config').doc('ai_settings');
+      const snap = await docRef.get();
+
+      let currentData = {};
+      if (snap.exists) {
+        currentData = snap.data();
+      }
+
+      const updateData = {
+        activeProvider: activeProvider || 'gemini'
+      };
+
+      // Process Gemini Key
+      if (apiKey_gemini !== undefined) {
+        if (apiKey_gemini.startsWith('••••••••')) {
+          // Keep old key if masked
+          updateData.apiKey_gemini = currentData.apiKey_gemini || '';
+        } else {
+          updateData.apiKey_gemini = apiKey_gemini.trim();
+        }
+      }
+
+      // Process OpenAI Key
+      if (apiKey_openai !== undefined) {
+        if (apiKey_openai.startsWith('••••••••')) {
+          updateData.apiKey_openai = currentData.apiKey_openai || '';
+        } else {
+          updateData.apiKey_openai = apiKey_openai.trim();
+        }
+      }
+
+      // Process Claude Key
+      if (apiKey_claude !== undefined) {
+        if (apiKey_claude.startsWith('••••••••')) {
+          updateData.apiKey_claude = currentData.apiKey_claude || '';
+        } else {
+          updateData.apiKey_claude = apiKey_claude.trim();
+        }
+      }
+
+      await docRef.set(updateData, { merge: true });
+
+      const finalSnap = await docRef.get();
+      const finalData = finalSnap.data();
+
+      return res.status(200).json({
+        success: true,
+        config: {
+          activeProvider: finalData.activeProvider,
+          apiKey_gemini: ConfigController.maskKey(finalData.apiKey_gemini),
+          apiKey_openai: ConfigController.maskKey(finalData.apiKey_openai),
+          apiKey_claude: ConfigController.maskKey(finalData.apiKey_claude)
+        }
+      });
+    } catch (error) {
+      console.error('Error saving dynamic AI settings:', error);
+      return res.status(500).json({ error: 'Failed to save AI configuration.' });
+    }
+  }
 }

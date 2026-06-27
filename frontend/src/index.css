@@ -798,6 +798,30 @@ body {
   border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
+.doc-type-badge.docx {
+  background: rgba(99, 102, 241, 0.1);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.doc-type-badge.csv {
+  background: rgba(245, 158, 11, 0.1);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.doc-type-badge.json {
+  background: rgba(139, 92, 246, 0.1);
+  color: #a78bfa;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.doc-type-badge.md {
+  background: rgba(20, 184, 166, 0.1);
+  color: #2dd4bf;
+  border: 1px solid rgba(20, 184, 166, 0.2);
+}
+
 /* Action Buttons */
 .btn-delete {
   background: transparent;

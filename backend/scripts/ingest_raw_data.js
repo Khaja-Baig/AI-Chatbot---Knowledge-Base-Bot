@@ -31,13 +31,17 @@ async function main() {
       process.exit(1);
     }
 
-    const files = fs.readdirSync(RAW_DATA_DIR).filter(file => file.endsWith('.pdf'));
+    const supportedExtensions = ['.pdf', '.docx', '.txt', '.md', '.csv', '.json'];
+    const files = fs.readdirSync(RAW_DATA_DIR).filter(file => {
+      const ext = path.extname(file).toLowerCase();
+      return supportedExtensions.includes(ext);
+    });
     if (files.length === 0) {
-      console.warn('⚠️ No PDF files found in data/raw.');
+      console.warn('⚠️ No supported documents found in data/raw.');
       process.exit(0);
     }
 
-    console.log(`📂 Found ${files.length} PDF documents to ingest.`);
+    console.log(`📂 Found ${files.length} documents to ingest.`);
 
     // 2. Initialize Chroma collection (clean start or get existing)
     console.log(`🧹 Resetting collection "${COLLECTION_NAME}" in ChromaDB...`);
@@ -63,8 +67,15 @@ async function main() {
         category = 'knowledge_structure';
       }
 
-      // Parse PDF to text
-      const rawText = await DocumentService.parsePdf(filePath);
+      // Parse document to text based on type
+      let rawText = '';
+      if (file.toLowerCase().endsWith('.pdf')) {
+        rawText = await DocumentService.parsePdf(filePath);
+      } else if (file.toLowerCase().endsWith('.docx')) {
+        rawText = await DocumentService.parseDocx(filePath);
+      } else {
+        rawText = fs.readFileSync(filePath, 'utf8');
+      }
       console.log(`   - Extracted ${rawText.length} characters of raw text.`);
 
       // Chunk the text

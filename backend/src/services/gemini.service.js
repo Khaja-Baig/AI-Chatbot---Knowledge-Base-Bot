@@ -1,4 +1,5 @@
-import ai from '../config/gemini.js';
+import { GoogleGenAI } from '@google/genai';
+import { db } from '../config/firebase.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -10,13 +11,41 @@ let mockCounter = 0;
 
 export class GeminiService {
   /**
+   * Fetch active Gemini API key from Firestore with environment fallback.
+   */
+  static async getApiKey() {
+    try {
+      const docRef = db.collection('config').doc('ai_settings');
+      const snap = await docRef.get();
+      if (snap.exists) {
+        const data = snap.data();
+        if (data.activeProvider === 'gemini' && data.apiKey_gemini) {
+          return data.apiKey_gemini;
+        }
+      }
+    } catch (err) {
+      console.error('Error reading dynamic API key from Firestore:', err);
+    }
+    return process.env.GEMINI_API_KEY;
+  }
+
+  /**
+   * Dynamically build a client instance using the currently configured key.
+   */
+  static async getClient() {
+    const key = await GeminiService.getApiKey();
+    return new GoogleGenAI({ apiKey: key });
+  }
+
+  /**
    * Generate vector embeddings for text or an array of texts.
    * @param {string|Array<string>} textOrTexts - Input text(s)
    * @returns {Promise<Array<number>|Array<Array<number>>} Vector embedding(s)
    */
   static async generateEmbedding(textOrTexts) {
     try {
-      const response = await ai.models.embedContent({
+      const client = await GeminiService.getClient();
+      const response = await client.models.embedContent({
         model: EMBEDDING_MODEL,
         contents: textOrTexts,
         config: {
@@ -207,7 +236,8 @@ export class GeminiService {
    * @returns {Promise<string>} Response text
    */
   static async generateChatResponse({ systemInstruction, contents }) {
-    const hasApiKey = !!process.env.GEMINI_API_KEY;
+    const key = await GeminiService.getApiKey();
+    const hasApiKey = !!key;
     const lastMessage = contents[contents.length - 1]?.parts[0]?.text || '';
     
     if (!hasApiKey) {
@@ -220,7 +250,8 @@ export class GeminiService {
 
     for (let attempt = 1; attempt <= maxRetries + 1; attempt++) {
       try {
-        const response = await ai.models.generateContent({
+        const client = await GeminiService.getClient();
+        const response = await client.models.generateContent({
           model: MODEL_NAME,
           contents,
           config: {

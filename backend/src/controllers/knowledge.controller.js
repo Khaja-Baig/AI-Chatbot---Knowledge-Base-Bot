@@ -13,18 +13,76 @@ const RAW_DATA_DIR = path.join(__dirname, '../../data/raw');
 
 export class KnowledgeController {
   /**
+   * Helper to chunk and index plain text content into the vector store.
+   */
+  static async indexTextContent(fileName, textContent) {
+    const chunks = DocumentService.chunkText(textContent, 800, 150);
+    if (chunks.length === 0) return 0;
+
+    const apiKey = await GeminiService.getApiKey();
+    const hasApiKey = !!apiKey;
+    const items = [];
+
+    for (let j = 0; j < chunks.length; j++) {
+      const chunkText = chunks[j];
+      const chunkId = `${fileName.replace(/\s+/g, '_')}_chunk_${j}`;
+      
+      let embedding;
+      if (hasApiKey) {
+        embedding = await GeminiService.generateEmbedding(chunkText);
+      } else {
+        // Fallback mock embedding
+        embedding = new Array(768).fill(0.0).map((_, idx) => {
+          let hash = 0;
+          for (let k = 0; k < chunkText.length; k++) {
+            hash = (hash << 5) - hash + chunkText.charCodeAt(k);
+            hash |= 0;
+          }
+          return Math.sin(hash + idx) * 0.1;
+        });
+      }
+
+      let category = 'general';
+      if (fileName.toLowerCase().includes('requirement')) category = 'requirements';
+      else if (fileName.toLowerCase().includes('instruction')) category = 'instructions';
+      else if (fileName.toLowerCase().includes('conversation')) category = 'examples';
+      else if (fileName.toLowerCase().includes('structure') || fileName.toLowerCase().includes('knowledge')) category = 'knowledge_structure';
+
+      items.push({
+        id: chunkId,
+        text: chunkText,
+        metadata: {
+          source: fileName,
+          category,
+          chunkIndex: j,
+          timestamp: new Date().toISOString()
+        },
+        embedding
+      });
+    }
+
+    await ChromaService.addDocuments(COLLECTION_NAME, items);
+    return chunks.length;
+  }
+
+  /**
    * Run the document ingestion pipeline programmatically and return status.
    */
   static async ingest(req, res) {
     try {
-      const hasApiKey = !!process.env.GEMINI_API_KEY;
+      const apiKey = await GeminiService.getApiKey();
+      const hasApiKey = !!apiKey;
       if (!fs.existsSync(RAW_DATA_DIR)) {
         return res.status(404).json({ error: `Raw data directory not found at ${RAW_DATA_DIR}` });
       }
 
-      const files = fs.readdirSync(RAW_DATA_DIR).filter(file => file.endsWith('.pdf'));
+      const supportedExtensions = ['.pdf', '.docx', '.txt', '.md', '.csv', '.json'];
+      const files = fs.readdirSync(RAW_DATA_DIR).filter(file => {
+        const ext = path.extname(file).toLowerCase();
+        return supportedExtensions.includes(ext);
+      });
       if (files.length === 0) {
-        return res.status(200).json({ success: true, message: 'No PDF documents found to ingest.' });
+        return res.status(200).json({ success: true, message: 'No supported documents found to ingest.' });
       }
 
       // Re-create/clean collection
@@ -35,52 +93,18 @@ export class KnowledgeController {
 
       for (const file of files) {
         const filePath = path.join(RAW_DATA_DIR, file);
-        let category = 'general';
-        if (file.toLowerCase().includes('requirement')) category = 'requirements';
-        else if (file.toLowerCase().includes('instruction')) category = 'instructions';
-        else if (file.toLowerCase().includes('conversation')) category = 'examples';
-        else if (file.toLowerCase().includes('structure') || file.toLowerCase().includes('knowledge')) category = 'knowledge_structure';
+        let rawText = '';
 
-        const rawText = await DocumentService.parsePdf(filePath);
-        const chunks = DocumentService.chunkText(rawText, 800, 150);
-
-        if (chunks.length === 0) continue;
-
-        const items = [];
-        for (let j = 0; j < chunks.length; j++) {
-          const chunkText = chunks[j];
-          const chunkId = `${file.replace(/\s+/g, '_')}_chunk_${j}`;
-          
-          let embedding;
-          if (hasApiKey) {
-            embedding = await GeminiService.generateEmbedding(chunkText);
-          } else {
-            // Test mock embedding
-            embedding = new Array(768).fill(0.0).map((_, idx) => {
-              let hash = 0;
-              for (let k = 0; k < chunkText.length; k++) {
-                hash = (hash << 5) - hash + chunkText.charCodeAt(k);
-                hash |= 0;
-              }
-              return Math.sin(hash + idx) * 0.1;
-            });
-          }
-
-          items.push({
-            id: chunkId,
-            text: chunkText,
-            metadata: {
-              source: file,
-              category,
-              chunkIndex: j,
-              timestamp: new Date().toISOString()
-            },
-            embedding
-          });
+        if (file.toLowerCase().endsWith('.pdf')) {
+          rawText = await DocumentService.parsePdf(filePath);
+        } else if (file.toLowerCase().endsWith('.docx')) {
+          rawText = await DocumentService.parseDocx(filePath);
+        } else {
+          rawText = fs.readFileSync(filePath, 'utf8');
         }
 
-        await ChromaService.addDocuments(COLLECTION_NAME, items);
-        totalChunks += items.length;
+        const chunksCount = await KnowledgeController.indexTextContent(file, rawText);
+        totalChunks += chunksCount;
       }
 
       return res.status(200).json({
@@ -104,14 +128,20 @@ export class KnowledgeController {
       
       let sourceDocs = [];
       if (fs.existsSync(RAW_DATA_DIR)) {
-        sourceDocs = fs.readdirSync(RAW_DATA_DIR).filter(file => file.endsWith('.pdf') || file.endsWith('.txt'));
+        const supportedExtensions = ['.pdf', '.docx', '.txt', '.md', '.csv', '.json'];
+        sourceDocs = fs.readdirSync(RAW_DATA_DIR).filter(file => {
+          const ext = path.extname(file).toLowerCase();
+          return supportedExtensions.includes(ext);
+        });
       }
+
+      const apiKey = await GeminiService.getApiKey();
 
       return res.status(200).json({
         collection: COLLECTION_NAME,
         chunksCount: count,
         sourceDocuments: sourceDocs,
-        apiKeyConfigured: !!process.env.GEMINI_API_KEY
+        apiKeyConfigured: !!apiKey
       });
     } catch (error) {
       console.error('Error fetching knowledge base status:', error);
@@ -130,7 +160,8 @@ export class KnowledgeController {
     }
 
     try {
-      const hasApiKey = !!process.env.GEMINI_API_KEY;
+      const apiKey = await GeminiService.getApiKey();
+      const hasApiKey = !!apiKey;
       let queryEmbedding;
 
       if (hasApiKey) {
@@ -146,10 +177,27 @@ export class KnowledgeController {
         });
       }
 
-      const results = await ChromaService.query(COLLECTION_NAME, queryEmbedding, limit || 3);
+      const collection = await ChromaService.getOrCreateCollection(COLLECTION_NAME);
+      const results = await collection.query({
+        queryEmbeddings: [queryEmbedding],
+        nResults: limit ? parseInt(limit, 10) : 3
+      });
+
+      const formattedResults = [];
+      if (results && results.ids && results.ids[0]) {
+        for (let i = 0; i < results.ids[0].length; i++) {
+          formattedResults.push({
+            id: results.ids[0][i],
+            text: results.documents[0][i],
+            metadata: results.metadatas[0][i],
+            distance: results.distances ? results.distances[0][i] : null
+          });
+        }
+      }
+
       return res.status(200).json({
         query: queryText,
-        results
+        results: formattedResults
       });
     } catch (error) {
       console.error('Error querying vector store:', error);
@@ -177,61 +225,21 @@ export class KnowledgeController {
       fs.writeFileSync(filePath, buffer);
       console.log(`📥 Base64 upload saved to: ${filePath}`);
 
-      let category = 'general';
-      if (fileName.toLowerCase().includes('requirement')) category = 'requirements';
-      else if (fileName.toLowerCase().includes('instruction')) category = 'instructions';
-      else if (fileName.toLowerCase().includes('conversation')) category = 'examples';
-      else if (fileName.toLowerCase().includes('structure') || fileName.toLowerCase().includes('knowledge')) category = 'knowledge_structure';
-
       let text = '';
-      if (fileName.endsWith('.pdf')) {
+      if (fileName.toLowerCase().endsWith('.pdf')) {
         text = await DocumentService.parsePdf(filePath);
+      } else if (fileName.toLowerCase().endsWith('.docx')) {
+        text = await DocumentService.parseDocx(filePath);
       } else {
         text = fs.readFileSync(filePath, 'utf8');
       }
 
-      const chunks = DocumentService.chunkText(text, 800, 150);
-      if (chunks.length > 0) {
-        const hasApiKey = !!process.env.GEMINI_API_KEY;
-        const items = [];
-        
-        for (let j = 0; j < chunks.length; j++) {
-          const chunkText = chunks[j];
-          const chunkId = `${fileName.replace(/\s+/g, '_')}_chunk_${j}`;
-          
-          let embedding;
-          if (hasApiKey) {
-            embedding = await GeminiService.generateEmbedding(chunkText);
-          } else {
-            embedding = new Array(768).fill(0.0).map((_, idx) => {
-              let hash = 0;
-              for (let k = 0; k < chunkText.length; k++) {
-                hash = (hash << 5) - hash + chunkText.charCodeAt(k);
-                hash |= 0;
-              }
-              return Math.sin(hash + idx) * 0.1;
-            });
-          }
-
-          items.push({
-            id: chunkId,
-            text: chunkText,
-            metadata: {
-              source: fileName,
-              category,
-              chunkIndex: j,
-              timestamp: new Date().toISOString()
-            },
-            embedding
-          });
-        }
-        
-        await ChromaService.addDocuments(COLLECTION_NAME, items);
-      }
+      const chunkCount = await KnowledgeController.indexTextContent(fileName, text);
+      console.log(`🚀 Indexed uploaded file "${fileName}" (${chunkCount} chunks)`);
 
       return res.status(200).json({
         success: true,
-        message: `Successfully uploaded and indexed "${fileName}" (${chunks.length} chunks).`
+        message: `Successfully uploaded and indexed "${fileName}" (${chunkCount} chunks).`
       });
     } catch (err) {
       console.error('File upload indexing failed:', err);
@@ -261,37 +269,8 @@ export class KnowledgeController {
       fs.writeFileSync(filePath, textContent, 'utf8');
       console.log(`📥 Custom FAQ saved to text file: ${filePath}`);
 
-      const hasApiKey = !!process.env.GEMINI_API_KEY;
-      const items = [];
-      const chunkId = `${fileName.replace(/\s+/g, '_')}_chunk_0`;
-      
-      let embedding;
-      if (hasApiKey) {
-        embedding = await GeminiService.generateEmbedding(textContent);
-      } else {
-        embedding = new Array(768).fill(0.0).map((_, idx) => {
-          let hash = 0;
-          for (let k = 0; k < textContent.length; k++) {
-            hash = (hash << 5) - hash + textContent.charCodeAt(k);
-            hash |= 0;
-          }
-          return Math.sin(hash + idx) * 0.1;
-        });
-      }
-
-      items.push({
-        id: chunkId,
-        text: textContent,
-        metadata: {
-          source: fileName,
-          category: 'faq',
-          chunkIndex: 0,
-          timestamp: new Date().toISOString()
-        },
-        embedding
-      });
-
-      await ChromaService.addDocuments(COLLECTION_NAME, items);
+      const chunkCount = await KnowledgeController.indexTextContent(fileName, textContent);
+      console.log(`🚀 Indexed FAQ "${fileName}" (${chunkCount} chunks)`);
 
       return res.status(200).json({
         success: true,
@@ -333,6 +312,111 @@ export class KnowledgeController {
     } catch (err) {
       console.error('Failed to delete document:', err);
       return res.status(500).json({ error: 'Failed to delete knowledge source.', details: err.message });
+    }
+  }
+
+  /**
+   * Get the plain text content of an uploaded knowledge source.
+   */
+  static async getSourceContent(req, res) {
+    const { sourceName } = req.params;
+    if (!sourceName) {
+      return res.status(400).json({ error: 'sourceName parameter is required.' });
+    }
+
+    try {
+      const safeName = path.basename(sourceName);
+      const filePath = path.join(RAW_DATA_DIR, safeName);
+
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: `Knowledge source "${safeName}" not found.` });
+      }
+
+      let text = '';
+      if (safeName.toLowerCase().endsWith('.pdf')) {
+        text = await DocumentService.parsePdf(filePath);
+      } else if (safeName.toLowerCase().endsWith('.docx')) {
+        text = await DocumentService.parseDocx(filePath);
+      } else {
+        text = fs.readFileSync(filePath, 'utf8');
+      }
+
+      return res.status(200).json({
+        success: true,
+        fileName: safeName,
+        content: text
+      });
+    } catch (error) {
+      console.error('Error fetching source content:', error);
+      return res.status(500).json({ error: 'Failed to retrieve file contents.', details: error.message });
+    }
+  }
+
+  /**
+   * Update the content of an uploaded knowledge source.
+   */
+  static async updateSourceContent(req, res) {
+    const { sourceName } = req.params;
+    const { content } = req.body;
+
+    if (!sourceName) {
+      return res.status(400).json({ error: 'sourceName parameter is required.' });
+    }
+    if (content === undefined || typeof content !== 'string') {
+      return res.status(400).json({ error: 'content body parameter (string) is required.' });
+    }
+
+    try {
+      const safeName = path.basename(sourceName);
+      const filePath = path.join(RAW_DATA_DIR, safeName);
+
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: `Knowledge source "${safeName}" not found.` });
+      }
+
+      // Delete old vector store chunks for this source
+      const collection = await ChromaService.getOrCreateCollection(COLLECTION_NAME);
+      await collection.delete({
+        where: { source: safeName }
+      });
+      console.log(`🗑️ Cleared vector store chunks for: "${safeName}"`);
+
+      const isBinary = safeName.toLowerCase().endsWith('.pdf') || safeName.toLowerCase().endsWith('.docx');
+      let targetFileName = safeName;
+
+      if (isBinary) {
+        // Delete original binary file
+        fs.unlinkSync(filePath);
+        console.log(`🗑️ Deleted original binary file: ${filePath}`);
+
+        // Save as a text file instead, replacing the extension
+        const baseName = safeName.replace(/\.(pdf|docx)$/i, '');
+        targetFileName = `${baseName}.txt`;
+        const newFilePath = path.join(RAW_DATA_DIR, targetFileName);
+        
+        fs.writeFileSync(newFilePath, content, 'utf8');
+        console.log(`📝 Wrote updated content to text file: ${newFilePath}`);
+      } else {
+        // Directly overwrite existing text-compatible file (txt, md, csv, etc)
+        fs.writeFileSync(filePath, content, 'utf8');
+        console.log(`📝 Overwrote existing text file: ${filePath}`);
+      }
+
+      // Re-index the content using our helper
+      const chunkCount = await KnowledgeController.indexTextContent(targetFileName, content);
+      console.log(`🚀 Indexed updated file "${targetFileName}" (${chunkCount} chunks)`);
+
+      return res.status(200).json({
+        success: true,
+        message: isBinary 
+          ? `Updated and converted "${safeName}" to "${targetFileName}" successfully.`
+          : `Updated "${safeName}" successfully.`,
+        fileName: targetFileName,
+        chunksIndexed: chunkCount
+      });
+    } catch (error) {
+      console.error('Error updating source content:', error);
+      return res.status(500).json({ error: 'Failed to update file contents.', details: error.message });
     }
   }
 }

@@ -1,5 +1,6 @@
 import fs from 'fs';
 import pdf from 'pdf-parse';
+import mammoth from 'mammoth';
 
 export class DocumentService {
   /**
@@ -14,6 +15,21 @@ export class DocumentService {
       return data.text;
     } catch (error) {
       console.error(`Error parsing PDF at ${filePath}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Parse a DOCX file and extract its text content.
+   * @param {string} filePath - Absolute path to the DOCX file
+   * @returns {Promise<string>} Extracted text
+   */
+  static async parseDocx(filePath) {
+    try {
+      const result = await mammoth.extractRawText({ path: filePath });
+      return result.value;
+    } catch (error) {
+      console.error(`Error parsing DOCX at ${filePath}:`, error);
       throw error;
     }
   }
