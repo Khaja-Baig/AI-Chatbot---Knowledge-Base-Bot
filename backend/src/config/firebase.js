@@ -14,6 +14,7 @@ let db;
 let isMock = false;
 
 // Simple Local JSON Database Mock for Firestore
+// Simple Local JSON Database Mock for Firestore supporting subcollections
 class MockFirestore {
   constructor(dbPath) {
     this.dbPath = dbPath;
@@ -38,59 +39,104 @@ class MockFirestore {
     fs.writeFileSync(this.dbPath, JSON.stringify(data, null, 2), 'utf8');
   }
 
+  _getNested(pathArray) {
+    const data = this._read();
+    let current = data;
+    for (const key of pathArray) {
+      if (current === undefined || current === null) return undefined;
+      current = current[key];
+    }
+    return current;
+  }
+
+  _setNested(pathArray, value) {
+    const data = this._read();
+    let current = data;
+    for (let i = 0; i < pathArray.length - 1; i++) {
+      const key = pathArray[i];
+      if (!current[key] || typeof current[key] !== 'object') {
+        current[key] = {};
+      }
+      current = current[key];
+    }
+    const lastKey = pathArray[pathArray.length - 1];
+    current[lastKey] = value;
+    this._write(data);
+  }
+
+  _deleteNested(pathArray) {
+    const data = this._read();
+    let current = data;
+    for (let i = 0; i < pathArray.length - 1; i++) {
+      const key = pathArray[i];
+      if (!current[key]) return;
+      current = current[key];
+    }
+    const lastKey = pathArray[pathArray.length - 1];
+    if (current && current[lastKey] !== undefined) {
+      delete current[lastKey];
+      this._write(data);
+    }
+  }
+
   collection(colName) {
+    return this._collectionRoute([colName]);
+  }
+
+  _collectionRoute(pathArray) {
     const self = this;
     return {
       doc(docId) {
+        const docPath = [...pathArray, docId];
         return {
+          collection(subColName) {
+            return self._collectionRoute([...docPath, subColName]);
+          },
           async get() {
-            const data = self._read();
-            const col = data[colName] || {};
-            const docData = col[docId];
+            const docData = self._getNested(docPath);
             return {
-              exists: !!docData,
+              exists: docData !== undefined && docData !== null,
               id: docId,
               data: () => docData ? JSON.parse(JSON.stringify(docData)) : undefined
             };
           },
           async set(newData, options = {}) {
-            const data = self._read();
-            if (!data[colName]) data[colName] = {};
-            
+            let docData = self._getNested(docPath) || {};
             if (options.merge) {
-              data[colName][docId] = { ...(data[colName][docId] || {}), ...newData };
+              docData = { ...docData, ...newData };
             } else {
-              data[colName][docId] = newData;
+              docData = newData;
             }
-            self._write(data);
+            self._setNested(docPath, docData);
             return { writeTime: new Date() };
           },
           async update(updateData) {
-            const data = self._read();
-            if (!data[colName] || !data[colName][docId]) {
-              throw new Error(`Document "${docId}" does not exist in collection "${colName}".`);
+            let docData = self._getNested(docPath);
+            if (docData === undefined || docData === null) {
+              throw new Error(`Document "${docId}" does not exist.`);
             }
-            data[colName][docId] = { ...data[colName][docId], ...updateData };
-            self._write(data);
+            docData = { ...docData, ...updateData };
+            self._setNested(docPath, docData);
             return { writeTime: new Date() };
           },
           async delete() {
-            const data = self._read();
-            if (data[colName] && data[colName][docId]) {
-              delete data[colName][docId];
-              self._write(data);
-            }
+            self._deleteNested(docPath);
             return { writeTime: new Date() };
           }
         };
       },
 
       async get() {
-        const data = self._read();
-        const col = data[colName] || {};
-        const docs = Object.keys(col).map(id => ({
+        const colData = self._getNested(pathArray) || {};
+        if (typeof colData !== 'object' || colData === null) {
+          return {
+            docs: [],
+            forEach() {}
+          };
+        }
+        const docs = Object.keys(colData).map(id => ({
           id,
-          data: () => JSON.parse(JSON.stringify(col[id]))
+          data: () => JSON.parse(JSON.stringify(colData[id]))
         }));
         return {
           docs,
@@ -103,7 +149,7 @@ class MockFirestore {
       where(field, op, val) {
         return {
           async get() {
-            const allDocs = await self.collection(colName).get();
+            const allDocs = await self._collectionRoute(pathArray).get();
             const filteredDocs = allDocs.docs.filter(doc => {
               const d = doc.data();
               if (!d) return false;

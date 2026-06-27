@@ -157,6 +157,16 @@ function detectUserLanguage(message) {
 
 export class ChatController {
   /**
+   * Get the targeted Firestore collection based on request authentication state.
+   */
+  static getChatCollection(req) {
+    if (req.user) {
+      return db.collection('users').doc(req.user.uid).collection('chats');
+    }
+    return db.collection('guest_sessions');
+  }
+
+  /**
    * Process incoming user chat message, perform vector search, construct prompt, call Gemini, and save to database.
    */
   static async sendMessage(req, res) {
@@ -169,8 +179,9 @@ export class ChatController {
     const activeSessionId = sessionId || `session_${Date.now()}`;
 
     try {
-      // 1. Retrieve conversation history from Firestore
-      const sessionDocRef = db.collection('sessions').doc(activeSessionId);
+      // 1. Retrieve conversation history from database
+      const chatCol = ChatController.getChatCollection(req);
+      const sessionDocRef = chatCol.doc(activeSessionId);
       const sessionSnap = await sessionDocRef.get();
       
       let chatHistory = [];
@@ -239,18 +250,22 @@ export class ChatController {
         contents: formattedContents
       });
 
-      // 6. Save message history back to Firestore (or mock JSON DB)
+      // 6. Save message history back to database (includes ownership metadata)
       const updatedMessages = [
         ...chatHistory,
         { role: 'user', text: message, timestamp: new Date().toISOString() },
         { role: 'model', text: responseText, timestamp: new Date().toISOString() }
       ];
 
-      await sessionDocRef.set({
+      const savePayload = {
         sessionId: activeSessionId,
+        chatId: activeSessionId,
         updatedAt: new Date().toISOString(),
-        messages: updatedMessages
-      }, { merge: true });
+        messages: updatedMessages,
+        ownerId: req.user ? req.user.uid : 'guest'
+      };
+
+      await sessionDocRef.set(savePayload, { merge: true });
 
       // Determine suggested follow-up questions based on message and response content
       let suggestedQuestions = [];
@@ -307,7 +322,8 @@ export class ChatController {
   static async getHistory(req, res) {
     const { sessionId } = req.params;
     try {
-      const sessionDocRef = db.collection('sessions').doc(sessionId);
+      const chatCol = ChatController.getChatCollection(req);
+      const sessionDocRef = chatCol.doc(sessionId);
       const sessionSnap = await sessionDocRef.get();
 
       if (!sessionSnap.exists) {
@@ -326,14 +342,20 @@ export class ChatController {
    */
   static async listSessions(req, res) {
     try {
-      const sessionsRef = db.collection('sessions');
-      const snap = await sessionsRef.get();
+      // Guests do not have a sidebar list of past sessions
+      if (!req.user) {
+        return res.status(200).json([]);
+      }
+
+      const chatCol = ChatController.getChatCollection(req);
+      const snap = await chatCol.get();
       
       const sessions = [];
       snap.forEach(doc => {
         const data = doc.data();
         sessions.push({
           sessionId: doc.id,
+          chatId: doc.id,
           updatedAt: data.updatedAt,
           messageCount: data.messages ? data.messages.length : 0,
           lastMessage: data.messages && data.messages.length > 0 
@@ -358,7 +380,14 @@ export class ChatController {
   static async deleteSession(req, res) {
     const { sessionId } = req.params;
     try {
-      const sessionDocRef = db.collection('sessions').doc(sessionId);
+      const chatCol = ChatController.getChatCollection(req);
+      const sessionDocRef = chatCol.doc(sessionId);
+      
+      const sessionSnap = await sessionDocRef.get();
+      if (!sessionSnap.exists) {
+        return res.status(404).json({ error: 'Session not found.' });
+      }
+
       await sessionDocRef.delete();
       return res.status(200).json({ success: true, message: `Session ${sessionId} deleted.` });
     } catch (error) {

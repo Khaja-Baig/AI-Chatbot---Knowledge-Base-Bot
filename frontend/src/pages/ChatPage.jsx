@@ -22,26 +22,34 @@ export default function ChatPage() {
   });
 
   useEffect(() => {
-    // Persist guest session details
-    if (!user) {
-      const savedSessionId = sessionStorage.getItem('guestSessionId');
-      if (savedSessionId) {
-        setActiveSessionId(savedSessionId);
+    const handleAuthTransition = async () => {
+      if (user) {
+        // Clear guest session info from storage so it does not persist for authenticated users
+        sessionStorage.removeItem('guestSessionId');
+        
+        // Fetch user sessions and force-load the user's history
+        await fetchSessions(true);
       } else {
-        const freshId = `session_guest_${Date.now()}`;
-        setActiveSessionId(freshId);
-        sessionStorage.setItem('guestSessionId', freshId);
+        // Reset sessions list for guest
+        setSessions([]);
+        
+        // Restore or initialize guest session
+        const savedSessionId = sessionStorage.getItem('guestSessionId');
+        if (savedSessionId) {
+          setActiveSessionId(savedSessionId);
+        } else {
+          const freshId = `session_guest_${Date.now()}`;
+          setActiveSessionId(freshId);
+          sessionStorage.setItem('guestSessionId', freshId);
+        }
       }
-    } else {
-      // Clear storage to avoid mixups for logged in users
-      sessionStorage.removeItem('guestSessionId');
-    }
-    
-    fetchSessions();
-    fetchConfig();
+      fetchConfig();
+    };
+
+    handleAuthTransition();
   }, [user]);
 
-  const fetchSessions = async () => {
+  const fetchSessions = async (isLoginTransition = false) => {
     try {
       const headers = {};
       if (user?.token) {
@@ -51,9 +59,18 @@ export default function ChatPage() {
       if (res.ok) {
         const data = await res.json();
         setSessions(data);
-        // Set active session ID if none active
-        if (data.length > 0 && !activeSessionId) {
-          setActiveSessionId(data[0].sessionId);
+        
+        // Decide which session should be active
+        if (user) {
+          if (isLoginTransition || !activeSessionId || activeSessionId.includes('guest')) {
+            if (data.length > 0) {
+              setActiveSessionId(data[0].sessionId);
+            } else {
+              // Start a fresh user session if they have no history
+              const newId = `session_user_${Date.now()}`;
+              setActiveSessionId(newId);
+            }
+          }
         }
       }
     } catch (err) {
@@ -78,16 +95,17 @@ export default function ChatPage() {
     setActiveSessionId(newId);
     if (!user) {
       sessionStorage.setItem('guestSessionId', newId);
+    } else {
+      setSessions(prev => [
+        {
+          sessionId: newId,
+          updatedAt: new Date().toISOString(),
+          messageCount: 0,
+          lastMessage: 'New Chat'
+        },
+        ...prev
+      ]);
     }
-    setSessions(prev => [
-      {
-        sessionId: newId,
-        updatedAt: new Date().toISOString(),
-        messageCount: 0,
-        lastMessage: 'New Chat'
-      },
-      ...prev
-    ]);
   };
 
   const handleDeleteSession = async (sessionId) => {

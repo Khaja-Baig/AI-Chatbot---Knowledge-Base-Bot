@@ -1416,5 +1416,89 @@
       "behaviorMode": "warm",
       "maxHistoryTurns": 10
     }
+  },
+  "guest_sessions": {
+    "session_guest_test": {
+      "sessionId": "session_guest_test",
+      "chatId": "session_guest_test",
+      "updatedAt": "2026-06-27T07:27:30.432Z",
+      "messages": [
+        {
+          "role": "user",
+          "text": "hello",
+          "timestamp": "2026-06-27T07:27:30.432Z"
+        },
+        {
+          "role": "model",
+          "text": "Hey there! How can I help you today?",
+          "timestamp": "2026-06-27T07:27:30.432Z"
+        }
+      ],
+      "ownerId": "guest"
+    }
+  },
+  "users": {
+    "kNIklwtlDwXmTljtXavcWWyCtbF3": {
+      "chats": {
+        "session_user_1782545411616": {
+          "sessionId": "session_user_1782545411616",
+          "chatId": "session_user_1782545411616",
+          "updatedAt": "2026-06-27T07:30:22.102Z",
+          "messages": [
+            {
+              "role": "user",
+              "text": "Hello ",
+              "timestamp": "2026-06-27T07:30:22.102Z"
+            },
+            {
+              "role": "model",
+              "text": "Hey there! How can I help you today?",
+              "timestamp": "2026-06-27T07:30:22.102Z"
+            }
+          ],
+          "ownerId": "kNIklwtlDwXmTljtXavcWWyCtbF3"
+        }
+      }
+    },
+    "yERIQ3MfLUMdu9jgchKJRNyPvMK2": {
+      "chats": {
+        "session_user_1782545465393": {
+          "sessionId": "session_user_1782545465393",
+          "chatId": "session_user_1782545465393",
+          "updatedAt": "2026-06-27T07:31:14.720Z",
+          "messages": [
+            {
+              "role": "user",
+              "text": "I am sukuna",
+              "timestamp": "2026-06-27T07:31:14.720Z"
+            },
+            {
+              "role": "model",
+              "text": "Hey Sukuna! Nice to meet you.\n\nWhat can I help you with today?",
+              "timestamp": "2026-06-27T07:31:14.720Z"
+            }
+          ],
+          "ownerId": "yERIQ3MfLUMdu9jgchKJRNyPvMK2"
+        },
+        "session_user_1782545485654": {
+          "sessionId": "session_user_1782545485654",
+          "chatId": "session_user_1782545485654",
+          "updatedAt": "2026-06-27T07:31:36.899Z",
+          "messages": [
+            {
+              "role": "user",
+              "text": "what is your name",
+              "timestamp": "2026-06-27T07:31:36.899Z"
+            },
+            {
+              "role": "model",
+              "text": "Hey there! I'm Guru, your friendly guide here at NavGurukul. Happy to help you out!",
+              "timestamp": "2026-06-27T07:31:36.899Z"
+            }
+          ],
+          "ownerId": "yERIQ3MfLUMdu9jgchKJRNyPvMK2"
+        }
+      }
+    }
   }
 }
