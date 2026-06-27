@@ -190,7 +190,8 @@ export default function AdminShell() {
       <div 
         className={`sidebar ${isCollapsed ? 'collapsed' : ''}`} 
         style={{ 
-          transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important'
+          transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important',
+          willChange: 'width, padding'
         }}
       >
         <div className="sidebar-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>

@@ -97,7 +97,10 @@ export default function SessionSidebar({
   };
 
   return (
-    <div className={`sidebar ${isOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''}`}>
+    <div 
+      className={`sidebar ${isOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''}`}
+      style={{ willChange: 'width, padding' }}
+    >
       <div className="sidebar-header">
         <div className="logo-container">
           <div className="logo-icon">NG</div>

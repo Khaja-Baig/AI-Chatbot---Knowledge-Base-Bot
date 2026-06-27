@@ -5,14 +5,18 @@ import { useAuth } from '../contexts/AuthContext';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [forgotEmail, setForgotEmail] = useState('');
-  const [isForgotMode, setIsForgotMode] = useState(false);
+  
+  // mode: 'login' | 'signup' | 'forgot'
+  const [mode, setMode] = useState('login');
   
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const { login, loginWithGoogle, resetPassword } = useAuth();
+  const { login, loginWithGoogle, resetPassword, register } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -44,6 +48,45 @@ export default function LoginPage() {
     }
   };
 
+  const handleEmailRegister = async (e) => {
+    e.preventDefault();
+    if (!email || !password || !displayName || !confirmPassword) {
+      return setError('Please fill in all fields.');
+    }
+    if (password.length < 6) {
+      return setError('Password must be at least 6 characters.');
+    }
+    if (password !== confirmPassword) {
+      return setError('Passwords do not match.');
+    }
+
+    setError('');
+    setMessage('');
+    setIsLoading(true);
+
+    try {
+      const res = await register(email, password, displayName);
+      handleRedirect(res.user.role);
+    } catch (err) {
+      console.error(err);
+      let friendlyMessage = 'Registration failed. Please try again.';
+      if (err.code === 'auth/email-already-in-use') {
+        friendlyMessage = 'An account with this email already exists.';
+      } else if (err.code === 'auth/weak-password') {
+        friendlyMessage = 'Password must be at least 6 characters.';
+      } else if (err.code === 'auth/invalid-email') {
+        friendlyMessage = 'Please enter a valid email address.';
+      } else if (err.code === 'auth/network-request-failed') {
+        friendlyMessage = 'A network error occurred. Please check your connection.';
+      } else if (err.message) {
+        friendlyMessage = err.message;
+      }
+      setError(friendlyMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleGoogleLogin = async () => {
     setError('');
     setMessage('');
@@ -70,13 +113,19 @@ export default function LoginPage() {
     try {
       await resetPassword(forgotEmail);
       setMessage('Password reset email sent. Please check your inbox.');
-      setIsForgotMode(false);
+      setMode('login');
     } catch (err) {
       console.error(err);
       setError(err.message || 'Failed to send password reset email.');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const changeMode = (newMode) => {
+    setError('');
+    setMessage('');
+    setMode(newMode);
   };
 
   return (
@@ -134,12 +183,14 @@ export default function LoginPage() {
         {/* Title */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px', marginTop: 0 }}>
-            {isForgotMode ? 'Reset Password' : 'Welcome Back'}
+            {mode === 'forgot' ? 'Reset Password' : mode === 'signup' ? 'Create Account' : 'Welcome Back'}
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', margin: 0 }}>
-            {isForgotMode 
+            {mode === 'forgot' 
               ? 'Enter your email to receive a password reset link' 
-              : 'Sign in to access your dashboard and save your history'
+              : mode === 'signup' 
+                ? 'Sign up to build your admissions knowledge profile'
+                : 'Sign in to access your dashboard and save your history'
             }
           </p>
         </div>
@@ -175,8 +226,8 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Forgot Password Mode */}
-        {isForgotMode ? (
+        {/* Form Selection based on Mode */}
+        {mode === 'forgot' ? (
           <form onSubmit={handleResetPassword} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label htmlFor="forgot-email" style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-secondary)' }}>Email Address</label>
@@ -223,11 +274,7 @@ export default function LoginPage() {
 
             <button
               type="button"
-              onClick={() => {
-                setIsForgotMode(false);
-                setError('');
-                setMessage('');
-              }}
+              onClick={() => changeMode('login')}
               style={{
                 background: 'none',
                 border: 'none',
@@ -241,6 +288,138 @@ export default function LoginPage() {
               Back to Sign In
             </button>
           </form>
+        ) : mode === 'signup' ? (
+          /* Sign Up Form Mode */
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <form onSubmit={handleEmailRegister} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              
+              {/* Full Name */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label htmlFor="reg-name" style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-secondary)' }}>Full Name</label>
+                <input
+                  id="reg-name"
+                  type="text"
+                  placeholder="John Doe"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  disabled={isLoading}
+                  style={{
+                    backgroundColor: 'var(--bg-primary)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '8px',
+                    color: 'var(--text-primary)',
+                    padding: '12px 16px',
+                    fontSize: '0.9rem',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    width: '100%'
+                  }}
+                />
+              </div>
+
+              {/* Email */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label htmlFor="reg-email" style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-secondary)' }}>Email Address</label>
+                <input
+                  id="reg-email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
+                  style={{
+                    backgroundColor: 'var(--bg-primary)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '8px',
+                    color: 'var(--text-primary)',
+                    padding: '12px 16px',
+                    fontSize: '0.9rem',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    width: '100%'
+                  }}
+                />
+              </div>
+
+              {/* Password */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label htmlFor="reg-password" style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-secondary)' }}>Password</label>
+                <input
+                  id="reg-password"
+                  type="password"
+                  placeholder="At least 6 characters"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
+                  style={{
+                    backgroundColor: 'var(--bg-primary)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '8px',
+                    color: 'var(--text-primary)',
+                    padding: '12px 16px',
+                    fontSize: '0.9rem',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    width: '100%'
+                  }}
+                />
+              </div>
+
+              {/* Confirm Password */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label htmlFor="reg-confirm-password" style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-secondary)' }}>Confirm Password</label>
+                <input
+                  id="reg-confirm-password"
+                  type="password"
+                  placeholder="Confirm your password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={isLoading}
+                  style={{
+                    backgroundColor: 'var(--bg-primary)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '8px',
+                    color: 'var(--text-primary)',
+                    padding: '12px 16px',
+                    fontSize: '0.9rem',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    width: '100%'
+                  }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                style={{
+                  backgroundColor: 'var(--accent-color, #4f46e5)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '12px',
+                  fontSize: '0.95rem',
+                  fontWeight: 500,
+                  cursor: isLoading ? 'not-allowed' : 'pointer',
+                  opacity: isLoading ? 0.7 : 1,
+                  transition: 'opacity 0.2s',
+                  marginTop: '12px'
+                }}
+              >
+                {isLoading ? 'Creating Account...' : 'Sign Up'}
+              </button>
+            </form>
+
+            <div style={{ textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              Already have an account?{' '}
+              <button 
+                onClick={() => changeMode('login')} 
+                style={{ background: 'none', border: 'none', color: 'var(--accent-color, #4f46e5)', cursor: 'pointer', fontWeight: 500, padding: 0 }}
+              >
+                Sign In
+              </button>
+            </div>
+          </div>
         ) : (
           /* Normal Sign In Mode */
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -276,11 +455,7 @@ export default function LoginPage() {
                   <label htmlFor="login-password" style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-secondary)' }}>Password</label>
                   <button
                     type="button"
-                    onClick={() => {
-                      setIsForgotMode(true);
-                      setError('');
-                      setMessage('');
-                    }}
+                    onClick={() => changeMode('forgot')}
                     style={{
                       background: 'none',
                       border: 'none',
@@ -336,6 +511,16 @@ export default function LoginPage() {
                 {isLoading ? 'Signing In...' : 'Sign In'}
               </button>
             </form>
+
+            <div style={{ textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              Don't have an account?{' '}
+              <button 
+                onClick={() => changeMode('signup')} 
+                style={{ background: 'none', border: 'none', color: 'var(--accent-color, #4f46e5)', cursor: 'pointer', fontWeight: 500, padding: 0 }}
+              >
+                Sign Up
+              </button>
+            </div>
 
             {/* Divider */}
             <div style={{

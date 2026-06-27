@@ -3,6 +3,7 @@ import cors from 'cors';
 import chatRoutes from './routes/chat.routes.js';
 import knowledgeRoutes from './routes/knowledge.routes.js';
 import configRoutes from './routes/config.routes.js';
+import authRoutes from './routes/auth.routes.js';
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use('/api/chat', chatRoutes);
 app.use('/api/knowledge', knowledgeRoutes);
 app.use('/api/config', configRoutes);
+app.use('/api/auth', authRoutes);
 
 // Base / Health Check
 app.get('/health', (req, res) => {

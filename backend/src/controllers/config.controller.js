@@ -1,4 +1,5 @@
 import { db } from '../config/firebase.js';
+import { GeminiService } from '../services/gemini.service.js';
 
 const CONFIG_DOC_ID = 'chatbot';
 
@@ -139,6 +140,9 @@ export class ConfigController {
       }
 
       await docRef.set(updateData, { merge: true });
+
+      // Invalidate the cached API key so it takes effect instantly
+      GeminiService.invalidateCache();
 
       const finalSnap = await docRef.get();
       const finalData = finalSnap.data();

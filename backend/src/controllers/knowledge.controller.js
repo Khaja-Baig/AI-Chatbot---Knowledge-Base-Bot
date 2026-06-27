@@ -23,42 +23,50 @@ export class KnowledgeController {
     const hasApiKey = !!apiKey;
     const items = [];
 
-    for (let j = 0; j < chunks.length; j++) {
-      const chunkText = chunks[j];
-      const chunkId = `${fileName.replace(/\s+/g, '_')}_chunk_${j}`;
+    const batchSize = 5;
+    for (let i = 0; i < chunks.length; i += batchSize) {
+      const batchChunks = chunks.slice(i, i + batchSize);
       
-      let embedding;
-      if (hasApiKey) {
-        embedding = await GeminiService.generateEmbedding(chunkText);
-      } else {
-        // Fallback mock embedding
-        embedding = new Array(768).fill(0.0).map((_, idx) => {
-          let hash = 0;
-          for (let k = 0; k < chunkText.length; k++) {
-            hash = (hash << 5) - hash + chunkText.charCodeAt(k);
-            hash |= 0;
-          }
-          return Math.sin(hash + idx) * 0.1;
-        });
-      }
+      const batchPromises = batchChunks.map(async (chunkText, batchIdx) => {
+        const j = i + batchIdx;
+        const chunkId = `${fileName.replace(/\s+/g, '_')}_chunk_${j}`;
+        
+        let embedding;
+        if (hasApiKey) {
+          embedding = await GeminiService.generateEmbedding(chunkText);
+        } else {
+          // Fallback mock embedding
+          embedding = new Array(768).fill(0.0).map((_, idx) => {
+            let hash = 0;
+            for (let k = 0; k < chunkText.length; k++) {
+              hash = (hash << 5) - hash + chunkText.charCodeAt(k);
+              hash |= 0;
+            }
+            return Math.sin(hash + idx) * 0.1;
+          });
+        }
 
-      let category = 'general';
-      if (fileName.toLowerCase().includes('requirement')) category = 'requirements';
-      else if (fileName.toLowerCase().includes('instruction')) category = 'instructions';
-      else if (fileName.toLowerCase().includes('conversation')) category = 'examples';
-      else if (fileName.toLowerCase().includes('structure') || fileName.toLowerCase().includes('knowledge')) category = 'knowledge_structure';
+        let category = 'general';
+        if (fileName.toLowerCase().includes('requirement')) category = 'requirements';
+        else if (fileName.toLowerCase().includes('instruction')) category = 'instructions';
+        else if (fileName.toLowerCase().includes('conversation')) category = 'examples';
+        else if (fileName.toLowerCase().includes('structure') || fileName.toLowerCase().includes('knowledge')) category = 'knowledge_structure';
 
-      items.push({
-        id: chunkId,
-        text: chunkText,
-        metadata: {
-          source: fileName,
-          category,
-          chunkIndex: j,
-          timestamp: new Date().toISOString()
-        },
-        embedding
+        return {
+          id: chunkId,
+          text: chunkText,
+          metadata: {
+            source: fileName,
+            category,
+            chunkIndex: j,
+            timestamp: new Date().toISOString()
+          },
+          embedding
+        };
       });
+
+      const batchResults = await Promise.all(batchPromises);
+      items.push(...batchResults);
     }
 
     await ChromaService.addDocuments(COLLECTION_NAME, items);

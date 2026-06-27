@@ -7,26 +7,55 @@ dotenv.config();
 const MODEL_NAME = process.env.GEMINI_CHAT_MODEL || 'gemini-2.5-flash';
 const EMBEDDING_MODEL = 'gemini-embedding-001';
 
-let mockCounter = 0;
+let apiKeyCache = {
+  key: null,
+  expiresAt: 0
+};
+let googleGenAIClient = null;
 
 export class GeminiService {
+  /**
+   * Clear API key and client instance cache.
+   */
+  static invalidateCache() {
+    apiKeyCache = { key: null, expiresAt: 0 };
+    googleGenAIClient = null;
+    console.log('🔄 Gemini Service API Key cache invalidated.');
+  }
+
   /**
    * Fetch active Gemini API key from Firestore with environment fallback.
    */
   static async getApiKey() {
+    const now = Date.now();
+    if (apiKeyCache.key && apiKeyCache.expiresAt > now) {
+      return apiKeyCache.key;
+    }
+
     try {
       const docRef = db.collection('config').doc('ai_settings');
       const snap = await docRef.get();
       if (snap.exists) {
         const data = snap.data();
         if (data.activeProvider === 'gemini' && data.apiKey_gemini) {
-          return data.apiKey_gemini;
+          const key = data.apiKey_gemini;
+          apiKeyCache = {
+            key,
+            expiresAt: now + 5 * 60 * 1000 // 5 minutes TTL
+          };
+          return key;
         }
       }
     } catch (err) {
       console.error('Error reading dynamic API key from Firestore:', err);
     }
-    return process.env.GEMINI_API_KEY;
+
+    const envKey = process.env.GEMINI_API_KEY;
+    apiKeyCache = {
+      key: envKey,
+      expiresAt: now + 5 * 60 * 1000 // 5 minutes TTL
+    };
+    return envKey;
   }
 
   /**
@@ -34,7 +63,11 @@ export class GeminiService {
    */
   static async getClient() {
     const key = await GeminiService.getApiKey();
-    return new GoogleGenAI({ apiKey: key });
+    if (!googleGenAIClient || googleGenAIClient.apiKey !== key) {
+      googleGenAIClient = new GoogleGenAI({ apiKey: key });
+      googleGenAIClient.apiKey = key;
+    }
+    return googleGenAIClient;
   }
 
   /**

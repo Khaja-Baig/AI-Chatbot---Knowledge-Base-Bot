@@ -4,7 +4,9 @@ import {
   signInWithPopup, 
   signOut, 
   sendPasswordResetEmail, 
-  onAuthStateChanged 
+  onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  updateProfile
 } from 'firebase/auth';
 import { auth, googleProvider } from '../lib/firebase';
 
@@ -117,13 +119,65 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const register = async (email, password, displayName) => {
+    setIsLoading(true);
+    try {
+      // 1. Create Firebase Auth user
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // 2. Set Firebase Auth display name
+      await updateProfile(userCredential.user, {
+        displayName: displayName || ''
+      });
+
+      // 3. Force token refresh to capture new auth state
+      const idTokenResult = await userCredential.user.getIdTokenResult(true);
+
+      // 4. Register user document in Firestore database via backend
+      const regRes = await fetch('http://localhost:5001/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          uid: userCredential.user.uid,
+          email: userCredential.user.email,
+          displayName: displayName || ''
+        })
+      });
+
+      if (!regRes.ok) {
+        const errData = await regRes.json();
+        throw new Error(errData.error || 'Failed to initialize database profile.');
+      }
+
+      const loggedUser = {
+        uid: userCredential.user.uid,
+        email: userCredential.user.email,
+        displayName: displayName || '',
+        photoURL: null,
+        role: 'user',
+        token: idTokenResult.token
+      };
+
+      setUser(loggedUser);
+      setIsLoading(false);
+      return { success: true, user: loggedUser };
+    } catch (error) {
+      console.error('Registration error:', error);
+      setIsLoading(false);
+      throw error;
+    }
+  };
+
   const value = {
     user,
     isLoading,
     login,
     loginWithGoogle,
     logout,
-    resetPassword
+    resetPassword,
+    register
   };
 
   return (

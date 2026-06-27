@@ -77,7 +77,8 @@ body {
   flex-direction: column;
   height: 100%;
   padding: 20px;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
   z-index: 100;
 }
 
@@ -899,13 +900,29 @@ body {
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
+.logo-text,
+.new-chat-btn-text,
+.session-meta,
+.session-preview,
+.session-actions,
+.user-details,
+.profile-chevron,
+.recent-title {
+  transition: opacity 0.15s ease, max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease, margin 0.3s ease;
+  max-width: 300px;
+  opacity: 1;
+}
+
 .sidebar.collapsed {
   width: 68px;
   padding: 20px 14px;
 }
 
-/* Hide all descriptive labels in collapsed mode */
-.sidebar.collapsed .logo-container,
+.sidebar.collapsed .logo-container {
+  justify-content: center;
+  width: 100%;
+}
+
 .sidebar.collapsed .logo-text,
 .sidebar.collapsed .new-chat-btn-text,
 .sidebar.collapsed .session-meta,
@@ -914,7 +931,12 @@ body {
 .sidebar.collapsed .user-details,
 .sidebar.collapsed .profile-chevron,
 .sidebar.collapsed .recent-title {
-  display: none !important;
+  opacity: 0 !important;
+  max-width: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden;
+  pointer-events: none;
 }
 
 .sidebar.collapsed .new-chat-btn {
@@ -985,8 +1007,16 @@ body.light-theme .sidebar-toggle-btn:hover {
 .user-profile-container {
   position: relative;
   margin-top: auto;
-  padding-top: 12px;
-  border-top: 1px solid var(--border-color);
+  padding-top: 0;
+}
+
+.user-profile-container::before {
+  content: '';
+  display: block;
+  height: 1px;
+  background: var(--border-color);
+  margin-bottom: 12px;
+  width: 100%;
 }
 
 .user-profile-btn {
