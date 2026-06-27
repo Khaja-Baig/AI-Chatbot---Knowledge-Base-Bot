@@ -18,6 +18,7 @@ node_modules/
 data/chroma_db/
 data/raw/
 data/faqs/
+data/local_firestore.json
 
 # ========================
 # Python virtual environment (used by ChromaDB)
