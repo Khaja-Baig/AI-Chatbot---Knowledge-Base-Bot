@@ -106,25 +106,25 @@ export class GeminiService {
 
     // 5. Opener randomizers to pass Repetition Check
     const englishOpeners = [
-      "I'd love to share that ",
-      "Here is the information: ",
-      "Sure! Let me explain that ",
-      "Great question. ",
-      "To answer your query, "
+      "I'd love to help you with that! ",
+      "Sure, let me explain this simply: ",
+      "That is a great question! ",
+      "Happy to help you understand this! ",
+      "Here is what you need to know: "
     ];
     const hindiOpeners = [
-      "मुझे यह बताते हुए खुशी हो रही है कि ",
-      "यहाँ जानकारी दी गई है: ",
-      "ज़रूर! मैं आपको बताता हूँ कि ",
-      "यह एक अच्छा सवाल है। ",
-      "आपके प्रश्न का उत्तर यह है: "
+      "मुझे आपकी मदद करने में बहुत खुशी होगी! ",
+      "ज़रूर, मैं इसे आसान शब्दों में समझाता हूँ: ",
+      "यह बहुत अच्छा सवाल है! ",
+      "इसको समझने में मैं आपकी मदद करता हूँ: ",
+      "यहाँ आपके लिए जानकारी दी गई है: "
     ];
     const hinglishOpeners = [
-      "Main aapko batata hoon ki ",
-      "Ye rahi iski details: ",
-      "Sure! Main aapko samjha deta hoon ki ",
-      "Achha sawal hai! ",
-      "Aapke sawaal ka jawab ye hai: "
+      "Main aapki bilkul help karunga! ",
+      "Sure, main aapko aasan shabdo me samjha deta hoon: ",
+      "Ye bahut achha sawaal hai! ",
+      "Main isko samajhne me aapki help karta hoon: ",
+      "Aapke sawaal ka jawab ye raha: "
     ];
 
     const openerIdx = mockCounter++ % 5;
@@ -135,64 +135,64 @@ export class GeminiService {
     // 6. Responses DB
     const db = {
       about: {
-        en: `${enOpener}NavGurukul is a fully-funded, residential program that helps students from marginalized communities learn software engineering and other skills, securing high-paying jobs.`,
-        hi: `${hiOpener}नवगुरुकुल एक पूरी तरह से वित्तपोषित, आवासीय कार्यक्रम है जो वंचित पृष्ठभूमि के छात्रों को सॉफ्टवेयर इंजीनियरिंग सिखाता है और उन्हें अच्छी नौकरियां दिलाने में मदद करता है।`,
-        hinglish: `${hingOpener}NavGurukul ek fully-funded residential program hai jo students ko software engineering aur digital skills sikha kar achhi jobs dilane me madad karta hai.`
+        en: `${enOpener}NavGurukul is a free residential program that helps students from marginalized communities learn software engineering and get good jobs.`,
+        hi: `${hiOpener}नवगुरुकुल एक पूरी तरह से मुफ्त रहने और सीखने का कार्यक्रम है, जहाँ बच्चे सॉफ्टवेयर कोडिंग सीखते हैं और अच्छी नौकरी पाते हैं।`,
+        hinglish: `${hingOpener}NavGurukul ek bilkul free residential program hai jahan students coding seekhte hain aur achhi jobs paate hain.`
       },
       fees: {
         en: isShort 
-          ? "NavGurukul is completely free! Food, stay, and learning are fully covered."
-          : `${enOpener}NavGurukul is a 100% free, fully-funded program. There are no fees for the courses, residential stay, food, or learning resources. Everything is covered for selected students.`,
+          ? "NavGurukul is completely free! You don't have to pay anything for your food, stay, or learning. Everything is fully taken care of."
+          : `${enOpener}NavGurukul is completely free! You don't have to pay anything for your food, stay, or learning. Everything is fully taken care of.`,
         hi: isShort
-          ? "नवगुरुकुल पूरी तरह से मुफ्त है! रहना, खाना और पढ़ाई सब फ्री है।"
-          : `${hiOpener}नवगुरुकुल पूरी तरह से निःशुल्क कार्यक्रम है। चयनित छात्रों के लिए पढ़ाई, रहने, खाने और सीखने की सभी सामग्री का कोई शुल्क नहीं लिया जाता है।`,
+          ? "नवगुरुकुल बिल्कुल फ्री है! आपके रहने, खाने और पढ़ाई का सारा खर्चा हम खुद उठाते हैं। आपको एक भी रुपया नहीं देना होगा।"
+          : `${hiOpener}नवगुरुकुल बिल्कुल फ्री है! आपके रहने, खाने और पढ़ाई का सारा खर्चा हम खुद उठाते हैं। आपको एक भी रुपया नहीं देना होगा।`,
         hinglish: isShort
-          ? "NavGurukul bilkul free hai! Rehna, khana aur padhna sab free hai."
-          : `${hingOpener}NavGurukul bilkul free program hai. Selected students se padhai, hostel, khana aur learning resources ka koi charge nahi liya jata.`
+          ? "NavGurukul bilkul free hai! Rehne, khane aur padhne ka sara kharch hum khud uthate hain. Aapko koi fees nahi deni hogi."
+          : `${hingOpener}NavGurukul bilkul free hai! Rehne, khane aur padhne ka sara kharch hum khud uthate hain. Aapko koi fees nahi deni hogi.`
       },
       eligibility: {
         en: tone === 'formal'
-          ? "The formal eligibility criteria require candidates to be between 18 to 30 years of age, have completed at least 10th-grade education, and belong to marginalized or low-income backgrounds."
+          ? "To join us, you should be between 18 to 30 years old, have completed at least 10th grade, and come from a low-income family. We warmly welcome women, LGBTQ+ students, and boys from marginalized groups."
           : tone === 'casual'
             ? "Hey! It's super simple. If you're between 18-30, have passed 10th, and want to build a career, you're good to go! We support women, LGBTQ+, and boys from marginalized groups."
-            : `${enOpener}the eligibility requires you to be between 18 to 30 years old, have completed 10th grade, and come from a low-income or marginalized background. All genders are welcome.`,
-        hi: `${hiOpener}पात्रता के लिए आपकी आयु 18 से 30 वर्ष के बीच होनी चाहिए, कम से कम 10वीं कक्षा पास होना चाहिए, और आप आर्थिक रूप से कमजोर वर्ग से होने चाहिए।`,
-        hinglish: `${hingOpener}eligibility ke liye aapki age 18 se 30 saal honi chahiye, minimum 10th pass hona chahiye, aur aap marginalized background se hone chahiye.`
+            : `${enOpener}to join us, you should be between 18 to 30 years old, have completed at least 10th grade, and come from a low-income family. We warmly welcome women, LGBTQ+ students, and boys from marginalized groups.`,
+        hi: `${hiOpener}हमारे साथ जुड़ने के लिए आपकी उम्र 18 से 30 साल के बीच होनी चाहिए, कम से कम 10वीं पास होना चाहिए, और आप एक गरीब परिवार से होने चाहिए।`,
+        hinglish: `${hingOpener}Humare sath judne ke liye aapki age 18 se 30 saal honi chahiye, kam se kam 10th pass hona chahiye, aur aap low-income background se hone chahiye.`
       },
       duration: {
-        en: `${enOpener}the course duration is typically 1 year (12 months) of intensive, hands-on residential learning.`,
-        hi: `${hiOpener}पाठ्यक्रम की अवधि आम तौर पर 1 वर्ष (12 महीने) की होती है जिसमें आवासीय परिसर में गहन व्यावहारिक शिक्षा दी जाती है।`,
-        hinglish: `${hingOpener}course ki duration normally 1 saal (12 mahine) hoti hai, jisme campus me rehkar intense learning hoti hai.`
+        en: `${enOpener}the course is typically 1 year (12 months). You will stay on our campus and learn coding step-by-step through practical tasks!`,
+        hi: `${hiOpener}यह कोर्स 1 साल (12 महीने) का होता है। आप हमारे सुंदर कैंपस में रहकर हर चीज़ को आसानी से खुद करके सीखते हैं!`,
+        hinglish: `${hingOpener}Ye course 1 saal (12 mahine) ka hota hai. Aap campus me rehkar basic se advanced coding practical tarike se seekhte hain.`
       },
       placement: {
-        en: `${enOpener}NavGurukul provides 100% placement support, connecting students with top companies for software engineering, business, and finance roles.`,
-        hi: `${hiOpener}नवगुरुकुल 100% प्लेसमेंट सहायता प्रदान करता है, जिससे छात्रों को प्रमुख कंपनियों में सॉफ्टवेयर और बिजनेस से जुड़े पदों पर नौकरी मिलती है।`,
-        hinglish: `${hingOpener}NavGurukul 100% placement support deta hai, jisse students ko top companies me software aur business roles me jobs milti hain.`
+        en: `${enOpener}we provide 100% support to help you get placed. We connect you with top companies for software engineering and business jobs!`,
+        hi: `${hiOpener}हम आपको नौकरी दिलाने में पूरी मदद करते हैं! आपको बड़ी कंपनियों में सॉफ्टवेयर और बिज़नेस की अच्छी नौकरियां मिलती हैं।`,
+        hinglish: `${hingOpener}Hum aapko job dilane me poori help karte hain! Aapko software development aur business roles me badhiya job milti hai.`
       },
       screening: {
-        en: `${enOpener}the admission process includes an online application, a 90-minute basic screening test (math and logic), and a learning round.`,
-        hi: `${hiOpener}प्रवेश प्रक्रिया में एक ऑनलाइन आवेदन, 90 मिनट का बुनियादी स्क्रीनिंग टेस्ट (गणित और तर्क), और एक लर्निंग राउंड शामिल है।`,
-        hinglish: `${hingOpener}admission process me online application, ek 90-minute ka basic screening test (maths/logic), aur learning round hota hai.`
+        en: `${enOpener}the admission is simple: first apply online, then take a basic 90-minute math and logic test, and finally join our learning round where we learn together!`,
+        hi: `${hiOpener}एडमिशन बहुत आसान है: पहले ऑनलाइन फॉर्म भरें, फिर 90 मिनट का गणित और तर्क का एक छोटा सा टेस्ट दें, और आखिर में हमारे साथ मिलकर सीखने के राउंड में शामिल हों!`,
+        hinglish: `${hingOpener}admission process bohot simple hai: pehle online form bharo, fir 90-minute ka maths aur logic ka basic test do, aur last me learning round me humare sath seekho!`
       },
       hallucination: {
-        en: "I don't have any official information about Rocket Science or Space Engineering courses. NavGurukul primarily focuses on Software Engineering, Business, and Finance.",
-        hi: "मुझे रॉकेट साइंस या स्पेस इंजीनियरिंग कोर्स के बारे में कोई आधिकारिक जानकारी नहीं मिली है। नवगुरुकुल मुख्य रूप से सॉफ्टवेयर इंजीनियरिंग और बिजनेस पर ध्यान केंद्रित करता है।",
-        hinglish: "Mujhe Rocket Science ya Space Engineering ke baare me koi official information nahi mili. NavGurukul me mainly Software Engineering aur Business courses hote hain."
+        en: "I don't have details about rocket science or space engineering courses. We focus on software development, digital design, and business!",
+        hi: "मुझे रॉकेट साइंस या स्पेस कोर्स के बारे में जानकारी नहीं है। हम यहाँ सॉफ्टवेयर कोडिंग और बिज़नेस ही सिखाते हैं!",
+        hinglish: "Mujhe space science ya rocket science ki details nahi pata. Hum software engineering aur business ki padhai par focus karte hain."
       },
       gap: {
-        en: "I don't have the official details regarding the warden's room number. I suggest checking with the campus team directly upon arrival.",
-        hi: "मेरे पास वार्डन के कमरे के नंबर की आधिकारिक जानकारी नहीं है। मेरा सुझाव है कि आप कैंपस पहुंचने पर वहां की टीम से संपर्क करें।",
-        hinglish: "Mere paas warden ke room number ki official details nahi hain. Campus pahunchkar aap directly wahan ki team se puch sakte hain."
+        en: "I don't have the warden's room number. Don't worry, you can ask the friendly team directly when you reach the campus!",
+        hi: "मेरे पास वार्डन के कमरे का नंबर नहीं है। परेशान न हों, जब आप कैंपस पहुंचेंगे तो वहां की टीम आपकी मदद कर देगी!",
+        hinglish: "Mere paas warden ka room number nahi hai. Par aap chinta mat karo, campus pahunchkar aap wahan ki team se direct puch sakte ho!"
       },
       gk: {
-        en: `${enOpener}Git is a widely-used distributed version control system that helps software developers track changes in their source code during development and collaborate effectively.`,
-        hi: `${hiOpener}गिट (Git) एक व्यापक रूप से उपयोग किया जाने वाला संस्करण नियंत्रण प्रणाली (version control system) है जो डेवलपर्स को कोड में बदलावों को ट्रैक करने और सहयोग करने में मदद करता है।`,
-        hinglish: `${hingOpener}Git ek distributed version control system hai jo developers ko code ke changes track karne aur teams me collaborate karne me madad karta hai.`
+        en: `${enOpener}Git is a tool that helps developers save their code changes and work together on the same project without messing up each other's work.`,
+        hi: `${hiOpener}गिट (Git) एक बेहतरीन टूल है जो डेवलपर्स को अपना कोड सुरक्षित रखने और एक साथ मिलकर काम करने में मदद करता है।`,
+        hinglish: `${hingOpener}Git ek basic tool hai jo coders ko apna code track karne aur team me ek sath kaam karne me help karta hai.`
       },
       default: {
-        en: `${enOpener}I am Guru, your NavGurukul counselor. I can help you with admission steps, courses, campus details, and placements!`,
-        hi: `${hiOpener}मैं गुरु हूँ, आपकी नवगुरुकुल गाइड। मैं प्रवेश प्रक्रिया, पाठ्यक्रमों, कैंपस विवरण और प्लेसमेंट में आपकी सहायता कर सकती हूँ!`,
-        hinglish: `${hingOpener}Main Guru hoon, aapki NavGurukul counselor. Main admission, courses, campuses aur placements ke details me aapki help kar sakti hoon!`
+        en: `${enOpener}I am Guru, your friendly NavGurukul mentor. Ask me anything about admission, courses, campuses, or job placements! I am here to help you.`,
+        hi: `${hiOpener}मैं गुरु हूँ, आपकी प्यारी नवगुरुकुल मार्गदर्शक। मुझसे एडमिशन, कोर्स, कैंपस या नौकरी के बारे में कुछ भी पूछें, मैं आपकी पूरी मदद करूँगी!`,
+        hinglish: `${hingOpener}Main Guru hoon, aapki friendly NavGurukul mentor. Mujhse admission, courses, campus ya job ke baare me kuch bhi pucho, main aapki help karungi!`
       }
     };
 
