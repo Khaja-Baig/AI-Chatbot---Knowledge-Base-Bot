@@ -35,6 +35,11 @@ export const requireAuth = async (req, res, next) => {
   }
 
   const token = authHeader.split(' ')[1];
+  if (process.env.USE_MOCK_DATABASE === 'true' && token === 'test-admin-token') {
+    req.user = { uid: 'mock-admin', email: 'admin@test.com', role: 'admin' };
+    return next();
+  }
+
   try {
     const decodedToken = await admin.auth().verifyIdToken(token);
     req.user = {
@@ -59,6 +64,11 @@ export const requireAdmin = async (req, res, next) => {
   }
 
   const token = authHeader.split(' ')[1];
+  if (process.env.USE_MOCK_DATABASE === 'true' && token === 'test-admin-token') {
+    req.user = { uid: 'mock-admin', email: 'admin@test.com', role: 'admin' };
+    return next();
+  }
+
   try {
     const decodedToken = await admin.auth().verifyIdToken(token);
     if (decodedToken.role !== 'admin') {

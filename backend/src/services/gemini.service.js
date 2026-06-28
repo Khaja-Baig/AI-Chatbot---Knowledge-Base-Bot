@@ -1,6 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { db } from '../config/firebase.js';
 import dotenv from 'dotenv';
+import { withRetry } from '../utils/rateLimit.utils.js';
 
 dotenv.config();
 
@@ -12,6 +13,8 @@ let apiKeyCache = {
   expiresAt: 0
 };
 let googleGenAIClient = null;
+let googleGenAIEmbedClient = null;
+let mockCounter = 0;
 
 export class GeminiService {
   /**
@@ -20,6 +23,7 @@ export class GeminiService {
   static invalidateCache() {
     apiKeyCache = { key: null, expiresAt: 0 };
     googleGenAIClient = null;
+    googleGenAIEmbedClient = null;
     console.log('🔄 Gemini Service API Key cache invalidated.');
   }
 
@@ -59,6 +63,17 @@ export class GeminiService {
   }
 
   /**
+   * Fetch API key for embeddings, prioritizing GEMINI_EMBED_API_KEY if configured in environment.
+   */
+  static async getEmbeddingApiKey() {
+    const envEmbedKey = process.env.GEMINI_EMBED_API_KEY;
+    if (envEmbedKey) {
+      return envEmbedKey;
+    }
+    return this.getApiKey();
+  }
+
+  /**
    * Dynamically build a client instance using the currently configured key.
    */
   static async getClient() {
@@ -71,41 +86,92 @@ export class GeminiService {
   }
 
   /**
+   * Dynamically build an embedding client instance using the embedding key.
+   */
+  static async getEmbedClient() {
+    const key = await GeminiService.getEmbeddingApiKey();
+    if (!googleGenAIEmbedClient || googleGenAIEmbedClient.apiKey !== key) {
+      googleGenAIEmbedClient = new GoogleGenAI({ apiKey: key });
+      googleGenAIEmbedClient.apiKey = key;
+    }
+    return googleGenAIEmbedClient;
+  }
+
+  /**
    * Generate vector embeddings for text or an array of texts.
    * @param {string|Array<string>} textOrTexts - Input text(s)
    * @returns {Promise<Array<number>|Array<Array<number>>} Vector embedding(s)
    */
   static async generateEmbedding(textOrTexts) {
+    return withRetry(
+      async () => {
+        const client = await GeminiService.getEmbedClient();
+        const response = await client.models.embedContent({
+          model: EMBEDDING_MODEL,
+          contents: textOrTexts,
+          config: {
+            outputDimensionality: 768
+          }
+        });
+
+        if (response.embeddings && response.embeddings.length > 0) {
+          if (Array.isArray(textOrTexts)) {
+            return response.embeddings.map(e => e.values);
+          } else {
+            return response.embeddings[0].values;
+          }
+        }
+
+        if (response.embedding && response.embedding.values) {
+          if (Array.isArray(textOrTexts)) {
+            return [response.embedding.values];
+          } else {
+            return response.embedding.values;
+          }
+        }
+
+        throw new Error('Embedding response format unexpected.');
+      },
+      {
+        maxRetries: 3,
+        baseDelayMs: 2000,
+        jitterMs: 400,
+        isRetryable: (err) => {
+          const status = err?.status ?? err?.statusCode;
+          if (status === 429 || status >= 500) return true;
+          const msg = (err?.message ?? '').toLowerCase();
+          return msg.includes('429') || msg.includes('too many requests') || msg.includes('quota');
+        },
+        onRetry: (attempt, delayMs, err) => {
+          console.warn(`⚠️ Embedding retry ${attempt}/3 in ${delayMs}ms — ${err.message || err}`);
+        }
+      }
+    );
+  }
+
+  /**
+   * Dynamic retrieval of configured embedding info from config/ai_settings document in Firestore.
+   */
+  static async getEmbeddingInfo() {
     try {
-      const client = await GeminiService.getClient();
-      const response = await client.models.embedContent({
-        model: EMBEDDING_MODEL,
-        contents: textOrTexts,
-        config: {
-          outputDimensionality: 768
-        }
-      });
+      const snap = await db.collection('config').doc('ai_settings').get();
+      const provider = snap.exists ? (snap.data().activeProvider || 'gemini') : 'gemini';
 
-      if (response.embeddings && response.embeddings.length > 0) {
-        if (Array.isArray(textOrTexts)) {
-          return response.embeddings.map(e => e.values);
-        } else {
-          return response.embeddings[0].values;
-        }
-      }
+      const modelMap = {
+        gemini: EMBEDDING_MODEL,
+        openai: 'text-embedding-3-small'
+      };
 
-      if (response.embedding && response.embedding.values) {
-        if (Array.isArray(textOrTexts)) {
-          return [response.embedding.values];
-        } else {
-          return response.embedding.values;
-        }
-      }
-
-      throw new Error('Embedding response format unexpected.');
-    } catch (error) {
-      console.error('Error generating embedding with Gemini:', error);
-      throw error;
+      return {
+        embeddingProvider: provider,
+        embeddingModel: modelMap[provider] ?? EMBEDDING_MODEL
+      };
+    } catch (err) {
+      console.error('Error fetching embedding info from settings:', err);
+      return {
+        embeddingProvider: 'gemini',
+        embeddingModel: EMBEDDING_MODEL
+      };
     }
   }
 

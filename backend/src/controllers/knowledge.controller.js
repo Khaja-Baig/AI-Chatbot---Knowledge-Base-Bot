@@ -1,9 +1,13 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { randomUUID, createHash } from 'crypto';
+import { db } from '../config/firebase.js';
+import { sleep, computeBatchDelay } from '../utils/rateLimit.utils.js';
 import { DocumentService } from '../services/document.service.js';
 import { GeminiService } from '../services/gemini.service.js';
 import { ChromaService } from '../services/chroma.service.js';
+import { JobQueue } from '../utils/jobQueue.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,62 +19,515 @@ export class KnowledgeController {
   /**
    * Helper to chunk and index plain text content into the vector store.
    */
-  static async indexTextContent(fileName, textContent) {
+  static async indexTextContent(fileName, textContent, options = {}) {
+    const initiatedBy = options.initiatedBy || 'system-api';
     const chunks = DocumentService.chunkText(textContent, 800, 150);
     if (chunks.length === 0) return 0;
 
     const apiKey = await GeminiService.getApiKey();
     const hasApiKey = !!apiKey;
-    const items = [];
 
-    const batchSize = 5;
-    for (let i = 0; i < chunks.length; i += batchSize) {
-      const batchChunks = chunks.slice(i, i + batchSize);
-      
-      const batchPromises = batchChunks.map(async (chunkText, batchIdx) => {
-        const j = i + batchIdx;
-        const chunkId = `${fileName.replace(/\s+/g, '_')}_chunk_${j}`;
-        
-        let embedding;
-        if (hasApiKey) {
+    const { embeddingProvider, embeddingModel } = await GeminiService.getEmbeddingInfo();
+
+    // Stable source ID lookup or creation
+    let sourceId = randomUUID();
+    let version = 1;
+    try {
+      const metadataRef = db.collection('ingestion_metadata');
+      const querySnap = await metadataRef.where('fileName', '==', fileName).get();
+      if (querySnap && querySnap.docs && querySnap.docs.length > 0) {
+        const doc = querySnap.docs[0];
+        sourceId = doc.id;
+        version = (doc.data().version || 1) + 1;
+      }
+    } catch (err) {
+      console.error('Error lookup metadata:', err);
+    }
+
+    // Set initial status to Processing
+    try {
+      await db.collection('ingestion_metadata').doc(sourceId).set({
+        sourceId,
+        fileName,
+        version,
+        status: 'Processing',
+        startedAt: new Date().toISOString(),
+        initiatedBy,
+        completedBy: null,
+        embeddingProvider,
+        embeddingModel,
+        totalChunks: chunks.length,
+        successfulChunks: 0,
+        failedChunks: 0,
+        processingTimeMs: null,
+        lastIndexedAt: null
+      });
+    } catch (err) {
+      console.error('Error writing processing status to metadata:', err);
+    }
+
+    const items = [];
+    const retryQueue = [];
+    let succeededCount = 0;
+    let failedCount = 0;
+    const docStartTime = Date.now();
+
+    const CONTROLLER_DELAY_MS = Math.round(computeBatchDelay() / 2);
+
+    for (let j = 0; j < chunks.length; j++) {
+      const chunkText = chunks[j];
+      const chunkId = `${fileName.replace(/\s+/g, '_')}_chunk_${j}`;
+      const chunkHash = createHash('sha256').update(chunkText).digest('hex').slice(0, 16);
+
+      let embedding;
+      if (hasApiKey) {
+        try {
           embedding = await GeminiService.generateEmbedding(chunkText);
+          succeededCount++;
+        } catch (err) {
+          console.warn(`[indexTextContent] "${fileName}" chunk ${j} failed initial attempt — queued for retry: ${err.message}`);
+          retryQueue.push({ chunkText, chunkId, chunkIndex: j, chunkHash });
+          continue;
+        }
+      } else {
+        // Mock embedding
+        embedding = new Array(768).fill(0.0).map((_, idx) => {
+          let hash = 0;
+          for (let k = 0; k < chunkText.length; k++) {
+            hash = (hash << 5) - hash + chunkText.charCodeAt(k);
+            hash |= 0;
+          }
+          return Math.sin(hash + idx) * 0.1;
+        });
+        succeededCount++;
+      }
+
+      items.push({
+        id: chunkId,
+        text: chunkText,
+        metadata: {
+          source: fileName,
+          sourceId,
+          category: fileName.toLowerCase().includes('requirement') ? 'requirements' :
+                    fileName.toLowerCase().includes('instruction') ? 'instructions' :
+                    fileName.toLowerCase().includes('conversation') ? 'examples' :
+                    (fileName.toLowerCase().includes('structure') || fileName.toLowerCase().includes('knowledge')) ? 'knowledge_structure' : 'general',
+          chunkIndex: j,
+          chunkHash,
+          timestamp: new Date().toISOString()
+        },
+        embedding
+      });
+
+      // Pace between embeddings (only for larger documents)
+      if (chunks.length > 5 && j < chunks.length - 1) {
+        await sleep(CONTROLLER_DELAY_MS);
+      }
+    }
+
+    if (items.length > 0) {
+      await ChromaService.addDocuments(COLLECTION_NAME, items);
+    }
+
+    // Process retry queue (second pass)
+    if (retryQueue.length > 0) {
+      console.log(`[indexTextContent] Second pass: retrying ${retryQueue.length} failed chunks for "${fileName}"`);
+      for (const retryItem of retryQueue) {
+        await sleep(CONTROLLER_DELAY_MS);
+        try {
+          const embedding = await GeminiService.generateEmbedding(retryItem.chunkText);
+          await ChromaService.addDocuments(COLLECTION_NAME, [{
+            id: retryItem.chunkId,
+            text: retryItem.chunkText,
+            metadata: {
+              source: fileName,
+              sourceId,
+              category: fileName.toLowerCase().includes('requirement') ? 'requirements' :
+                        fileName.toLowerCase().includes('instruction') ? 'instructions' :
+                        fileName.toLowerCase().includes('conversation') ? 'examples' :
+                        (fileName.toLowerCase().includes('structure') || fileName.toLowerCase().includes('knowledge')) ? 'knowledge_structure' : 'general',
+              chunkIndex: retryItem.chunkIndex,
+              chunkHash: retryItem.chunkHash,
+              timestamp: new Date().toISOString()
+            },
+            embedding
+          }]);
+          succeededCount++;
+          console.log(`[indexTextContent] Recovered "${fileName}" chunk ${retryItem.chunkIndex}`);
+        } catch (err) {
+          failedCount++;
+          console.error(`[indexTextContent] "${fileName}" chunk ${retryItem.chunkIndex} permanently failed: ${err.message}`);
+        }
+      }
+    }
+
+    // Write final status to Firestore
+    const finalStatus =
+      failedCount === 0 ? 'Completed' :
+      succeededCount > 0 ? 'Completed with Warnings' : 'Failed';
+
+    try {
+      await db.collection('ingestion_metadata').doc(sourceId).update({
+        status: finalStatus,
+        completedBy: initiatedBy,
+        successfulChunks: succeededCount,
+        failedChunks: failedCount,
+        processingTimeMs: Date.now() - docStartTime,
+        lastIndexedAt: new Date().toISOString()
+      });
+    } catch (err) {
+      console.error(`⚠️ Failed to update metadata for ${fileName}:`, err);
+    }
+
+    return succeededCount;
+  }
+
+  /**
+   * Run chunking and embedding pipeline in the background with progress updates.
+   * Supports optional smart diffing when updating an existing document.
+   */
+  static async processIngestionInBackground(jobId, fileName, textContent, options = {}) {
+    const initiatedBy = options.initiatedBy || 'system-api';
+    const isDiff = !!options.diffEnabled;
+    const oldFileName = options.oldFileName || fileName;
+    
+    const docStartTime = Date.now();
+    let succeededCount = 0;
+    let failedCount = 0;
+    let sourceId = randomUUID();
+
+    const deleteBackup = () => {
+      if (options.backupPath && fs.existsSync(options.backupPath)) {
+        try {
+          fs.unlinkSync(options.backupPath);
+          console.log(`🧹 Cleaned up backup file: ${options.backupPath}`);
+        } catch (err) {
+          console.error(`⚠️ Failed to delete backup file:`, err);
+        }
+      }
+    };
+
+    const handleCancellation = async () => {
+      console.log(`[Job ${jobId}] Cleaning up cancelled job...`);
+      JobQueue.updateJob(jobId, { status: 'cancelled' });
+
+      try {
+        await db.collection('ingestion_metadata').doc(sourceId).update({
+          status: 'Cancelled',
+          lastIndexedAt: new Date().toISOString()
+        });
+      } catch (err) {
+        console.error(`⚠️ [Job ${jobId}] Failed to update metadata on cancel:`, err);
+      }
+
+      if (options.backupPath && fs.existsSync(options.backupPath)) {
+        try {
+          const targetFilePath = path.join(RAW_DATA_DIR, fileName);
+          if (fileName !== options.originalFileName && fs.existsSync(targetFilePath)) {
+            fs.unlinkSync(targetFilePath);
+            console.log(`🗑️ Cancel Revert: Deleted partial text file: ${targetFilePath}`);
+          }
+          const originalFilePath = path.join(RAW_DATA_DIR, options.originalFileName);
+          fs.copyFileSync(options.backupPath, originalFilePath);
+          fs.unlinkSync(options.backupPath);
+          console.log(`🔄 Cancel Revert: Restored original file from backup: ${originalFilePath}`);
+        } catch (revertErr) {
+          console.error(`❌ [Job ${jobId}] Failed to revert files during cancel:`, revertErr);
+        }
+      } else if (options.isUpload) {
+        const uploadedFilePath = path.join(RAW_DATA_DIR, fileName);
+        if (fs.existsSync(uploadedFilePath)) {
+          try {
+            fs.unlinkSync(uploadedFilePath);
+            console.log(`🗑️ Cancel Clean: Deleted uploaded file: ${uploadedFilePath}`);
+          } catch (cleanErr) {
+            console.error(`❌ [Job ${jobId}] Failed to delete uploaded file during cancel:`, cleanErr);
+          }
+        }
+      }
+    };
+
+    try {
+      const apiKey = await GeminiService.getEmbeddingApiKey();
+      const hasApiKey = !!apiKey;
+      const { embeddingProvider, embeddingModel } = await GeminiService.getEmbeddingInfo();
+
+      const chunks = DocumentService.chunkText(textContent, 800, 150);
+      if (chunks.length === 0) {
+        JobQueue.updateJob(jobId, { status: 'completed', progress: { done: 0, total: 0 } });
+        deleteBackup();
+        return;
+      }
+
+      let version = 1;
+      try {
+        const metadataRef = db.collection('ingestion_metadata');
+        const querySnap = await metadataRef.where('fileName', '==', fileName).get();
+        if (querySnap && querySnap.docs && querySnap.docs.length > 0) {
+          const doc = querySnap.docs[0];
+          sourceId = doc.id;
+          version = (doc.data().version || 1) + 1;
+        } else if (isDiff && oldFileName !== fileName) {
+          const oldQuerySnap = await metadataRef.where('fileName', '==', oldFileName).get();
+          if (oldQuerySnap && oldQuerySnap.docs && oldQuerySnap.docs.length > 0) {
+            const doc = oldQuerySnap.docs[0];
+            sourceId = doc.id;
+            version = (doc.data().version || 1) + 1;
+          }
+        }
+      } catch (err) {
+        console.error('Error lookup metadata:', err);
+      }
+
+      try {
+        await db.collection('ingestion_metadata').doc(sourceId).set({
+          sourceId,
+          fileName,
+          version,
+          status: 'Processing',
+          startedAt: new Date().toISOString(),
+          initiatedBy,
+          completedBy: null,
+          embeddingProvider,
+          embeddingModel,
+          totalChunks: chunks.length,
+          successfulChunks: 0,
+          failedChunks: 0,
+          processingTimeMs: null,
+          lastIndexedAt: null
+        });
+      } catch (err) {
+        console.error('Error writing processing status to metadata:', err);
+      }
+
+      if (JobQueue.getJob(jobId)?.cancelled) {
+        await handleCancellation();
+        return;
+      }
+
+      let category = fileName.toLowerCase().includes('requirement') ? 'requirements' :
+                     fileName.toLowerCase().includes('instruction') ? 'instructions' :
+                     fileName.toLowerCase().includes('conversation') ? 'examples' :
+                     (fileName.toLowerCase().includes('structure') || fileName.toLowerCase().includes('knowledge')) ? 'knowledge_structure' : 'general';
+
+      const collection = await ChromaService.getOrCreateCollection(COLLECTION_NAME);
+      
+      let chunksToEmbed = [];
+      let chunksToInsertDirectly = [];
+      let idsToDelete = [];
+
+      if (isDiff) {
+        console.log(`[Job ${jobId}] Running smart diff update for: "${oldFileName}" -> "${fileName}"`);
+        
+        const existing = await collection.get({
+          where: { source: oldFileName },
+          include: ['documents', 'metadatas', 'embeddings']
+        });
+
+        const existingMap = new Map();
+        const existingIds = new Set();
+        if (existing && existing.ids && existing.ids.length > 0) {
+          for (let i = 0; i < existing.ids.length; i++) {
+            const id = existing.ids[i];
+            const text = existing.documents[i];
+            const metadata = existing.metadatas[i];
+            const embedding = existing.embeddings ? existing.embeddings[i] : null;
+            const hash = metadata.chunkHash;
+            existingIds.add(id);
+            existingMap.set(hash, { id, text, embedding, chunkIndex: metadata.chunkIndex });
+          }
+        }
+
+        const keptIds = new Set();
+
+        for (let j = 0; j < chunks.length; j++) {
+          const chunkText = chunks[j];
+          const chunkId = `${fileName.replace(/\s+/g, '_')}_chunk_${j}`;
+          const chunkHash = createHash('sha256').update(chunkText).digest('hex').slice(0, 16);
+
+          const matched = existingMap.get(chunkHash);
+          if (matched && matched.embedding) {
+            if (matched.id === chunkId && matched.chunkIndex === j && oldFileName === fileName) {
+              keptIds.add(chunkId);
+              succeededCount++;
+            } else {
+              chunksToInsertDirectly.push({
+                id: chunkId,
+                text: chunkText,
+                metadata: {
+                  source: fileName,
+                  sourceId,
+                  category,
+                  chunkIndex: j,
+                  chunkHash,
+                  timestamp: new Date().toISOString()
+                },
+                embedding: matched.embedding
+              });
+              keptIds.add(chunkId);
+              succeededCount++;
+            }
+          } else {
+            chunksToEmbed.push({
+              text: chunkText,
+              id: chunkId,
+              hash: chunkHash,
+              index: j
+            });
+            keptIds.add(chunkId);
+          }
+        }
+
+        idsToDelete = [...existingIds].filter(id => !keptIds.has(id));
+      } else {
+        chunksToEmbed = chunks.map((text, idx) => ({
+          text,
+          id: `${fileName.replace(/\s+/g, '_')}_chunk_${idx}`,
+          hash: createHash('sha256').update(text).digest('hex').slice(0, 16),
+          index: idx
+        }));
+      }
+
+      if (JobQueue.getJob(jobId)?.cancelled) {
+        await handleCancellation();
+        return;
+      }
+
+      if (idsToDelete.length > 0) {
+        await collection.delete({ ids: idsToDelete });
+        console.log(`[Job ${jobId}] Deleted ${idsToDelete.length} obsolete chunks from ChromaDB.`);
+      }
+
+      if (chunksToInsertDirectly.length > 0) {
+        await ChromaService.addDocuments(COLLECTION_NAME, chunksToInsertDirectly);
+        console.log(`[Job ${jobId}] Kept ${chunksToInsertDirectly.length} existing chunks without re-embedding.`);
+      }
+
+      JobQueue.updateJob(jobId, {
+        progress: { done: succeededCount, total: chunks.length }
+      });
+
+      const CONTROLLER_DELAY_MS = Math.round(computeBatchDelay() / 2);
+      const retryQueue = [];
+      const totalToEmbed = chunksToEmbed.length;
+
+      for (let idx = 0; idx < totalToEmbed; idx++) {
+        if (JobQueue.getJob(jobId)?.cancelled) {
+          await handleCancellation();
+          return;
+        }
+
+        const item = chunksToEmbed[idx];
+        let embedding;
+
+        if (hasApiKey) {
+          try {
+            embedding = await GeminiService.generateEmbedding(item.text);
+            succeededCount++;
+          } catch (err) {
+            console.warn(`[Job ${jobId}] Chunk ${item.index} failed embedding: ${err.message}. Queuing for retry.`);
+            retryQueue.push(item);
+            continue;
+          }
         } else {
-          // Fallback mock embedding
           embedding = new Array(768).fill(0.0).map((_, idx) => {
             let hash = 0;
-            for (let k = 0; k < chunkText.length; k++) {
-              hash = (hash << 5) - hash + chunkText.charCodeAt(k);
+            for (let k = 0; k < item.text.length; k++) {
+              hash = (hash << 5) - hash + item.text.charCodeAt(k);
               hash |= 0;
             }
             return Math.sin(hash + idx) * 0.1;
           });
+          succeededCount++;
         }
 
-        let category = 'general';
-        if (fileName.toLowerCase().includes('requirement')) category = 'requirements';
-        else if (fileName.toLowerCase().includes('instruction')) category = 'instructions';
-        else if (fileName.toLowerCase().includes('conversation')) category = 'examples';
-        else if (fileName.toLowerCase().includes('structure') || fileName.toLowerCase().includes('knowledge')) category = 'knowledge_structure';
-
-        return {
-          id: chunkId,
-          text: chunkText,
+        await ChromaService.addDocuments(COLLECTION_NAME, [{
+          id: item.id,
+          text: item.text,
           metadata: {
             source: fileName,
+            sourceId,
             category,
-            chunkIndex: j,
+            chunkIndex: item.index,
+            chunkHash: item.hash,
             timestamp: new Date().toISOString()
           },
           embedding
-        };
+        }]);
+
+        JobQueue.updateJob(jobId, {
+          progress: { done: succeededCount }
+        });
+
+        if (totalToEmbed > 5 && idx < totalToEmbed - 1) {
+          await sleep(CONTROLLER_DELAY_MS);
+        }
+      }
+
+      if (retryQueue.length > 0) {
+        console.log(`[Job ${jobId}] Second pass: retrying ${retryQueue.length} failed chunks...`);
+        for (const item of retryQueue) {
+          if (JobQueue.getJob(jobId)?.cancelled) {
+            await handleCancellation();
+            return;
+          }
+          if (totalToEmbed > 5) await sleep(CONTROLLER_DELAY_MS);
+          try {
+            const embedding = await GeminiService.generateEmbedding(item.text);
+            await ChromaService.addDocuments(COLLECTION_NAME, [{
+              id: item.id,
+              text: item.text,
+              metadata: {
+                source: fileName,
+                sourceId,
+                category,
+                chunkIndex: item.index,
+                chunkHash: item.hash,
+                timestamp: new Date().toISOString()
+              },
+              embedding
+            }]);
+            succeededCount++;
+            JobQueue.updateJob(jobId, { progress: { done: succeededCount } });
+          } catch (err) {
+            failedCount++;
+            console.error(`[Job ${jobId}] Chunk ${item.index} permanently failed: ${err.message}`);
+          }
+        }
+      }
+
+      const finalStatus = failedCount === 0 ? 'Completed' : (succeededCount > 0 ? 'Completed with Warnings' : 'Failed');
+      
+      JobQueue.updateJob(jobId, {
+        status: finalStatus === 'Completed' || finalStatus === 'Completed with Warnings' ? 'completed' : 'failed',
+        error: finalStatus === 'Failed' ? 'All chunks failed embedding.' : null,
+        progress: { done: succeededCount, total: chunks.length }
       });
 
-      const batchResults = await Promise.all(batchPromises);
-      items.push(...batchResults);
-    }
+      try {
+        await db.collection('ingestion_metadata').doc(sourceId).update({
+          status: finalStatus,
+          completedBy: initiatedBy,
+          successfulChunks: succeededCount,
+          failedChunks: failedCount,
+          processingTimeMs: Date.now() - docStartTime,
+          lastIndexedAt: new Date().toISOString()
+        });
+      } catch (err) {
+        console.error(`⚠️ [Job ${jobId}] Failed to update metadata in Firestore:`, err);
+      }
 
-    await ChromaService.addDocuments(COLLECTION_NAME, items);
-    return chunks.length;
+      deleteBackup();
+      console.log(`🎉 [Job ${jobId}] Background ingestion completed for: "${fileName}" in ${((Date.now() - docStartTime)/1000).toFixed(1)}s`);
+
+    } catch (jobErr) {
+      console.error(`❌ [Job ${jobId}] Job crashed with exception:`, jobErr);
+      JobQueue.updateJob(jobId, {
+        status: 'failed',
+        error: jobErr.message
+      });
+      deleteBackup();
+    }
   }
 
   /**
@@ -111,7 +568,9 @@ export class KnowledgeController {
           rawText = fs.readFileSync(filePath, 'utf8');
         }
 
-        const chunksCount = await KnowledgeController.indexTextContent(file, rawText);
+        const chunksCount = await KnowledgeController.indexTextContent(file, rawText, {
+          initiatedBy: req.user?.email || req.user?.uid || 'admin-api'
+        });
         totalChunks += chunksCount;
       }
 
@@ -214,25 +673,17 @@ export class KnowledgeController {
   }
 
   /**
-   * Save a base64 encoded document to raw folder and run chunking/embedding pipeline.
+   * Save an uploaded document to raw folder and run chunking/embedding pipeline in the background.
    */
   static async uploadDocument(req, res) {
-    const { fileName, fileContent } = req.body;
-    if (!fileName || !fileContent) {
-      return res.status(400).json({ error: 'fileName and fileContent (base64) are required.' });
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded. Please upload a file via multipart form-data.' });
     }
 
+    const fileName = req.file.originalname;
+    const filePath = req.file.path;
+
     try {
-      const buffer = Buffer.from(fileContent, 'base64');
-      const filePath = path.join(RAW_DATA_DIR, fileName);
-      
-      if (!fs.existsSync(RAW_DATA_DIR)) {
-        fs.mkdirSync(RAW_DATA_DIR, { recursive: true });
-      }
-
-      fs.writeFileSync(filePath, buffer);
-      console.log(`📥 Base64 upload saved to: ${filePath}`);
-
       let text = '';
       if (fileName.toLowerCase().endsWith('.pdf')) {
         text = await DocumentService.parsePdf(filePath);
@@ -242,16 +693,35 @@ export class KnowledgeController {
         text = fs.readFileSync(filePath, 'utf8');
       }
 
-      const chunkCount = await KnowledgeController.indexTextContent(fileName, text);
-      console.log(`🚀 Indexed uploaded file "${fileName}" (${chunkCount} chunks)`);
+      // Create background job
+      const initiatedBy = req.user?.email || req.user?.uid || 'admin-api';
+      const jobId = JobQueue.createJob('upload', fileName, initiatedBy);
 
-      return res.status(200).json({
+      // Run in background asynchronously
+      setImmediate(() => {
+        KnowledgeController.processIngestionInBackground(jobId, fileName, text, {
+          initiatedBy,
+          diffEnabled: false,
+          isUpload: true
+        });
+      });
+
+      return res.status(202).json({
         success: true,
-        message: `Successfully uploaded and indexed "${fileName}" (${chunkCount} chunks).`
+        message: `File uploaded successfully. Indexing job "${jobId}" started in background.`,
+        jobId
       });
     } catch (err) {
       console.error('File upload indexing failed:', err);
-      return res.status(500).json({ error: 'Failed to upload and index document.', details: err.message });
+      // Clean up uploaded file on error
+      if (fs.existsSync(filePath)) {
+        try {
+          fs.unlinkSync(filePath);
+        } catch (unlinkErr) {
+          console.error('Failed to delete uploaded file after error:', unlinkErr);
+        }
+      }
+      return res.status(500).json({ error: 'Failed to process uploaded document.', details: err.message });
     }
   }
 
@@ -277,7 +747,9 @@ export class KnowledgeController {
       fs.writeFileSync(filePath, textContent, 'utf8');
       console.log(`📥 Custom FAQ saved to text file: ${filePath}`);
 
-      const chunkCount = await KnowledgeController.indexTextContent(fileName, textContent);
+      const chunkCount = await KnowledgeController.indexTextContent(fileName, textContent, {
+        initiatedBy: req.user?.email || req.user?.uid || 'admin-api'
+      });
       console.log(`🚀 Indexed FAQ "${fileName}" (${chunkCount} chunks)`);
 
       return res.status(200).json({
@@ -312,6 +784,20 @@ export class KnowledgeController {
         where: { source: fileName }
       });
       console.log(`🗑️ Deleted chunks matching source: "${fileName}" from ChromaDB`);
+
+      // Delete metadata record from Firestore
+      try {
+        const metadataRef = db.collection('ingestion_metadata');
+        const querySnap = await metadataRef.where('fileName', '==', fileName).get();
+        if (querySnap && querySnap.docs && querySnap.docs.length > 0) {
+          for (const doc of querySnap.docs) {
+            await doc.ref.delete();
+          }
+          console.log(`🗑️ Deleted ingestion_metadata record for file: "${fileName}"`);
+        }
+      } catch (err) {
+        console.error('Error deleting metadata record:', err);
+      }
 
       return res.status(200).json({
         success: true,
@@ -361,7 +847,7 @@ export class KnowledgeController {
   }
 
   /**
-   * Update the content of an uploaded knowledge source.
+   * Update the content of an uploaded knowledge source using a smart diff background job.
    */
   static async updateSourceContent(req, res) {
     const { sourceName } = req.params;
@@ -382,15 +868,13 @@ export class KnowledgeController {
         return res.status(404).json({ error: `Knowledge source "${safeName}" not found.` });
       }
 
-      // Delete old vector store chunks for this source
-      const collection = await ChromaService.getOrCreateCollection(COLLECTION_NAME);
-      await collection.delete({
-        where: { source: safeName }
-      });
-      console.log(`🗑️ Cleared vector store chunks for: "${safeName}"`);
-
       const isBinary = safeName.toLowerCase().endsWith('.pdf') || safeName.toLowerCase().endsWith('.docx');
       let targetFileName = safeName;
+      let backupPath = path.join(RAW_DATA_DIR, `${safeName}.bak`);
+
+      // Create backup of original file
+      fs.copyFileSync(filePath, backupPath);
+      console.log(`💾 Backed up original file "${safeName}" to "${backupPath}"`);
 
       if (isBinary) {
         // Delete original binary file
@@ -410,21 +894,86 @@ export class KnowledgeController {
         console.log(`📝 Overwrote existing text file: ${filePath}`);
       }
 
-      // Re-index the content using our helper
-      const chunkCount = await KnowledgeController.indexTextContent(targetFileName, content);
-      console.log(`🚀 Indexed updated file "${targetFileName}" (${chunkCount} chunks)`);
+      // Create background job for smart diff indexing
+      const initiatedBy = req.user?.email || req.user?.uid || 'admin-api';
+      const jobId = JobQueue.createJob('edit', targetFileName, initiatedBy);
 
-      return res.status(200).json({
+      setImmediate(() => {
+        KnowledgeController.processIngestionInBackground(jobId, targetFileName, content, {
+          initiatedBy,
+          diffEnabled: true,
+          oldFileName: safeName,
+          backupPath,
+          originalFileName: safeName,
+          isUpload: false
+        });
+      });
+
+      return res.status(202).json({
         success: true,
-        message: isBinary 
-          ? `Updated and converted "${safeName}" to "${targetFileName}" successfully.`
-          : `Updated "${safeName}" successfully.`,
-        fileName: targetFileName,
-        chunksIndexed: chunkCount
+        message: `Content update started in background. Indexing job "${jobId}" running.`,
+        jobId,
+        fileName: targetFileName
       });
     } catch (error) {
       console.error('Error updating source content:', error);
       return res.status(500).json({ error: 'Failed to update file contents.', details: error.message });
+    }
+  }
+
+  /**
+   * Get the status and progress of an active background indexing job.
+   */
+  static async getJobStatus(req, res) {
+    const { jobId } = req.params;
+    if (!jobId) {
+      return res.status(400).json({ error: 'jobId parameter is required.' });
+    }
+
+    const job = JobQueue.getJob(jobId);
+    if (!job) {
+      return res.status(404).json({ error: `Job with ID "${jobId}" not found or expired.` });
+    }
+
+    return res.status(200).json({ success: true, job });
+  }
+
+  /**
+   * Cancel an active background indexing job.
+   */
+  static async cancelJob(req, res) {
+    const { jobId } = req.params;
+    if (!jobId) {
+      return res.status(400).json({ error: 'jobId parameter is required.' });
+    }
+
+    const job = JobQueue.cancelJob(jobId);
+    if (!job) {
+      return res.status(404).json({ error: `Job with ID "${jobId}" not found or expired.` });
+    }
+
+    return res.status(200).json({ success: true, message: 'Cancellation signal sent.', job });
+  }
+
+  /**
+   * Get dynamic ingestion metadata for the dashboard.
+   */
+  static async getIngestionMetadata(req, res) {
+    try {
+      const snapshot = await db.collection('ingestion_metadata')
+        .orderBy('lastIndexedAt', 'desc')
+        .limit(50)
+        .get();
+
+      const records = [];
+      snapshot.forEach(doc => {
+        records.push(doc.data());
+      });
+
+      return res.status(200).json({ records });
+    } catch (error) {
+      console.error('Error fetching ingestion metadata:', error);
+      return res.status(500).json({ error: 'Failed to retrieve ingestion metadata.' });
     }
   }
 }

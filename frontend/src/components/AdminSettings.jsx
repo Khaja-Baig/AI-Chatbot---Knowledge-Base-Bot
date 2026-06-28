@@ -6,6 +6,8 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
   const [behaviorMode, setBehaviorMode] = useState(config.behaviorMode || 'warm');
   
   const [status, setStatus] = useState(null);
+  const [ingestionMetadata, setIngestionMetadata] = useState([]);
+  const [isLoadingMetadata, setIsLoadingMetadata] = useState(false);
   const [isIngesting, setIsIngesting] = useState(false);
   const [ingestResult, setIngestResult] = useState('');
   
@@ -35,6 +37,10 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
   const [isLoadingContent, setIsLoadingContent] = useState(false);
   const [isSavingContent, setIsSavingContent] = useState(false);
   const [editStatus, setEditStatus] = useState({ type: '', message: '' });
+  const [uploadProgress, setUploadProgress] = useState(null);
+  const [editProgress, setEditProgress] = useState(null);
+  const [activeJobs, setActiveJobs] = useState([]);
+  const [currentEditJobId, setCurrentEditJobId] = useState(null);
 
   useEffect(() => {
     fetchStatus();
@@ -42,6 +48,25 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
     setGreetingMessage(config.greetingMessage || '');
     setBehaviorMode(config.behaviorMode || 'warm');
   }, [config]);
+
+  const fetchIngestionMetadata = async () => {
+    setIsLoadingMetadata(true);
+    try {
+      const res = await fetch('http://localhost:5001/api/knowledge/ingestion-metadata', {
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setIngestionMetadata(data.records || []);
+      }
+    } catch (err) {
+      console.error('Error fetching ingestion metadata:', err);
+    } finally {
+      setIsLoadingMetadata(false);
+    }
+  };
 
   const fetchStatus = async () => {
     try {
@@ -57,6 +82,7 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
     } catch (err) {
       console.error('Error fetching status:', err);
     }
+    fetchIngestionMetadata();
   };
 
   const handleSaveConfig = (e) => {
@@ -104,10 +130,124 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
     }
   };
 
+  const dismissJob = (jobId) => {
+    setActiveJobs(prev => prev.filter(j => j.jobId !== jobId));
+  };
+
+  const cancelActiveJob = async (jobId) => {
+    setActiveJobs(prev => prev.map(job => {
+      if (job.jobId === jobId) {
+        return { ...job, status: 'cancelling' };
+      }
+      return job;
+    }));
+
+    try {
+      const res = await fetch(`http://localhost:5001/api/knowledge/jobs/${encodeURIComponent(jobId)}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        }
+      });
+      if (res.ok) {
+        setActiveJobs(prev => prev.map(job => {
+          if (job.jobId === jobId) {
+            return { ...job, status: 'cancelled' };
+          }
+          return job;
+        }));
+        fetchStatus();
+        setTimeout(() => {
+          dismissJob(jobId);
+        }, 8000);
+      } else {
+        const data = await res.json();
+        alert(`Failed to cancel job: ${data.error || 'Unknown error'}`);
+      }
+    } catch (err) {
+      console.error('Error cancelling job:', err);
+      alert(`Error communicating with server: ${err.message}`);
+    }
+  };
+
+  const pollJobStatus = (jobId, type, fileName, onComplete) => {
+    setActiveJobs(prev => {
+      if (prev.some(j => j.jobId === jobId)) return prev;
+      return [...prev, {
+        jobId,
+        type,
+        fileName,
+        status: 'processing',
+        progress: { done: 0, total: 0 },
+        error: null
+      }];
+    });
+
+    const intervalId = setInterval(async () => {
+      try {
+        const res = await fetch(`http://localhost:5001/api/knowledge/jobs/${jobId}`, {
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const { status, progress, error } = data.job;
+
+          setActiveJobs(prev => prev.map(job => {
+            if (job.jobId === jobId) {
+              return { ...job, status, progress, error };
+            }
+            return job;
+          }));
+          
+          if (status === 'completed') {
+            clearInterval(intervalId);
+            fetchStatus();
+            if (onComplete) onComplete(null, progress);
+            
+            setTimeout(() => {
+              dismissJob(jobId);
+            }, 8000);
+
+          } else if (status === 'failed') {
+            clearInterval(intervalId);
+            if (onComplete) onComplete(error || 'Failed', progress);
+            
+            setTimeout(() => {
+              dismissJob(jobId);
+            }, 12000);
+          } else if (status === 'cancelled') {
+            clearInterval(intervalId);
+            if (onComplete) onComplete('Cancelled', progress);
+          }
+        } else {
+          clearInterval(intervalId);
+          setActiveJobs(prev => prev.map(job => {
+            if (job.jobId === jobId) {
+              return { ...job, status: 'failed', error: 'Failed to communicate with server.' };
+            }
+            return job;
+          }));
+          if (onComplete) onComplete('Failed to poll status');
+        }
+      } catch (err) {
+        clearInterval(intervalId);
+        setActiveJobs(prev => prev.map(job => {
+          if (job.jobId === jobId) {
+            return { ...job, status: 'failed', error: err.message };
+          }
+          return job;
+        }));
+        if (onComplete) onComplete(err.message);
+      }
+    }, 2000);
+    return intervalId;
+  };
+
   const processFile = async (file) => {
     if (!file) return;
     
-    // Only accept supported extensions
     const supportedExtensions = ['.pdf', '.docx', '.txt', '.md', '.csv', '.json'];
     const fileExt = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
     if (!supportedExtensions.includes(fileExt)) {
@@ -116,44 +256,38 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
     }
 
     setIsUploading(true);
-    setUploadStatus({ type: 'success', message: `Reading "${file.name}"...` });
+    setUploadStatus({ type: 'success', message: `Uploading "${file.name}"...` });
 
     try {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const base64Content = e.target.result.split(',')[1];
-        
-        try {
-          const res = await fetch('http://localhost:5001/api/knowledge/upload', {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${authToken}`
-            },
-            body: JSON.stringify({
-              fileName: file.name,
-              fileContent: base64Content
-            })
-          });
+      const formData = new FormData();
+      formData.append('file', file);
 
-          const data = await res.json();
-          if (res.ok && data.success) {
-            setUploadStatus({ type: 'success', message: data.message || 'File uploaded and indexed successfully!' });
-            fetchStatus();
+      const res = await fetch('http://localhost:5001/api/knowledge/upload', {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: formData
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success && data.jobId) {
+        setIsUploading(false);
+        setUploadStatus({ type: 'success', message: `Upload complete. Indexing "${file.name}" in background...` });
+        
+        pollJobStatus(data.jobId, 'upload', file.name, (err, progress) => {
+          if (err) {
+            setUploadStatus({ type: 'error', message: `Indexing "${file.name}" failed: ${err}` });
           } else {
-            setUploadStatus({ type: 'error', message: data.error || 'Upload failed.' });
+            setUploadStatus({ type: 'success', message: `Successfully indexed "${file.name}"! ${progress?.done || 0}/${progress?.total || 0} chunks.` });
           }
-        } catch (err) {
-          setUploadStatus({ type: 'error', message: 'Connection to server failed during upload.' });
-          console.error(err);
-        } finally {
-          setIsUploading(false);
-        }
-      };
-      
-      reader.readAsDataURL(file);
+        });
+      } else {
+        setUploadStatus({ type: 'error', message: data.error || 'Upload failed.' });
+        setIsUploading(false);
+      }
     } catch (err) {
-      setUploadStatus({ type: 'error', message: 'Failed to read local file.' });
+      setUploadStatus({ type: 'error', message: 'Connection to server failed during upload.' });
       setIsUploading(false);
       console.error(err);
     }
@@ -314,9 +448,17 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
     }
   };
 
+  const handleCloseModal = () => {
+    if (isSavingContent) return;
+    setEditingDocName(null);
+    setEditingDocContent('');
+    setCurrentEditJobId(null);
+    setEditStatus({ type: '', message: '' });
+  };
+
   const handleSaveDocContent = async () => {
     setIsSavingContent(true);
-    setEditStatus({ type: 'success', message: 'Saving and re-indexing...' });
+    setEditStatus({ type: 'success', message: 'Saving changes...' });
     try {
       const res = await fetch(`http://localhost:5001/api/knowledge/sources/${encodeURIComponent(editingDocName)}`, {
         method: 'PUT',
@@ -326,22 +468,34 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
         },
         body: JSON.stringify({ content: editingDocContent })
       });
-      if (res.ok) {
-        const data = await res.json();
-        setEditStatus({ type: 'success', message: 'Document updated successfully!' });
-        fetchStatus(); // Refresh active sources table since name or chunk count might change
-        setTimeout(() => {
-          setEditingDocName(null);
-          setEditingDocContent('');
-        }, 1500);
+      
+      const data = await res.json();
+      if (res.ok && data.success && data.jobId) {
+        setIsSavingContent(false);
+        setCurrentEditJobId(data.jobId);
+        setEditStatus({ type: 'success', message: 'Saved successfully. Indexing in background...' });
+        
+        pollJobStatus(data.jobId, 'edit', data.fileName, (err, progress) => {
+          if (err) {
+            if (err === 'Cancelled') {
+              setEditStatus({ type: 'error', message: 'Indexing stopped. File reverted.' });
+            } else {
+              setEditStatus({ type: 'error', message: `Indexing failed: ${err}` });
+            }
+          } else {
+            setEditStatus({ type: 'success', message: `Successfully indexed! ${progress?.done || 0}/${progress?.total || 0} chunks.` });
+            setTimeout(() => {
+              handleCloseModal();
+            }, 2000);
+          }
+        });
       } else {
-        const data = await res.json();
         setEditStatus({ type: 'error', message: data.error || 'Failed to save changes.' });
+        setIsSavingContent(false);
       }
     } catch (err) {
       console.error(err);
       setEditStatus({ type: 'error', message: 'Connection to server failed.' });
-    } finally {
       setIsSavingContent(false);
     }
   };
@@ -416,6 +570,135 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
             </div>
           </div>
 
+          <style>{`
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          `}</style>
+
+          {/* Active Jobs Ingestion Tray */}
+          {activeJobs.length > 0 && (
+            <div style={{
+              background: 'var(--bg-primary)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '8px',
+              padding: '16px',
+              marginTop: '24px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h4 style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)', margin: 0, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {activeJobs.some(j => j.status === 'processing' || j.status === 'cancelling') && (
+                    <span className="spinner-border spinner-border-sm" style={{ border: '2px solid transparent', borderTop: '2px solid var(--text-primary)', borderRadius: '50%', width: '12px', height: '12px', display: 'inline-block', animation: 'spin 1s linear infinite' }}></span>
+                  )}
+                  ⚙️ Background Ingestion Jobs ({activeJobs.filter(j => j.status === 'processing').length} active)
+                </h4>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {activeJobs.map(job => {
+                  const percent = job.progress?.total > 0 ? Math.round((job.progress.done / job.progress.total) * 100) : 0;
+                  const isDone = job.status === 'completed';
+                  const isFailed = job.status === 'failed';
+                  const isCancelled = job.status === 'cancelled';
+                  const isProcessing = job.status === 'processing';
+                  const isCancelling = job.status === 'cancelling';
+
+                  return (
+                    <div key={job.jobId} style={{
+                      background: 'var(--bg-secondary)',
+                      border: `1px solid ${isDone ? '#10b981' : (isFailed || isCancelled) ? '#ef4444' : 'var(--border-color)'}`,
+                      borderRadius: '6px',
+                      padding: '12px',
+                      position: 'relative'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                        <div>
+                          <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                            📄 {job.fileName}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                            Type: <strong style={{ textTransform: 'uppercase' }}>{job.type}</strong> | Status: 
+                            <span style={{
+                              marginLeft: '4px',
+                              fontWeight: 600,
+                              color: isDone ? '#10b981' : isFailed ? '#ef4444' : isCancelled ? '#d97706' : 'var(--text-secondary)'
+                            }}>
+                              {job.status === 'processing' ? 'Indexing...' : job.status === 'cancelling' ? 'Stopping...' : job.status}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          {isProcessing && (
+                            <button
+                              onClick={() => cancelActiveJob(job.jobId)}
+                              style={{
+                                background: '#dc2626',
+                                color: '#fff',
+                                border: 'none',
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                fontSize: '0.7rem',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              Stop
+                            </button>
+                          )}
+                          <button
+                            onClick={() => dismissJob(job.jobId)}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: 'var(--text-muted)',
+                              fontSize: '0.9rem',
+                              cursor: 'pointer',
+                              padding: '0 4px'
+                            }}
+                            title="Dismiss notification"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+
+                      {(isProcessing || isCancelling || isDone) && job.progress?.total > 0 && (
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                            <span>{job.progress.done} / {job.progress.total} chunks processed</span>
+                            <span>{percent}%</span>
+                          </div>
+                          <div style={{ width: '100%', height: '6px', background: 'rgba(0,0,0,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
+                            <div style={{
+                              width: `${percent}%`,
+                              height: '100%',
+                              background: isDone ? '#10b981' : '#3b82f6',
+                              transition: 'width 0.3s ease'
+                            }}></div>
+                          </div>
+                        </div>
+                      )}
+
+                      {isFailed && (
+                        <div style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '6px' }}>
+                          ⚠️ Error: {job.error || 'Unknown error'}
+                        </div>
+                      )}
+                      {isCancelled && (
+                        <div style={{ fontSize: '0.75rem', color: '#d97706', marginTop: '6px' }}>
+                          🚫 Indexing stopped. File content reverted.
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Table List of active document sources */}
           <div style={{ marginTop: '24px' }}>
             <h4 style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '12px', textTransform: 'uppercase' }}>
@@ -485,6 +768,99 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
             </div>
           </div>
 
+          {/* Indexing Health / Ingestion Metadata Table */}
+          <div style={{ marginTop: '32px' }}>
+            <h4 style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '12px', textTransform: 'uppercase' }}>
+              Indexing Health & Ingestion Metadata
+            </h4>
+            <div className="doc-table-container">
+              <table className="doc-table">
+                <thead>
+                  <tr>
+                    <th>Source Document</th>
+                    <th style={{ width: '40px', textAlign: 'center' }}>v</th>
+                    <th style={{ width: '120px' }}>Status</th>
+                    <th style={{ width: '60px', textAlign: 'center' }}>Chunks</th>
+                    <th style={{ width: '40px', textAlign: 'center' }}>✅</th>
+                    <th style={{ width: '40px', textAlign: 'center' }}>❌</th>
+                    <th style={{ width: '150px' }}>Provider · Model</th>
+                    <th style={{ width: '100px' }}>Initiated By</th>
+                    <th style={{ width: '100px' }}>Completed By</th>
+                    <th style={{ width: '120px' }}>Last Indexed</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {isLoadingMetadata ? (
+                    <tr>
+                      <td colSpan="10" style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
+                        Loading ingestion metadata...
+                      </td>
+                    </tr>
+                  ) : ingestionMetadata.length > 0 ? (
+                    ingestionMetadata.map((record) => {
+                      let badgeStyle = { padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600, display: 'inline-block' };
+                      if (record.status === 'Completed') {
+                        badgeStyle = { ...badgeStyle, backgroundColor: '#d1fae5', color: '#065f46' };
+                      } else if (record.status === 'Completed with Warnings') {
+                        badgeStyle = { ...badgeStyle, backgroundColor: '#fef3c7', color: '#92400e' };
+                      } else if (record.status === 'Failed') {
+                        badgeStyle = { ...badgeStyle, backgroundColor: '#fee2e2', color: '#991b1b' };
+                      } else if (record.status === 'Processing') {
+                        badgeStyle = { ...badgeStyle, backgroundColor: '#e0f2fe', color: '#075985' };
+                      } else {
+                        badgeStyle = { ...badgeStyle, backgroundColor: 'var(--bg-secondary)', color: 'var(--text-muted)' };
+                      }
+
+                      const formatActor = (actor) => {
+                        if (!actor) return '-';
+                        if (actor === 'system-script' || actor === 'system-api') return actor;
+                        if (actor.includes('@')) return actor;
+                        return actor.substring(0, 8);
+                      };
+
+                      const formatDate = (dateStr) => {
+                        if (!dateStr) return '-';
+                        try {
+                          const date = new Date(dateStr);
+                          return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        } catch (e) {
+                          return dateStr;
+                        }
+                      };
+
+                      return (
+                        <tr key={record.sourceId}>
+                          <td style={{ wordBreak: 'break-all' }} title={record.fileName}>{record.fileName}</td>
+                          <td style={{ textAlign: 'center' }}>{record.version || 1}</td>
+                          <td>
+                            <span style={badgeStyle}>
+                              {record.status}
+                            </span>
+                          </td>
+                          <td style={{ textAlign: 'center' }}>{record.totalChunks}</td>
+                          <td style={{ textAlign: 'center', color: '#10b981', fontWeight: 'bold' }}>{record.successfulChunks}</td>
+                          <td style={{ textAlign: 'center', color: record.failedChunks > 0 ? '#ef4444' : 'var(--text-muted)' }}>{record.failedChunks}</td>
+                          <td style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                            {record.embeddingProvider} · {record.embeddingModel}
+                          </td>
+                          <td title={record.initiatedBy}>{formatActor(record.initiatedBy)}</td>
+                          <td title={record.completedBy}>{formatActor(record.completedBy)}</td>
+                          <td>{formatDate(record.lastIndexedAt)}</td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan="10" style={{ textAlign: 'center', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                        No ingestion records found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
           {/* Add Information Subsections */}
           <div style={{ marginTop: '32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
             
@@ -524,8 +900,13 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
               </div>
 
               {uploadStatus.message && (
-                <div className={`notification ${uploadStatus.type}`}>
-                  {uploadStatus.message}
+                <div className={`notification ${uploadStatus.type}`} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div>{uploadStatus.message}</div>
+                  {uploadProgress && uploadProgress.total > 0 && (
+                    <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.2)', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div style={{ width: `${Math.round((uploadProgress.done / uploadProgress.total) * 100)}%`, height: '100%', background: '#fff', transition: 'width 0.3s ease' }}></div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -638,64 +1019,134 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
       </div>
 
       {/* Document View / Edit Modal */}
-      {editingDocName && (
-        <div className="modal-backdrop" onClick={() => !isSavingContent && setEditingDocName(null)}>
-          <div className="settings-modal" onClick={(e) => e.stopPropagation()} style={{ width: '80%', maxWidth: '900px', height: '80%', display: 'flex', flexDirection: 'column' }}>
-            <div className="settings-modal-header">
-              <h2>View / Edit Source - {editingDocName}</h2>
-              <button className="close-modal-btn" onClick={() => !isSavingContent && setEditingDocName(null)}>✕</button>
-            </div>
-            <div className="settings-modal-body" style={{ display: 'flex', flexDirection: 'column', padding: '20px', gap: '16px', overflow: 'hidden', flex: 1 }}>
-              {isLoadingContent ? (
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
-                  Loading document contents...
-                </div>
-              ) : (
-                <>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: 0 }}>
-                    💡 Editing this document will overwrite the text contents and re-index the vector database.
-                    { (editingDocName.toLowerCase().endsWith('.pdf') || editingDocName.toLowerCase().endsWith('.docx')) && (
-                      <strong style={{ color: '#d97706', display: 'block', marginTop: '4px' }}>
-                        ⚠️ Note: This is a binary file ({editingDocName.substring(editingDocName.lastIndexOf('.'))}). Saving modifications will convert it to a plain text file (.txt) to store your edits.
-                      </strong>
-                    )}
-                  </p>
-                  <textarea
-                    className="form-control"
-                    style={{ flex: 1, minHeight: '300px', fontFamily: 'monospace', fontSize: '0.85rem', resize: 'none', lineHeight: '1.5' }}
-                    value={editingDocContent}
-                    onChange={(e) => setEditingDocContent(e.target.value)}
-                    disabled={isSavingContent}
-                  />
-                  {editStatus.message && (
-                    <div className={`notification ${editStatus.type}`} style={{ margin: 0 }}>
-                      {editStatus.message}
-                    </div>
-                  )}
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>
-                    <button
-                      className="btn-secondary"
-                      onClick={() => setEditingDocName(null)}
-                      disabled={isSavingContent}
-                      style={{ padding: '8px 16px', borderRadius: '6px', fontSize: '0.85rem' }}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      className="btn-primary"
-                      onClick={handleSaveDocContent}
-                      disabled={isSavingContent}
-                      style={{ padding: '8px 16px', borderRadius: '6px', fontSize: '0.85rem' }}
-                    >
-                      {isSavingContent ? 'Saving...' : 'Save Changes'}
-                    </button>
+      {editingDocName && (() => {
+        const currentEditJob = activeJobs.find(j => j.jobId === currentEditJobId);
+        const isIndexing = currentEditJob && (currentEditJob.status === 'processing' || currentEditJob.status === 'cancelling');
+        
+        const showStatusType = currentEditJob
+          ? (currentEditJob.status === 'completed' ? 'success' : (currentEditJob.status === 'failed' || currentEditJob.status === 'cancelled') ? 'error' : 'success')
+          : editStatus.type;
+
+        const showStatusMsg = currentEditJob
+          ? (currentEditJob.status === 'completed'
+              ? `Successfully indexed! Processed ${currentEditJob.progress.done}/${currentEditJob.progress.total} chunks.`
+              : currentEditJob.status === 'failed'
+                ? `Indexing failed: ${currentEditJob.error || 'Unknown error'}`
+                : currentEditJob.status === 'cancelled'
+                  ? 'Indexing stopped. File reverted.'
+                  : currentEditJob.status === 'cancelling'
+                    ? 'Stopping indexing...'
+                    : `Indexing in progress: ${currentEditJob.progress.done} / ${currentEditJob.progress.total} chunks...`)
+          : editStatus.message;
+
+        const percent = currentEditJob && currentEditJob.progress.total > 0
+          ? Math.round((currentEditJob.progress.done / currentEditJob.progress.total) * 100)
+          : 0;
+
+        const getCancelButtonProps = () => {
+          if (currentEditJob) {
+            if (currentEditJob.status === 'processing') {
+              return {
+                label: 'Stop Indexing',
+                onClick: () => cancelActiveJob(currentEditJobId),
+                disabled: false,
+                style: { padding: '8px 16px', borderRadius: '6px', fontSize: '0.85rem', background: '#dc2626', color: '#fff', border: 'none', cursor: 'pointer' }
+              };
+            }
+            if (currentEditJob.status === 'cancelling') {
+              return {
+                label: 'Stopping...',
+                onClick: () => {},
+                disabled: true,
+                style: { padding: '8px 16px', borderRadius: '6px', fontSize: '0.85rem', cursor: 'not-allowed', opacity: 0.7 }
+              };
+            }
+            return {
+              label: 'Close',
+              onClick: handleCloseModal,
+              disabled: false,
+              style: { padding: '8px 16px', borderRadius: '6px', fontSize: '0.85rem', cursor: 'pointer' }
+            };
+          }
+          return {
+            label: 'Cancel',
+            onClick: handleCloseModal,
+            disabled: isSavingContent,
+            style: { padding: '8px 16px', borderRadius: '6px', fontSize: '0.85rem', cursor: isSavingContent ? 'not-allowed' : 'pointer' }
+          };
+        };
+        const cancelBtnProps = getCancelButtonProps();
+
+        return (
+          <div className="modal-backdrop" onClick={handleCloseModal}>
+            <div className="settings-modal" onClick={(e) => e.stopPropagation()} style={{ width: '80%', maxWidth: '900px', height: '80%', display: 'flex', flexDirection: 'column' }}>
+              <div className="settings-modal-header">
+                <h2>View / Edit Source - {editingDocName}</h2>
+                <button
+                  className="close-modal-btn"
+                  onClick={handleCloseModal}
+                  title={isIndexing ? "Close window — indexing continues in background" : "Close"}
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="settings-modal-body" style={{ display: 'flex', flexDirection: 'column', padding: '20px', gap: '16px', overflow: 'hidden', flex: 1 }}>
+                {isLoadingContent ? (
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
+                    Loading document contents...
                   </div>
-                </>
-              )}
+                ) : (
+                  <>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: 0 }}>
+                      💡 Editing this document will overwrite the text contents and re-index the vector database.
+                      { (editingDocName.toLowerCase().endsWith('.pdf') || editingDocName.toLowerCase().endsWith('.docx')) && (
+                        <strong style={{ color: '#d97706', display: 'block', marginTop: '4px' }}>
+                          ⚠️ Note: This is a binary file ({editingDocName.substring(editingDocName.lastIndexOf('.'))}). Saving modifications will convert it to a plain text file (.txt) to store your edits.
+                        </strong>
+                      )}
+                    </p>
+                    <textarea
+                      className="form-control"
+                      style={{ flex: 1, minHeight: '300px', fontFamily: 'monospace', fontSize: '0.85rem', resize: 'none', lineHeight: '1.5' }}
+                      value={editingDocContent}
+                      onChange={(e) => setEditingDocContent(e.target.value)}
+                      disabled={isSavingContent || isIndexing}
+                    />
+                    {showStatusMsg && (
+                      <div className={`notification ${showStatusType}`} style={{ margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div>{showStatusMsg}</div>
+                        {currentEditJob && currentEditJob.progress && currentEditJob.progress.total > 0 && (
+                          <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.2)', borderRadius: '3px', overflow: 'hidden' }}>
+                            <div style={{ width: `${percent}%`, height: '100%', background: '#fff', transition: 'width 0.3s ease' }}></div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>
+                      <button
+                        className="btn-secondary"
+                        onClick={cancelBtnProps.onClick}
+                        disabled={cancelBtnProps.disabled}
+                        style={cancelBtnProps.style}
+                      >
+                        {cancelBtnProps.label}
+                      </button>
+                      <button
+                        className="btn-primary"
+                        onClick={handleSaveDocContent}
+                        disabled={isSavingContent || isIndexing}
+                        style={{ padding: '8px 16px', borderRadius: '6px', fontSize: '0.85rem', cursor: (isSavingContent || isIndexing) ? 'not-allowed' : 'pointer' }}
+                      >
+                        {isIndexing ? 'Indexing...' : (isSavingContent ? 'Saving...' : 'Save Changes')}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

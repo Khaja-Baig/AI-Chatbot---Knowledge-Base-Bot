@@ -13,7 +13,107 @@ const projectId = process.env.FIREBASE_PROJECT_ID || 'local-ai-assistant';
 let db;
 let isMock = false;
 
-// Simple Local JSON Database Mock for Firestore
+class MockFirestoreQuery {
+  constructor(firestore, pathArray, filters = [], sortField = null, sortDir = 'asc', limitVal = null) {
+    this.firestore = firestore;
+    this.pathArray = pathArray;
+    this.filters = filters;
+    this.sortField = sortField;
+    this.sortDir = sortDir;
+    this.limitVal = limitVal;
+  }
+
+  where(field, op, val) {
+    return new MockFirestoreQuery(
+      this.firestore,
+      this.pathArray,
+      [...this.filters, { field, op, val }],
+      this.sortField,
+      this.sortDir,
+      this.limitVal
+    );
+  }
+
+  orderBy(field, direction = 'asc') {
+    return new MockFirestoreQuery(
+      this.firestore,
+      this.pathArray,
+      this.filters,
+      field,
+      direction,
+      this.limitVal
+    );
+  }
+
+  limit(n) {
+    return new MockFirestoreQuery(
+      this.firestore,
+      this.pathArray,
+      this.filters,
+      this.sortField,
+      this.sortDir,
+      n
+    );
+  }
+
+  async get() {
+    const colData = this.firestore._getNested(this.pathArray) || {};
+    let docs = [];
+    if (typeof colData === 'object' && colData !== null) {
+      docs = Object.keys(colData).map(id => ({
+        id,
+        ref: {
+          delete: async () => {
+            const docPath = [...this.pathArray, id];
+            this.firestore._deleteNested(docPath);
+            return { writeTime: new Date() };
+          }
+        },
+        data: () => JSON.parse(JSON.stringify(colData[id]))
+      }));
+    }
+
+    // Apply filters
+    for (const filter of this.filters) {
+      docs = docs.filter(doc => {
+        const d = doc.data();
+        if (!d) return false;
+        const val = d[filter.field];
+        if (filter.op === '==') return val === filter.val;
+        if (filter.op === '!=') return val !== filter.val;
+        if (filter.op === 'array-contains') return Array.isArray(val) && val.includes(filter.val);
+        return false;
+      });
+    }
+
+    // Apply sorting
+    if (this.sortField) {
+      docs.sort((a, b) => {
+        const valA = a.data()?.[this.sortField];
+        const valB = b.data()?.[this.sortField];
+        if (valA === undefined || valA === null) return 1;
+        if (valB === undefined || valB === null) return -1;
+        if (valA < valB) return this.sortDir === 'desc' ? 1 : -1;
+        if (valA > valB) return this.sortDir === 'desc' ? -1 : 1;
+        return 0;
+      });
+    }
+
+    // Apply limit
+    if (this.limitVal !== null && this.limitVal !== undefined) {
+      docs = docs.slice(0, this.limitVal);
+    }
+
+    return {
+      docs,
+      empty: docs.length === 0,
+      forEach(cb) {
+        docs.forEach(cb);
+      }
+    };
+  }
+}
+
 // Simple Local JSON Database Mock for Firestore supporting subcollections
 class MockFirestore {
   constructor(dbPath) {
@@ -126,46 +226,17 @@ class MockFirestore {
         };
       },
 
-      async get() {
-        const colData = self._getNested(pathArray) || {};
-        if (typeof colData !== 'object' || colData === null) {
-          return {
-            docs: [],
-            forEach() {}
-          };
-        }
-        const docs = Object.keys(colData).map(id => ({
-          id,
-          data: () => JSON.parse(JSON.stringify(colData[id]))
-        }));
-        return {
-          docs,
-          forEach(cb) {
-            docs.forEach(cb);
-          }
-        };
-      },
-
       where(field, op, val) {
-        return {
-          async get() {
-            const allDocs = await self._collectionRoute(pathArray).get();
-            const filteredDocs = allDocs.docs.filter(doc => {
-              const d = doc.data();
-              if (!d) return false;
-              if (op === '==') return d[field] === val;
-              if (op === '!=') return d[field] !== val;
-              if (op === 'array-contains') return Array.isArray(d[field]) && d[field].includes(val);
-              return false;
-            });
-            return {
-              docs: filteredDocs,
-              forEach(cb) {
-                filteredDocs.forEach(cb);
-              }
-            };
-          }
-        };
+        return new MockFirestoreQuery(self, pathArray).where(field, op, val);
+      },
+      orderBy(field, direction) {
+        return new MockFirestoreQuery(self, pathArray).orderBy(field, direction);
+      },
+      limit(n) {
+        return new MockFirestoreQuery(self, pathArray).limit(n);
+      },
+      async get() {
+        return new MockFirestoreQuery(self, pathArray).get();
       }
     };
   }
