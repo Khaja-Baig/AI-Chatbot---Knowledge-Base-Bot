@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import SessionSidebar from '../components/SessionSidebar';
 import ChatWindow from '../components/ChatWindow';
 import GuestUpgradePrompt from '../components/GuestUpgradePrompt';
+import { ChatStorage } from '../utils/sessionStorage';
 
 export default function ChatPage() {
   const { user, logout } = useAuth();
@@ -45,24 +46,24 @@ export default function ChatPage() {
 
   useEffect(() => {
     const handleAuthTransition = async () => {
+      const savedSessionId = ChatStorage.getActiveSession();
+
       if (user) {
-        // Clear guest session info from storage so it does not persist for authenticated users
+        // Clear any guest session ID from sessionStorage
         sessionStorage.removeItem('guestSessionId');
         
-        // Fetch user sessions and force-load the user's history
-        await fetchSessions(true);
+        // Fetch sessions and try to restore preferredSessionId
+        await fetchSessions(savedSessionId);
       } else {
-        // Reset sessions list for guest
         setSessions([]);
         
-        // Restore or initialize guest session
-        const savedSessionId = sessionStorage.getItem('guestSessionId');
-        if (savedSessionId) {
+        // Restore guest session if it is a valid guest session ID
+        if (savedSessionId && savedSessionId.startsWith('session_guest_')) {
           setActiveSessionId(savedSessionId);
         } else {
           const freshId = `session_guest_${Date.now()}`;
           setActiveSessionId(freshId);
-          sessionStorage.setItem('guestSessionId', freshId);
+          ChatStorage.saveActiveSession(freshId);
         }
       }
       fetchConfig();
@@ -71,7 +72,7 @@ export default function ChatPage() {
     handleAuthTransition();
   }, [user]);
 
-  const fetchSessions = async (isLoginTransition = false) => {
+  const fetchSessions = async (preferredSessionId = null) => {
     try {
       const headers = {};
       if (user?.token) {
@@ -80,18 +81,51 @@ export default function ChatPage() {
       const res = await fetch('http://localhost:5001/api/chat/sessions', { headers });
       if (res.ok) {
         const data = await res.json();
-        setSessions(data);
         
-        // Decide which session should be active
+        let validSessionId = null;
+
         if (user) {
-          if (isLoginTransition || !activeSessionId || activeSessionId.includes('guest')) {
-            if (data.length > 0) {
-              setActiveSessionId(data[0].sessionId);
+          if (preferredSessionId) {
+            const isDbSession = data.some(s => s.sessionId === preferredSessionId);
+            
+            if (isDbSession) {
+              validSessionId = preferredSessionId;
+              setSessions(data);
+            } else if (preferredSessionId.startsWith('session_user_')) {
+              // Prepend placeholder for a fresh unsaved user session
+              validSessionId = preferredSessionId;
+              const newChatPlaceholder = {
+                sessionId: preferredSessionId,
+                updatedAt: new Date().toISOString(),
+                messageCount: 0,
+                lastMessage: 'New Chat'
+              };
+              setSessions([newChatPlaceholder, ...data]);
             } else {
-              // Start a fresh user session if they have no history
-              const newId = `session_user_${Date.now()}`;
-              setActiveSessionId(newId);
+              setSessions(data);
             }
+          } else {
+            setSessions(data);
+          }
+
+          if (validSessionId) {
+            setActiveSessionId(validSessionId);
+            ChatStorage.saveActiveSession(validSessionId);
+          } else if (data.length > 0) {
+            const firstId = data[0].sessionId;
+            setActiveSessionId(firstId);
+            ChatStorage.saveActiveSession(firstId);
+          } else {
+            // No history, start fresh user session
+            const newId = `session_user_${Date.now()}`;
+            setActiveSessionId(newId);
+            ChatStorage.saveActiveSession(newId);
+            setSessions([{
+              sessionId: newId,
+              updatedAt: new Date().toISOString(),
+              messageCount: 0,
+              lastMessage: 'New Chat'
+            }]);
           }
         }
       }
@@ -115,24 +149,31 @@ export default function ChatPage() {
   const handleNewChat = () => {
     const newId = user ? `session_user_${Date.now()}` : `session_guest_${Date.now()}`;
     setActiveSessionId(newId);
+    ChatStorage.saveActiveSession(newId);
     if (!user) {
-      sessionStorage.setItem('guestSessionId', newId);
+      setSessions([]);
     } else {
-      setSessions(prev => [
-        {
-          sessionId: newId,
-          updatedAt: new Date().toISOString(),
-          messageCount: 0,
-          lastMessage: 'New Chat'
-        },
-        ...prev
-      ]);
+      setSessions(prev => {
+        const filtered = prev.filter(s => s.messageCount > 0 || s.sessionId === newId);
+        if (filtered.some(s => s.sessionId === newId)) return filtered;
+        return [
+          {
+            sessionId: newId,
+            updatedAt: new Date().toISOString(),
+            messageCount: 0,
+            lastMessage: 'New Chat'
+          },
+          ...filtered
+        ];
+      });
     }
   };
 
   const handleDeleteSession = async (sessionId) => {
     if (!confirm('Are you sure you want to delete this session?')) return;
     try {
+      ChatStorage.removeDraft(sessionId);
+
       const headers = {};
       if (user?.token) {
         headers['Authorization'] = `Bearer ${user.token}`;
@@ -144,10 +185,9 @@ export default function ChatPage() {
       if (res.ok) {
         setSessions(prev => prev.filter(s => s.sessionId !== sessionId));
         if (activeSessionId === sessionId) {
+          ChatStorage.clearActiveSession();
           setActiveSessionId(null);
-          if (!user) {
-            sessionStorage.removeItem('guestSessionId');
-          }
+          await fetchSessions();
         }
       }
     } catch (err) {
@@ -222,6 +262,7 @@ export default function ChatPage() {
         onClose={() => setIsSidebarOpen(false)}
         onSelectSession={(id) => {
           setActiveSessionId(id);
+          ChatStorage.saveActiveSession(id);
           setIsSidebarOpen(false);
         }}
         onNewChat={() => {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { ChatStorage } from '../utils/sessionStorage';
 
 function parseMarkdown(text) {
   if (!text) return '';
@@ -64,8 +65,10 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
   useEffect(() => {
     if (activeSessionId) {
       fetchHistory();
+      setInputValue(ChatStorage.getDraft(activeSessionId));
     } else {
       setMessages([]);
+      setInputValue('');
       setSuggestedQuestions([
         "Tell me about the School of Business",
         "What is the admission process?",
@@ -117,6 +120,9 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
     if (isTyping) return;
     
     setInputValue('');
+    if (activeSessionId) {
+      ChatStorage.removeDraft(activeSessionId);
+    }
     setSuggestedQuestions([]); // Hide current suggestions
     
     // Add user message to state
@@ -167,6 +173,14 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
       ]);
     } finally {
       setIsTyping(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const val = e.target.value;
+    setInputValue(val);
+    if (activeSessionId) {
+      ChatStorage.saveDraft(activeSessionId, val);
     }
   };
 
@@ -234,7 +248,7 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
               className="chat-input"
               placeholder="Ask Guru anything about admissions, courses, placements..."
               value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
+              onChange={handleInputChange}
               disabled={isTyping}
             />
             <button

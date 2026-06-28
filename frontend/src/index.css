@@ -148,6 +148,7 @@ body {
   flex: 1;
   overflow-y: auto;
   margin-top: 20px;
+  padding-bottom: 12px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -916,6 +917,7 @@ body {
 .sidebar.collapsed {
   width: 68px;
   padding: 20px 14px;
+  overflow: visible;
 }
 
 .sidebar.collapsed .logo-container {

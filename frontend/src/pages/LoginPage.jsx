@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { getFriendlyAuthError } from '../utils/authErrors';
+import GoogleButton from '../components/GoogleButton';
+import PasswordInput from '../components/PasswordInput';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -42,7 +45,7 @@ export default function LoginPage() {
       handleRedirect(res.user.role);
     } catch (err) {
       console.error(err);
-      setError(err.message || 'Failed to sign in. Please check your credentials.');
+      setError(getFriendlyAuthError(err));
     } finally {
       setIsLoading(false);
     }
@@ -69,19 +72,7 @@ export default function LoginPage() {
       handleRedirect(res.user.role);
     } catch (err) {
       console.error(err);
-      let friendlyMessage = 'Registration failed. Please try again.';
-      if (err.code === 'auth/email-already-in-use') {
-        friendlyMessage = 'An account with this email already exists.';
-      } else if (err.code === 'auth/weak-password') {
-        friendlyMessage = 'Password must be at least 6 characters.';
-      } else if (err.code === 'auth/invalid-email') {
-        friendlyMessage = 'Please enter a valid email address.';
-      } else if (err.code === 'auth/network-request-failed') {
-        friendlyMessage = 'A network error occurred. Please check your connection.';
-      } else if (err.message) {
-        friendlyMessage = err.message;
-      }
-      setError(friendlyMessage);
+      setError(getFriendlyAuthError(err));
     } finally {
       setIsLoading(false);
     }
@@ -97,7 +88,7 @@ export default function LoginPage() {
       handleRedirect(res.user.role);
     } catch (err) {
       console.error(err);
-      setError(err.message || 'Failed to sign in with Google.');
+      setError(getFriendlyAuthError(err));
     } finally {
       setIsLoading(false);
     }
@@ -116,7 +107,7 @@ export default function LoginPage() {
       setMode('login');
     } catch (err) {
       console.error(err);
-      setError(err.message || 'Failed to send password reset email.');
+      setError(getFriendlyAuthError(err));
     } finally {
       setIsLoading(false);
     }
@@ -342,52 +333,24 @@ export default function LoginPage() {
               </div>
 
               {/* Password */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label htmlFor="reg-password" style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-secondary)' }}>Password</label>
-                <input
-                  id="reg-password"
-                  type="password"
-                  placeholder="At least 6 characters"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading}
-                  style={{
-                    backgroundColor: 'var(--bg-primary)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: '8px',
-                    color: 'var(--text-primary)',
-                    padding: '12px 16px',
-                    fontSize: '0.9rem',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                    width: '100%'
-                  }}
-                />
-              </div>
+              <PasswordInput
+                id="reg-password"
+                label="Password"
+                placeholder="At least 6 characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
+              />
 
               {/* Confirm Password */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label htmlFor="reg-confirm-password" style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-secondary)' }}>Confirm Password</label>
-                <input
-                  id="reg-confirm-password"
-                  type="password"
-                  placeholder="Confirm your password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  disabled={isLoading}
-                  style={{
-                    backgroundColor: 'var(--bg-primary)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: '8px',
-                    color: 'var(--text-primary)',
-                    padding: '12px 16px',
-                    fontSize: '0.9rem',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                    width: '100%'
-                  }}
-                />
-              </div>
+              <PasswordInput
+                id="reg-confirm-password"
+                label="Confirm Password"
+                placeholder="Confirm your password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                disabled={isLoading}
+              />
 
               <button
                 type="submit"
@@ -419,6 +382,25 @@ export default function LoginPage() {
                 Sign In
               </button>
             </div>
+
+            {/* Divider */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              margin: '8px 0',
+              color: 'var(--text-muted)'
+            }}>
+              <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-color)' }}></div>
+              <span style={{ padding: '0 12px', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>or</span>
+              <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-color)' }}></div>
+            </div>
+
+            {/* Google Signup */}
+            <GoogleButton
+              onClick={handleGoogleLogin}
+              disabled={isLoading}
+              label="Continue with Google"
+            />
           </div>
         ) : (
           /* Normal Sign In Mode */
@@ -451,7 +433,7 @@ export default function LoginPage() {
 
               {/* Password */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '-6px' }}>
                   <label htmlFor="login-password" style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-secondary)' }}>Password</label>
                   <button
                     type="button"
@@ -469,24 +451,12 @@ export default function LoginPage() {
                     Forgot password?
                   </button>
                 </div>
-                <input
+                <PasswordInput
                   id="login-password"
-                  type="password"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
-                  style={{
-                    backgroundColor: 'var(--bg-primary)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: '8px',
-                    color: 'var(--text-primary)',
-                    padding: '12px 16px',
-                    fontSize: '0.9rem',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                    width: '100%'
-                  }}
                 />
               </div>
 
@@ -535,36 +505,11 @@ export default function LoginPage() {
             </div>
 
             {/* Google Login */}
-            <button
-              type="button"
+            <GoogleButton
               onClick={handleGoogleLogin}
               disabled={isLoading}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '12px',
-                backgroundColor: 'white',
-                color: '#1f2937',
-                border: '1px solid var(--border-color)',
-                borderRadius: '8px',
-                padding: '12px',
-                fontSize: '0.95rem',
-                fontWeight: 500,
-                cursor: isLoading ? 'not-allowed' : 'pointer',
-                transition: 'background-color 0.2s',
-                boxSizing: 'border-box',
-                width: '100%'
-              }}
-            >
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
-                <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
-                <path d="M3.964 10.707a5.416 5.416 0 01-.282-1.707c0-.593.102-1.17.282-1.707V4.96H.957A8.997 8.997 0 000 9c0 1.452.348 2.827.957 4.04l3.007-2.333z" fill="#FBBC05"/>
-                <path d="M9 3.58c1.32.001 2.506.454 3.44 1.345l2.582-2.58C13.463.894 11.426 0 9 0 5.474 0 2.457 2.031.957 4.962L3.964 7.295C4.672 5.168 6.656 3.58 9 3.58z" fill="#EA4335"/>
-              </svg>
-              Sign In with Google
-            </button>
+              label="Continue with Google"
+            />
           </div>
         )}
 
