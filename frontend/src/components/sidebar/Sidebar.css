@@ -1,0 +1,649 @@
+/* ==================================================
+   SIDEBAR COMPONENT SYSTEM CSS
+   ================================================== */
+
+:root {
+  /* Sidebar Widths */
+  --sb-width-expanded: 260px;
+  --sb-width-collapsed: 68px;
+
+  /* Spacing Scale */
+  --sb-space-xs: 4px;
+  --sb-space-sm: 8px;
+  --sb-space-md: 12px;
+  --sb-space-lg: 16px;
+  --sb-space-xl: 20px;
+
+  /* Sizing */
+  --sb-icon-btn-size: 38px;
+  --sb-icon-btn-radius: 8px;
+
+  /* Conversation Item */
+  --sb-item-height: 56px;
+  --sb-item-radius: 8px;
+  --sb-item-padding: 10px 12px;
+
+  /* Typography */
+  --sb-title-size: 0.875rem;
+  --sb-title-weight: 500;
+  --sb-meta-size: 0.72rem;
+
+  /* Transitions */
+  --sb-transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Base Container Shell */
+.sidebar-root {
+  width: var(--sb-width-expanded);
+  background-color: var(--bg-sidebar);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  transition: width var(--sb-transition), padding var(--sb-transition);
+  overflow: hidden;
+  z-index: 100;
+  box-sizing: border-box;
+}
+
+.sidebar-root.collapsed {
+  width: var(--sb-width-collapsed);
+}
+
+/* ==================================================
+   SHARED PRIMITIVES
+   ================================================== */
+
+/* Universal Icon Button System */
+.sb-icon-btn {
+  width: var(--sb-icon-btn-size);
+  height: var(--sb-icon-btn-size);
+  border-radius: var(--sb-icon-btn-radius);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color var(--sb-transition), color var(--sb-transition), border-color var(--sb-transition);
+  outline: none;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.sb-icon-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.sb-icon-btn:focus-visible {
+  border-color: var(--accent-color);
+  background-color: var(--bg-hover);
+}
+
+.sb-icon-btn.active {
+  background-color: var(--bg-active);
+  color: var(--text-primary);
+}
+
+/* Avatar base style */
+.sb-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--accent-color);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  flex-shrink: 0;
+  transition: transform var(--sb-transition);
+}
+
+.sb-avatar:hover {
+  transform: scale(1.05);
+}
+
+/* ==================================================
+   EXPANDED SIDEBAR LAYOUT
+   ================================================== */
+.sb-expanded-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: var(--sb-width-expanded);
+  box-sizing: border-box;
+  padding: var(--sb-space-lg) 0;
+}
+
+/* Brand Header */
+.sb-expanded-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--sb-space-lg);
+  margin-bottom: var(--sb-space-md);
+  flex-shrink: 0;
+}
+
+.sb-expanded-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sb-space-sm);
+}
+
+.sb-expanded-brand-icon {
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.sb-expanded-brand-text {
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: -0.2px;
+  color: var(--text-primary);
+}
+
+/* Actions Section */
+.sb-expanded-action-row {
+  padding: 0 var(--sb-space-lg);
+  margin-bottom: var(--sb-space-md);
+  flex-shrink: 0;
+}
+
+/* Rectangular New Chat Button */
+.sb-expanded-new-chat-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--sb-space-sm);
+  width: 100%;
+  padding: 10px 14px;
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color var(--sb-transition), border-color var(--sb-transition);
+  text-align: left;
+}
+
+.sb-expanded-new-chat-btn:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--text-muted);
+}
+
+.sb-expanded-new-chat-btn:focus-visible {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+.sb-expanded-new-chat-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+/* Conversation List Scroll Container */
+.sb-expanded-list-title {
+  padding: 0 var(--sb-space-lg);
+  margin-top: var(--sb-space-md);
+  margin-bottom: var(--sb-space-xs);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.sb-expanded-list-scroll {
+  flex: 1;
+  min-height: 0; /* Important for scroll isolation */
+  overflow-y: auto;
+  padding: 0 var(--sb-space-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Thin Scrollbar Styling */
+.sb-expanded-list-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sb-expanded-list-scroll::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 4px;
+  transition: background-color var(--sb-transition);
+}
+
+.sb-expanded-list-scroll:hover::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+}
+
+/* User Profile Footer Section */
+.sb-expanded-footer {
+  margin-top: auto;
+  padding: var(--sb-space-md) var(--sb-space-lg) 0 var(--sb-space-lg);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.sb-expanded-footer::before {
+  content: '';
+  display: block;
+  height: 1px;
+  background: var(--border-color);
+  margin-bottom: var(--sb-space-md);
+}
+
+.sb-expanded-profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color var(--sb-transition);
+}
+
+.sb-expanded-profile-btn:hover {
+  background-color: var(--bg-hover);
+}
+
+.sb-expanded-profile-btn:focus-visible {
+  outline: none;
+  background-color: var(--bg-hover);
+}
+
+.sb-expanded-profile-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.sb-expanded-profile-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-primary);
+}
+
+.sb-expanded-profile-chevron {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  margin-left: auto;
+}
+
+/* ==================================================
+   CONVERSATION ITEMS (EXPANDED LIST ONLY)
+   ================================================== */
+.sb-conv-item {
+  display: flex;
+  align-items: center;
+  height: var(--sb-item-height);
+  padding: var(--sb-item-padding);
+  border-radius: var(--sb-item-radius);
+  cursor: pointer;
+  position: relative;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  transition: background-color var(--sb-transition);
+  box-sizing: border-box;
+}
+
+.sb-conv-item:hover {
+  background-color: var(--bg-hover);
+}
+
+.sb-conv-item.active {
+  background-color: var(--bg-active-tab);
+}
+
+.sb-conv-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sb-conv-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sb-space-sm);
+}
+
+.sb-conv-title {
+  font-size: var(--sb-title-size);
+  font-weight: var(--sb-title-weight);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color var(--sb-transition);
+  flex: 1;
+}
+
+.sb-conv-item:hover .sb-conv-title,
+.sb-conv-item.active .sb-conv-title {
+  color: var(--text-primary);
+}
+
+.sb-conv-meta {
+  font-size: var(--sb-meta-size);
+  color: var(--text-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+/* Action Buttons Overlay on Hover */
+.sb-conv-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sb-space-xs);
+  position: absolute;
+  right: var(--sb-space-sm);
+  top: 50%;
+  transform: translateY(-50%) translateX(6px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--sb-transition), transform var(--sb-transition);
+}
+
+.sb-conv-item:hover .sb-conv-actions {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%) translateX(0);
+}
+
+/* Ensure title doesn't overflow beneath action icons on hover */
+.sb-conv-item:hover .sb-conv-title {
+  padding-right: 48px;
+}
+
+.sb-conv-action-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--sb-transition), color var(--sb-transition);
+}
+
+.sb-conv-action-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.sb-conv-action-btn.delete:hover {
+  background-color: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+}
+
+/* Rename Input Box */
+.sb-conv-rename-input {
+  width: 100%;
+  background: var(--bg-primary);
+  border: 1px solid var(--accent-color);
+  border-radius: 4px;
+  padding: 2px 6px;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  outline: none;
+  font-family: inherit;
+}
+
+/* ==================================================
+   COLLAPSED SIDEBAR LAYOUT
+   ================================================== */
+.sb-collapsed-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  width: var(--sb-width-collapsed);
+  box-sizing: border-box;
+  padding: var(--sb-space-lg) 0;
+}
+
+.sb-collapsed-brand {
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--sb-space-md);
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.sb-collapsed-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sb-space-md);
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.sb-collapsed-footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.sb-collapsed-profile-trigger {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  outline: none;
+}
+
+/* Separator above profile container */
+.sb-collapsed-footer::before {
+  content: '';
+  display: block;
+  height: 1px;
+  background: var(--border-color);
+  margin-bottom: var(--sb-space-md);
+  width: calc(100% - var(--sb-space-xl));
+}
+
+/* ==================================================
+   SIDEBAR PROFILE DROPDOWN MENU
+   ================================================== */
+.sb-dropdown-menu {
+  position: absolute;
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+  padding: 4px;
+  z-index: 1010;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+[data-theme='light'] .sb-dropdown-menu {
+  background: #ffffff;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+.sb-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color var(--sb-transition);
+}
+
+.sb-dropdown-item:hover {
+  background-color: var(--bg-hover);
+}
+
+.sb-dropdown-item.logout {
+  color: #ef4444;
+}
+
+.sb-dropdown-item.logout:hover {
+  background-color: rgba(239, 68, 68, 0.08);
+}
+
+/* Dropdown positions */
+.sb-expanded-dropdown {
+  bottom: calc(100% + var(--sb-space-sm));
+  left: var(--sb-space-lg);
+  width: calc(100% - 32px);
+}
+
+.sb-collapsed-dropdown {
+  left: 56px;
+  bottom: var(--sb-space-lg);
+  width: 180px;
+}
+
+/* Popover details preserved as is */
+.history-popover {
+  position: fixed;
+  left: 76px;
+  top: 110px;
+  width: 320px;
+  max-height: 480px;
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+  z-index: 1050;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: popoverFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+}
+
+[data-theme='light'] .history-popover {
+  background: #ffffff;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes popoverFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateX(0);
+  }
+}
+
+.popover-header {
+  padding: var(--sb-space-md) var(--sb-space-lg);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.popover-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.popover-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--sb-space-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.popover-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.popover-content::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+.popover-session-item {
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color var(--sb-transition);
+}
+
+.popover-session-item:hover {
+  background-color: var(--bg-hover);
+}
+
+.popover-session-item.active {
+  background-color: var(--bg-active-tab);
+}
+
+.popover-session-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.popover-session-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.popover-session-item:hover .popover-session-title,
+.popover-session-item.active .popover-session-title {
+  color: var(--text-primary);
+}
+
+.popover-session-time {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.popover-empty-text {
+  padding: var(--sb-space-lg);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
