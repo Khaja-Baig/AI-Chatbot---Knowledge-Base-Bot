@@ -1,20 +1,20 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import AdminSettings from '../components/AdminSettings';
 import ChatWindow from '../components/ChatWindow';
+import '../components/sidebar/Sidebar.css';
+import UserProfile from '../components/sidebar/UserProfile';
 
 export default function AdminShell() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const dropdownRef = useRef(null);
 
   // Layout and view states
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'api_config' | 'chat' | 'analytics'
   const [isCollapsed, setIsCollapsed] = useState(() => {
     return localStorage.getItem('admin_sidebar_collapsed') === 'true';
   });
-  const [showDropdown, setShowDropdown] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
@@ -54,19 +54,6 @@ export default function AdminShell() {
       fetchApiConfig();
     }
   }, [user]);
-
-  // Close dropdown on click outside
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowDropdown(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
 
   const fetchConfig = async () => {
     try {
@@ -161,21 +148,6 @@ export default function AdminShell() {
     setAdminSessionId(`admin_test_${Date.now()}`);
   };
 
-  const getInitials = (usr) => {
-    if (!usr) return 'AD';
-    if (usr.displayName) {
-      const parts = usr.displayName.split(' ');
-      if (parts.length >= 2) {
-        return (parts[0][0] + parts[1][0]).toUpperCase();
-      }
-      return usr.displayName.substring(0, 2).toUpperCase();
-    }
-    if (usr.email) {
-      return usr.email.substring(0, 2).toUpperCase();
-    }
-    return 'AD';
-  };
-
   return (
     <div className="admin-layout-container" style={{
       display: 'flex',
@@ -187,238 +159,282 @@ export default function AdminShell() {
     }}>
       
       {/* Sidebar Nav */}
-      <div 
-        className={`sidebar ${isCollapsed ? 'collapsed' : ''}`} 
-        style={{ 
-          transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important',
-          willChange: 'width, padding'
-        }}
-      >
-        <div className="sidebar-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <div className="logo-container">
-            <div className="logo-icon">NG</div>
-            <div className="logo-text">NavGurukul AI</div>
+      <div className={`sidebar-root ${isCollapsed ? 'collapsed' : ''}`}>
+        {!isCollapsed ? (
+          <div className="sb-expanded-layout">
+            {/* Brand Header */}
+            <header className="sb-expanded-header">
+              <div className="sb-expanded-brand">
+                <div className="sb-expanded-brand-icon">NG</div>
+                <div className="sb-expanded-brand-text">NavGurukul AI</div>
+              </div>
+              <button 
+                className="sb-icon-btn"
+                onClick={() => {
+                  setIsCollapsed(true);
+                  localStorage.setItem('admin_sidebar_collapsed', 'true');
+                }}
+                title="Collapse sidebar"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="9" y1="3" x2="9" y2="21"></line>
+                  <path d="M17 16l-4-4 4-4"></path>
+                </svg>
+              </button>
+            </header>
+
+            {/* Go back link styled identically to sidebar tabs */}
+            <section className="sb-expanded-action-row" style={{ marginBottom: '20px' }}>
+              <button
+                onClick={() => navigate('/')}
+                className="sb-expanded-new-chat-btn"
+                title="Return to Public Chat"
+                style={{ width: '100%' }}
+              >
+                <span style={{ fontSize: '1rem', marginRight: '4px', flexShrink: 0 }}>🏠</span>
+                <span>Return to Chat</span>
+              </button>
+            </section>
+
+            {/* Navigation Tabs */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, padding: '0 var(--sb-space-lg)' }}>
+              <button
+                onClick={() => setActiveTab('dashboard')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  justifyContent: 'flex-start',
+                  width: '100%',
+                  padding: '12px 16px',
+                  border: 'none',
+                  borderRadius: '8px',
+                  backgroundColor: activeTab === 'dashboard' ? 'var(--bg-active-tab)' : 'transparent',
+                  color: activeTab === 'dashboard' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  fontWeight: activeTab === 'dashboard' ? 600 : 500,
+                  fontSize: '0.9rem',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>📊</span> 
+                Knowledge Base
+              </button>
+
+              <button
+                onClick={() => setActiveTab('api_config')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  justifyContent: 'flex-start',
+                  width: '100%',
+                  padding: '12px 16px',
+                  border: 'none',
+                  borderRadius: '8px',
+                  backgroundColor: activeTab === 'api_config' ? 'var(--bg-active-tab)' : 'transparent',
+                  color: activeTab === 'api_config' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  fontWeight: activeTab === 'api_config' ? 600 : 500,
+                  fontSize: '0.9rem',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>🔑</span> 
+                API Configuration
+              </button>
+
+              <button
+                onClick={() => setActiveTab('chat')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  justifyContent: 'flex-start',
+                  width: '100%',
+                  padding: '12px 16px',
+                  border: 'none',
+                  borderRadius: '8px',
+                  backgroundColor: activeTab === 'chat' ? 'var(--bg-active-tab)' : 'transparent',
+                  color: activeTab === 'chat' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  fontWeight: activeTab === 'chat' ? 600 : 500,
+                  fontSize: '0.9rem',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>💬</span> 
+                Test Chatbot
+              </button>
+
+              <button
+                onClick={() => setActiveTab('analytics')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  justifyContent: 'flex-start',
+                  width: '100%',
+                  padding: '12px 16px',
+                  border: 'none',
+                  borderRadius: '8px',
+                  backgroundColor: activeTab === 'analytics' ? 'var(--bg-active-tab)' : 'transparent',
+                  color: activeTab === 'analytics' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  fontWeight: activeTab === 'analytics' ? 600 : 500,
+                  fontSize: '0.9rem',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  opacity: 0.6
+                }}
+              >
+                <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>📈</span> 
+                Analytics (WIP)
+              </button>
+            </div>
+
+            {/* Pinned User Profile Footer */}
+            <UserProfile
+              user={user}
+              isCollapsed={false}
+              onOpenSettings={() => setShowSettingsModal(true)}
+              onLogoutClick={() => setShowLogoutModal(true)}
+            />
           </div>
-          
-          {!isCollapsed && (
-            <button 
-              className="sidebar-toggle-btn"
-              onClick={() => {
-                setIsCollapsed(true);
-                localStorage.setItem('admin_sidebar_collapsed', 'true');
-              }}
-              title="Collapse sidebar"
-              style={{ marginLeft: 'auto' }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="9" y1="3" x2="9" y2="21"></line>
-                <path d="M17 16l-4-4 4-4"></path>
-              </svg>
-            </button>
-          )}
-        </div>
+        ) : (
+          <div className="sb-collapsed-layout">
+            {/* Collapsed Brand Icon */}
+            <div className="sb-collapsed-brand">
+              NG
+            </div>
 
-        {isCollapsed && (
-          <button 
-            className="sidebar-toggle-btn"
-            onClick={() => {
-              setIsCollapsed(false);
-              localStorage.setItem('admin_sidebar_collapsed', 'false');
-            }}
-            title="Expand sidebar"
-            style={{ margin: '0 auto 20px auto', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="9" y1="3" x2="9" y2="21"></line>
-              <path d="M13 8l4 4-4 4"></path>
-            </svg>
-          </button>
+            {/* Collapsed Actions */}
+            <div className="sb-collapsed-actions" style={{ marginBottom: '20px' }}>
+              <button 
+                className="sb-icon-btn"
+                onClick={() => {
+                  setIsCollapsed(false);
+                  localStorage.setItem('admin_sidebar_collapsed', 'false');
+                }}
+                title="Expand sidebar"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="9" y1="3" x2="9" y2="21"></line>
+                  <path d="M13 8l4 4-4 4"></path>
+                </svg>
+              </button>
+            </div>
+
+            {/* Collapsed Return to Chat Button */}
+            <div style={{ marginBottom: '20px' }}>
+              <button
+                onClick={() => navigate('/')}
+                className="sb-icon-btn"
+                title="Return to Public Chat"
+                style={{ backgroundColor: 'var(--accent-color)', color: '#ffffff' }}
+              >
+                <span style={{ fontSize: '1.1rem' }}>🏠</span>
+              </button>
+            </div>
+
+            {/* Collapsed Navigation Tabs */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, alignItems: 'center' }}>
+              <button
+                onClick={() => setActiveTab('dashboard')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '40px',
+                  height: '40px',
+                  border: 'none',
+                  borderRadius: '50%',
+                  backgroundColor: activeTab === 'dashboard' ? 'var(--bg-active-tab)' : 'transparent',
+                  color: activeTab === 'dashboard' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                title="Knowledge Base"
+              >
+                <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>📊</span> 
+              </button>
+
+              <button
+                onClick={() => setActiveTab('api_config')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '40px',
+                  height: '40px',
+                  border: 'none',
+                  borderRadius: '50%',
+                  backgroundColor: activeTab === 'api_config' ? 'var(--bg-active-tab)' : 'transparent',
+                  color: activeTab === 'api_config' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                title="API Configuration"
+              >
+                <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>🔑</span> 
+              </button>
+
+              <button
+                onClick={() => setActiveTab('chat')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '40px',
+                  height: '40px',
+                  border: 'none',
+                  borderRadius: '50%',
+                  backgroundColor: activeTab === 'chat' ? 'var(--bg-active-tab)' : 'transparent',
+                  color: activeTab === 'chat' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                title="Test Chatbot"
+              >
+                <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>💬</span> 
+              </button>
+
+              <button
+                onClick={() => setActiveTab('analytics')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '40px',
+                  height: '40px',
+                  border: 'none',
+                  borderRadius: '50%',
+                  backgroundColor: activeTab === 'analytics' ? 'var(--bg-active-tab)' : 'transparent',
+                  color: activeTab === 'analytics' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  opacity: 0.6
+                }}
+                title="Analytics (WIP)"
+              >
+                <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>📈</span> 
+              </button>
+            </div>
+
+            {/* Pinned User Profile Footer */}
+            <UserProfile
+              user={user}
+              isCollapsed={true}
+              onOpenSettings={() => setShowSettingsModal(true)}
+              onLogoutClick={() => setShowLogoutModal(true)}
+            />
+          </div>
         )}
-
-        {/* Go back link styled identically to sidebar tabs */}
-        <button
-          onClick={() => navigate('/')}
-          className="new-chat-btn"
-          title="Return to Public Chat"
-          style={{
-            marginBottom: '20px',
-            justifyContent: isCollapsed ? 'center' : 'flex-start',
-            height: isCollapsed ? '40px' : 'auto',
-            padding: isCollapsed ? '0' : '10px 14px',
-            borderRadius: isCollapsed ? '50%' : '6px'
-          }}
-        >
-          <span style={{ fontSize: '1rem', flexShrink: 0 }}>🏠</span>
-          {!isCollapsed && <span className="new-chat-btn-text" style={{ marginLeft: '4px' }}>Return to Chat</span>}
-        </button>
-
-        {/* Navigation Tabs */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, alignItems: isCollapsed ? 'center' : 'stretch' }}>
-          <button
-            onClick={() => setActiveTab('dashboard')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: isCollapsed ? '0' : '12px',
-              justifyContent: isCollapsed ? 'center' : 'flex-start',
-              width: isCollapsed ? '40px' : '100%',
-              height: isCollapsed ? '40px' : 'auto',
-              padding: isCollapsed ? '0' : '12px 16px',
-              border: 'none',
-              borderRadius: isCollapsed ? '50%' : '8px',
-              backgroundColor: activeTab === 'dashboard' ? 'var(--bg-active-tab)' : 'transparent',
-              color: activeTab === 'dashboard' ? 'var(--text-primary)' : 'var(--text-secondary)',
-              fontWeight: activeTab === 'dashboard' ? 600 : 500,
-              fontSize: '0.9rem',
-              textAlign: 'left',
-              cursor: 'pointer',
-              transition: 'all 0.2s'
-            }}
-            title={isCollapsed ? 'Knowledge & Persona' : undefined}
-          >
-            <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>📊</span> 
-            {!isCollapsed && 'Knowledge Base'}
-          </button>
-
-          <button
-            onClick={() => setActiveTab('api_config')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: isCollapsed ? '0' : '12px',
-              justifyContent: isCollapsed ? 'center' : 'flex-start',
-              width: isCollapsed ? '40px' : '100%',
-              height: isCollapsed ? '40px' : 'auto',
-              padding: isCollapsed ? '0' : '12px 16px',
-              border: 'none',
-              borderRadius: isCollapsed ? '50%' : '8px',
-              backgroundColor: activeTab === 'api_config' ? 'var(--bg-active-tab)' : 'transparent',
-              color: activeTab === 'api_config' ? 'var(--text-primary)' : 'var(--text-secondary)',
-              fontWeight: activeTab === 'api_config' ? 600 : 500,
-              fontSize: '0.9rem',
-              textAlign: 'left',
-              cursor: 'pointer',
-              transition: 'all 0.2s'
-            }}
-            title={isCollapsed ? 'API Configuration' : undefined}
-          >
-            <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>🔑</span> 
-            {!isCollapsed && 'API Configuration'}
-          </button>
-
-          <button
-            onClick={() => setActiveTab('chat')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: isCollapsed ? '0' : '12px',
-              justifyContent: isCollapsed ? 'center' : 'flex-start',
-              width: isCollapsed ? '40px' : '100%',
-              height: isCollapsed ? '40px' : 'auto',
-              padding: isCollapsed ? '0' : '12px 16px',
-              border: 'none',
-              borderRadius: isCollapsed ? '50%' : '8px',
-              backgroundColor: activeTab === 'chat' ? 'var(--bg-active-tab)' : 'transparent',
-              color: activeTab === 'chat' ? 'var(--text-primary)' : 'var(--text-secondary)',
-              fontWeight: activeTab === 'chat' ? 600 : 500,
-              fontSize: '0.9rem',
-              textAlign: 'left',
-              cursor: 'pointer',
-              transition: 'all 0.2s'
-            }}
-            title={isCollapsed ? 'Test Chatbot' : undefined}
-          >
-            <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>💬</span> 
-            {!isCollapsed && 'Test Chatbot'}
-          </button>
-
-          <button
-            onClick={() => setActiveTab('analytics')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: isCollapsed ? '0' : '12px',
-              justifyContent: isCollapsed ? 'center' : 'flex-start',
-              width: isCollapsed ? '40px' : '100%',
-              height: isCollapsed ? '40px' : 'auto',
-              padding: isCollapsed ? '0' : '12px 16px',
-              border: 'none',
-              borderRadius: isCollapsed ? '50%' : '8px',
-              backgroundColor: activeTab === 'analytics' ? 'var(--bg-active-tab)' : 'transparent',
-              color: activeTab === 'analytics' ? 'var(--text-primary)' : 'var(--text-secondary)',
-              fontWeight: activeTab === 'analytics' ? 600 : 500,
-              fontSize: '0.9rem',
-              textAlign: 'left',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              opacity: 0.6
-            }}
-            title={isCollapsed ? 'Analytics' : undefined}
-          >
-            <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>📈</span> 
-            {!isCollapsed && 'Analytics (WIP)'}
-          </button>
-        </div>
-
-        {/* User Profile dropdown section at the bottom of the sidebar */}
-        <div className="user-profile-container" ref={dropdownRef} style={{ width: '100%' }}>
-          <button 
-            className="user-profile-btn"
-            onClick={() => setShowDropdown(!showDropdown)}
-            title={isCollapsed ? (user?.displayName || user?.email?.split('@')[0]) : undefined}
-            style={{ width: '100%' }}
-          >
-            <div className="user-avatar">
-              {getInitials(user)}
-            </div>
-            {!isCollapsed && (
-              <>
-                <div className="user-details">
-                  <div className="user-username" style={{ textOverflow: 'ellipsis', overflow: 'hidden' }}>
-                    {user?.displayName || user?.email?.split('@')[0]}
-                  </div>
-                </div>
-                <div className="profile-chevron">▾</div>
-              </>
-            )}
-          </button>
-
-          {/* Profile Dropdown Menu */}
-          {showDropdown && (
-            <div className="profile-dropdown">
-              <button 
-                className="dropdown-item"
-                onClick={() => {
-                  setShowDropdown(false);
-                  setShowSettingsModal(true);
-                }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="3"></circle>
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                </svg>
-                Settings
-              </button>
-              <button 
-                className="dropdown-item"
-                onClick={() => {
-                  setShowDropdown(false);
-                  setShowLogoutModal(true);
-                }}
-                style={{ color: '#ef4444' }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                  <polyline points="16 17 21 12 16 7"></polyline>
-                  <line x1="21" y1="12" x2="9" y2="12"></line>
-                </svg>
-                Logout
-              </button>
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Main Content Area */}
