@@ -35,19 +35,17 @@ function SessionList({
             title={isCollapsed ? (session.title || session.lastMessage || 'New Chat') : undefined}
           >
             <div className="session-item-inner">
-              {/* Chat bubble icon */}
-              <div className="session-icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg>
-              </div>
+              {/* Chat bubble icon - ONLY when collapsed */}
+              {isCollapsed && (
+                <div className="session-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                </div>
+              )}
 
               {!isCollapsed && (
                 <div className="session-content-wrapper">
-                  <div className="session-meta">
-                    <span>{formatDate(session.updatedAt)}</span>
-                  </div>
-
                   {editingSessionId === session.sessionId ? (
                     <input
                       ref={editInputRef}
@@ -63,6 +61,10 @@ function SessionList({
                       {session.title || session.lastMessage || 'New Chat'}
                     </div>
                   )}
+
+                  <div className="session-meta">
+                    <span>{formatDate(session.updatedAt)}</span>
+                  </div>
                 </div>
               )}
             </div>
@@ -313,7 +315,7 @@ export default function SessionSidebar({
         {/* Expanded Sidebar Session List */}
         {!isCollapsed && (
           <>
-            <div className="recent-title" style={{ marginTop: '24px', marginBottom: '12px', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.5px' }}>
+            <div className="recent-title">
               Recent Conversations
             </div>
             <div className="session-list">
