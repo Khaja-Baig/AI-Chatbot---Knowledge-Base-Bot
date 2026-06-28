@@ -85,8 +85,6 @@ export default function SessionSidebar({
         className={`sidebar-root ${isOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''}`}
         style={{ willChange: 'width' }}
       >
-        {/* Mobile close button (standard in index.css for mobile slideover) */}
-        <button className="sidebar-close-btn" onClick={onClose} aria-label="Close sidebar">✕</button>
 
         {isCollapsed ? (
           <SidebarCollapsed
