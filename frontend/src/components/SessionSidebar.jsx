@@ -440,34 +440,32 @@ export default function SessionSidebar({
         >
           <div className="popover-header">
             <h3 className="popover-title">Recent Conversations</h3>
-            <button 
-              className="popover-close-btn" 
-              onClick={() => setShowHistoryPopover(false)}
-              aria-label="Close History"
-            >
-              ✕
-            </button>
           </div>
           <div className="popover-content">
-            <SessionList
-              sessions={sessions}
-              activeSessionId={activeSessionId}
-              isCollapsed={false}
-              editingSessionId={editingSessionId}
-              setEditingSessionId={setEditingSessionId}
-              editTitle={editTitle}
-              setEditTitle={setEditTitle}
-              editInputRef={editInputRef}
-              onSelectSession={(id) => {
-                onSelectSession(id);
-                setShowHistoryPopover(false);
-              }}
-              onDeleteSession={onDeleteSession}
-              handleDoubleClick={handleDoubleClick}
-              handleSave={handleSave}
-              handleKeyDown={handleKeyDown}
-              formatDate={formatDate}
-            />
+            {sessions.length === 0 ? (
+              <div className="popover-empty-text">No recent chats</div>
+            ) : (
+              sessions.map((session) => (
+                <div
+                  key={session.sessionId}
+                  className={`popover-session-item ${session.sessionId === activeSessionId ? 'active' : ''}`}
+                  onClick={() => {
+                    onSelectSession(session.sessionId);
+                    setShowHistoryPopover(false);
+                  }}
+                  title={session.title || session.lastMessage || 'New Chat'}
+                >
+                  <div className="popover-session-info">
+                    <span className="popover-session-title">
+                      {session.title || session.lastMessage || 'New Chat'}
+                    </span>
+                    <span className="popover-session-time">
+                      {formatDate(session.updatedAt)}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
