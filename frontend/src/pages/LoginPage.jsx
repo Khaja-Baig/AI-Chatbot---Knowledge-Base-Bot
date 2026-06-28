@@ -289,6 +289,8 @@ export default function LoginPage() {
                   </div>
                 </div>
 
+                <div className="auth-grid-divider"></div>
+
                 <div className="auth-grid-col">
                   {/* Password */}
                   <PasswordInput

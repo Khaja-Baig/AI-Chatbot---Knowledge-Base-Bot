@@ -1848,14 +1848,40 @@ body.light-theme .popover-close-btn:hover {
   gap: 16px;
 }
 
+.auth-grid-divider {
+  display: none;
+}
+
 @media (min-width: 600px) {
   .auth-grid-form {
     flex-direction: row;
-    gap: 24px;
+    gap: 16px;
   }
   .auth-grid-col {
     flex: 1;
   }
+  .auth-grid-divider {
+    display: block;
+    width: 1px;
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      rgba(255, 255, 255, 0.15) 20%,
+      rgba(255, 255, 255, 0.15) 80%,
+      transparent
+    );
+    align-self: stretch;
+  }
+}
+
+[data-theme='light'] .auth-grid-divider {
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(0, 0, 0, 0.15) 20%,
+    rgba(0, 0, 0, 0.15) 80%,
+    transparent
+  );
 }
 
 /* Animations for error and success alert banners */
