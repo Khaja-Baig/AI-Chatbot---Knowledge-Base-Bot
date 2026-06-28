@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 
 export default function AdminSettings({ config, onUpdateConfig, authToken }) {
   const [counselorName, setCounselorName] = useState(config.counselorName || '');
+  const [counselorAvatar, setCounselorAvatar] = useState(config.counselorAvatar || '🤖');
   const [greetingMessage, setGreetingMessage] = useState(config.greetingMessage || '');
   const [behaviorMode, setBehaviorMode] = useState(config.behaviorMode || 'warm');
   
@@ -45,6 +46,7 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
   useEffect(() => {
     fetchStatus();
     setCounselorName(config.counselorName || '');
+    setCounselorAvatar(config.counselorAvatar || '🤖');
     setGreetingMessage(config.greetingMessage || '');
     setBehaviorMode(config.behaviorMode || 'warm');
   }, [config]);
@@ -89,6 +91,7 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
     e.preventDefault();
     onUpdateConfig({
       counselorName,
+      counselorAvatar,
       greetingMessage,
       behaviorMode
     });
@@ -515,6 +518,17 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
                 value={counselorName}
                 onChange={(e) => setCounselorName(e.target.value)}
                 placeholder="Persona Name..."
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Counselor Avatar (Emoji or Image URL)</label>
+              <input
+                type="text"
+                className="form-control"
+                value={counselorAvatar}
+                onChange={(e) => setCounselorAvatar(e.target.value)}
+                placeholder="Emoji (e.g. 🤖) or Image URL (e.g. /assets/avatar.png)..."
               />
             </div>
 

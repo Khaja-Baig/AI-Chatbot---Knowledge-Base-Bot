@@ -5,6 +5,7 @@ const CONFIG_DOC_ID = 'chatbot';
 
 const DEFAULT_CONFIG = {
   counselorName: 'Guru',
+  counselorAvatar: '🤖',
   greetingMessage: 'Hello! I am Guru, your NavGurukul Admissions Counselor. I can help you understand our courses, admissions process, eligibility, placements, and campus life. How can I help you today?',
   behaviorMode: 'warm',
   maxHistoryTurns: 10

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getFriendlyAuthError } from '../utils/authErrors';
 import GoogleButton from '../components/GoogleButton';
 import PasswordInput from '../components/PasswordInput';
+import AuthAssistantHeader from '../components/AuthAssistantHeader';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -18,6 +19,32 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [flipState, setFlipState] = useState(''); // '' | 'half' | 'back'
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  const [config, setConfig] = useState({
+    counselorName: 'Guru',
+    counselorAvatar: '🤖'
+  });
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const res = await fetch('http://localhost:5001/api/config');
+        if (res.ok) {
+          const data = await res.json();
+          setConfig(prev => ({
+            ...prev,
+            counselorName: data.counselorName || 'Guru',
+            counselorAvatar: data.counselorAvatar || '🤖'
+          }));
+        }
+      } catch (err) {
+        console.error('Failed to load chatbot config:', err);
+      }
+    };
+    fetchConfig();
+  }, []);
 
   const { login, loginWithGoogle, resetPassword, register } = useAuth();
   const navigate = useNavigate();
@@ -82,6 +109,7 @@ export default function LoginPage() {
     setError('');
     setMessage('');
     setIsLoading(true);
+    setIsGoogleLoading(true);
 
     try {
       const res = await loginWithGoogle();
@@ -89,8 +117,8 @@ export default function LoginPage() {
     } catch (err) {
       console.error(err);
       setError(getFriendlyAuthError(err));
-    } finally {
       setIsLoading(false);
+      setIsGoogleLoading(false);
     }
   };
 
@@ -104,7 +132,7 @@ export default function LoginPage() {
     try {
       await resetPassword(forgotEmail);
       setMessage('Password reset email sent. Please check your inbox.');
-      setMode('login');
+      changeMode('login');
     } catch (err) {
       console.error(err);
       setError(getFriendlyAuthError(err));
@@ -114,9 +142,29 @@ export default function LoginPage() {
   };
 
   const changeMode = (newMode) => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    
+    if (prefersReducedMotion) {
+      setError('');
+      setMessage('');
+      setMode(newMode);
+      return;
+    }
+
     setError('');
     setMessage('');
-    setMode(newMode);
+    setFlipState('half');
+    
+    setTimeout(() => {
+      setMode(newMode);
+      setFlipState('back');
+      
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          setFlipState('');
+        }, 20);
+      });
+    }, 200);
   };
 
   return (
@@ -157,259 +205,126 @@ export default function LoginPage() {
         pointerEvents: 'none'
       }}></div>
 
-      <div className="login-card" style={{
-        width: '100%',
-        maxWidth: '420px',
-        backgroundColor: 'var(--bg-sidebar)',
-        border: '1px solid var(--border-color)',
-        borderRadius: '16px',
-        padding: '40px 32px',
-        boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
-        backdropFilter: 'blur(8px)',
-        zIndex: 1,
-        position: 'relative',
-        boxSizing: 'border-box'
-      }}>
-        
-        {/* Title */}
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px', marginTop: 0 }}>
-            {mode === 'forgot' ? 'Reset Password' : mode === 'signup' ? 'Create Account' : 'Welcome Back'}
-          </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', margin: 0 }}>
-            {mode === 'forgot' 
-              ? 'Enter your email to receive a password reset link' 
-              : mode === 'signup' 
-                ? 'Sign up to build your admissions knowledge profile'
-                : 'Sign in to access your dashboard and save your history'
-            }
-          </p>
-        </div>
+      <div className={`auth-card-container ${mode === 'signup' ? 'signup-mode' : ''}`}>
+        <div className={`auth-card ${flipState === 'half' ? 'flip-half' : flipState === 'back' ? 'flip-back' : ''}`}>
+        {/* Dynamic AI Assistant Header */}
+        <AuthAssistantHeader
+          counselorName={config.counselorName}
+          counselorAvatar={config.counselorAvatar}
+          mode={mode}
+        />
 
-        {/* Error / Success Alerts */}
-        {error && (
-          <div style={{
-            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-            border: '1px solid rgba(239, 68, 68, 0.2)',
-            color: '#f87171',
-            padding: '12px 16px',
-            borderRadius: '8px',
-            fontSize: '0.85rem',
-            marginBottom: '20px',
-            lineHeight: '1.4'
-          }}>
-            ⚠️ {error}
-          </div>
-        )}
-
-        {message && (
-          <div style={{
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-            border: '1px solid rgba(16, 185, 129, 0.2)',
-            color: '#34d399',
-            padding: '12px 16px',
-            borderRadius: '8px',
-            fontSize: '0.85rem',
-            marginBottom: '20px',
-            lineHeight: '1.4'
-          }}>
-            ✅ {message}
-          </div>
-        )}
-
-        {/* Form Selection based on Mode */}
-        {mode === 'forgot' ? (
-          <form onSubmit={handleResetPassword} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label htmlFor="forgot-email" style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-secondary)' }}>Email Address</label>
-              <input
-                id="forgot-email"
-                type="email"
-                placeholder="you@example.com"
-                value={forgotEmail}
-                onChange={(e) => setForgotEmail(e.target.value)}
-                disabled={isLoading}
-                style={{
-                  backgroundColor: 'var(--bg-primary)',
-                  border: '1px solid var(--border-color)',
-                  borderRadius: '8px',
-                  color: 'var(--text-primary)',
-                  padding: '12px 16px',
-                  fontSize: '0.9rem',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                  width: '100%'
-                }}
-              />
+        {/* Scrollable Form Body Container */}
+        <div className="auth-form-body">
+          {/* Error / Success Alerts */}
+          {error && (
+            <div className="auth-alert">
+              ⚠️ {error}
             </div>
+          )}
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              style={{
-                backgroundColor: 'var(--accent-color, #4f46e5)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '12px',
-                fontSize: '0.95rem',
-                fontWeight: 500,
-                cursor: isLoading ? 'not-allowed' : 'pointer',
-                opacity: isLoading ? 0.7 : 1,
-                transition: 'opacity 0.2s',
-                marginTop: '8px'
-              }}
-            >
-              {isLoading ? 'Sending...' : 'Send Reset Link'}
-            </button>
+          {message && (
+            <div className="auth-alert-success">
+              ✅ {message}
+            </div>
+          )}
 
-            <button
-              type="button"
-              onClick={() => changeMode('login')}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--text-secondary)',
-                fontSize: '0.85rem',
-                cursor: 'pointer',
-                textAlign: 'center',
-                textDecoration: 'underline'
-              }}
-            >
-              Back to Sign In
-            </button>
-          </form>
-        ) : mode === 'signup' ? (
-          /* Sign Up Form Mode */
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <form onSubmit={handleEmailRegister} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              
-              {/* Full Name */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label htmlFor="reg-name" style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-secondary)' }}>Full Name</label>
+          {/* Form Selection based on Mode */}
+          {mode === 'forgot' ? (
+            <form onSubmit={handleResetPassword} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className="auth-input-group">
+                <label htmlFor="forgot-email" className="auth-label">Email Address</label>
                 <input
-                  id="reg-name"
-                  type="text"
-                  placeholder="John Doe"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  disabled={isLoading}
-                  style={{
-                    backgroundColor: 'var(--bg-primary)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: '8px',
-                    color: 'var(--text-primary)',
-                    padding: '12px 16px',
-                    fontSize: '0.9rem',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                    width: '100%'
-                  }}
-                />
-              </div>
-
-              {/* Email */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label htmlFor="reg-email" style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-secondary)' }}>Email Address</label>
-                <input
-                  id="reg-email"
+                  id="forgot-email"
                   type="email"
                   placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
                   disabled={isLoading}
-                  style={{
-                    backgroundColor: 'var(--bg-primary)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: '8px',
-                    color: 'var(--text-primary)',
-                    padding: '12px 16px',
-                    fontSize: '0.9rem',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                    width: '100%'
-                  }}
+                  className="auth-input"
+                  required
                 />
               </div>
-
-              {/* Password */}
-              <PasswordInput
-                id="reg-password"
-                label="Password"
-                placeholder="At least 6 characters"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
-              />
-
-              {/* Confirm Password */}
-              <PasswordInput
-                id="reg-confirm-password"
-                label="Confirm Password"
-                placeholder="Confirm your password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                disabled={isLoading}
-              />
 
               <button
                 type="submit"
                 disabled={isLoading}
-                style={{
-                  backgroundColor: 'var(--accent-color, #4f46e5)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '12px',
-                  fontSize: '0.95rem',
-                  fontWeight: 500,
-                  cursor: isLoading ? 'not-allowed' : 'pointer',
-                  opacity: isLoading ? 0.7 : 1,
-                  transition: 'opacity 0.2s',
-                  marginTop: '12px'
-                }}
+                className="auth-submit-btn"
+              >
+                {isLoading ? 'Sending...' : 'Send Reset Link'}
+              </button>
+            </form>
+          ) : mode === 'signup' ? (
+            <form onSubmit={handleEmailRegister} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div className="auth-grid-form">
+                <div className="auth-grid-col">
+                  {/* Full Name */}
+                  <div className="auth-input-group">
+                    <label htmlFor="reg-name" className="auth-label">Full Name</label>
+                    <input
+                      id="reg-name"
+                      type="text"
+                      placeholder="John Doe"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      disabled={isLoading}
+                      className="auth-input"
+                      required
+                    />
+                  </div>
+
+                  {/* Email */}
+                  <div className="auth-input-group">
+                    <label htmlFor="reg-email" className="auth-label">Email Address</label>
+                    <input
+                      id="reg-email"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      disabled={isLoading}
+                      className="auth-input"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="auth-grid-col">
+                  {/* Password */}
+                  <PasswordInput
+                    id="reg-password"
+                    label="Password"
+                    placeholder="At least 6 characters"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={isLoading}
+                  />
+
+                  {/* Confirm Password */}
+                  <PasswordInput
+                    id="reg-confirm-password"
+                    label="Confirm Password"
+                    placeholder="Confirm your password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="auth-submit-btn"
               >
                 {isLoading ? 'Creating Account...' : 'Sign Up'}
               </button>
             </form>
-
-            <div style={{ textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              Already have an account?{' '}
-              <button 
-                onClick={() => changeMode('login')} 
-                style={{ background: 'none', border: 'none', color: 'var(--accent-color, #4f46e5)', cursor: 'pointer', fontWeight: 500, padding: 0 }}
-              >
-                Sign In
-              </button>
-            </div>
-
-            {/* Divider */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              margin: '8px 0',
-              color: 'var(--text-muted)'
-            }}>
-              <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-color)' }}></div>
-              <span style={{ padding: '0 12px', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>or</span>
-              <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-color)' }}></div>
-            </div>
-
-            {/* Google Signup */}
-            <GoogleButton
-              onClick={handleGoogleLogin}
-              disabled={isLoading}
-              label="Continue with Google"
-            />
-          </div>
-        ) : (
-          /* Normal Sign In Mode */
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <form onSubmit={handleEmailLogin} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              
+          ) : (
+            <form onSubmit={handleEmailLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {/* Email */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label htmlFor="login-email" style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-secondary)' }}>Email Address</label>
+              <div className="auth-input-group">
+                <label htmlFor="login-email" className="auth-label">Email Address</label>
                 <input
                   id="login-email"
                   type="email"
@@ -417,36 +332,20 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
-                  style={{
-                    backgroundColor: 'var(--bg-primary)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: '8px',
-                    color: 'var(--text-primary)',
-                    padding: '12px 16px',
-                    fontSize: '0.9rem',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                    width: '100%'
-                  }}
+                  className="auth-input"
+                  required
                 />
               </div>
 
               {/* Password */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div className="auth-input-group">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '-6px' }}>
-                  <label htmlFor="login-password" style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-secondary)' }}>Password</label>
+                  <label htmlFor="login-password" className="auth-label">Password</label>
                   <button
                     type="button"
                     onClick={() => changeMode('forgot')}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--accent-color, #4f46e5)',
-                      fontSize: '0.8rem',
-                      cursor: 'pointer',
-                      textDecoration: 'none',
-                      padding: 0
-                    }}
+                    className="auth-toggle-link"
+                    style={{ fontSize: '0.8rem' }}
                   >
                     Forgot password?
                   </button>
@@ -460,74 +359,77 @@ export default function LoginPage() {
                 />
               </div>
 
-              {/* Submit */}
               <button
                 type="submit"
                 disabled={isLoading}
-                style={{
-                  backgroundColor: 'var(--accent-color, #4f46e5)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '12px',
-                  fontSize: '0.95rem',
-                  fontWeight: 500,
-                  cursor: isLoading ? 'not-allowed' : 'pointer',
-                  opacity: isLoading ? 0.7 : 1,
-                  transition: 'opacity 0.2s',
-                  marginTop: '8px'
-                }}
+                className="auth-submit-btn"
               >
                 {isLoading ? 'Signing In...' : 'Sign In'}
               </button>
             </form>
+          )}
+        </div>
 
-            <div style={{ textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+        {/* Docked Footer (Fixed Actions) */}
+        <div className="auth-footer">
+          {mode === 'forgot' ? (
+            <div style={{ textAlign: 'center' }}>
+              <button 
+                onClick={() => changeMode('login')} 
+                className="auth-toggle-link"
+                style={{ fontSize: '0.85rem' }}
+              >
+                Back to Sign In
+              </button>
+            </div>
+          ) : mode === 'signup' ? (
+            <div className="auth-toggle-text">
+              Already have an account?{' '}
+              <button 
+                onClick={() => changeMode('login')} 
+                className="auth-toggle-link"
+              >
+                Sign In
+              </button>
+            </div>
+          ) : (
+            <div className="auth-toggle-text">
               Don't have an account?{' '}
               <button 
                 onClick={() => changeMode('signup')} 
-                style={{ background: 'none', border: 'none', color: 'var(--accent-color, #4f46e5)', cursor: 'pointer', fontWeight: 500, padding: 0 }}
+                className="auth-toggle-link"
               >
                 Sign Up
               </button>
             </div>
+          )}
 
-            {/* Divider */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              margin: '8px 0',
-              color: 'var(--text-muted)'
-            }}>
-              <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-color)' }}></div>
-              <span style={{ padding: '0 12px', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>or</span>
-              <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-color)' }}></div>
-            </div>
+          {mode !== 'forgot' && (
+            <>
+              <div className="auth-divider">
+                <div className="auth-divider-line"></div>
+                <span className="auth-divider-text">or</span>
+                <div className="auth-divider-line"></div>
+              </div>
 
-            {/* Google Login */}
-            <GoogleButton
-              onClick={handleGoogleLogin}
-              disabled={isLoading}
-              label="Continue with Google"
-            />
+              <GoogleButton
+                onClick={handleGoogleLogin}
+                disabled={isLoading}
+                loading={isGoogleLoading}
+                label="Continue with Google"
+              />
+            </>
+          )}
+
+          <div style={{ textAlign: 'center', marginTop: '4px' }}>
+            <Link to="/" className="auth-back-link">
+              <span>←</span> Back to Chat
+            </Link>
           </div>
-        )}
-
-        {/* Footer */}
-        <div style={{ textAlign: 'center', marginTop: '32px' }}>
-          <Link to="/" style={{
-            color: 'var(--text-secondary)',
-            fontSize: '0.85rem',
-            textDecoration: 'none',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px'
-          }}>
-            <span>←</span> Back to Chat
-          </Link>
         </div>
 
       </div>
     </div>
-  );
+  </div>
+);
 }

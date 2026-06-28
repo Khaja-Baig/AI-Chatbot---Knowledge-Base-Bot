@@ -4,9 +4,9 @@ export default function PasswordInput({ id, label, placeholder, value, onChange,
   const [show, setShow] = useState(false);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', ...style }}>
+    <div className="auth-input-group" style={style}>
       {label && (
-        <label htmlFor={id} style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-secondary)' }}>
+        <label htmlFor={id} className="auth-label">
           {label}
         </label>
       )}
@@ -18,17 +18,7 @@ export default function PasswordInput({ id, label, placeholder, value, onChange,
           value={value}
           onChange={onChange}
           disabled={disabled}
-          style={{
-            backgroundColor: 'var(--bg-primary)',
-            border: '1px solid var(--border-color)',
-            borderRadius: '8px',
-            color: 'var(--text-primary)',
-            padding: '12px 48px 12px 16px',
-            fontSize: '0.9rem',
-            outline: 'none',
-            boxSizing: 'border-box',
-            width: '100%'
-          }}
+          className="auth-input password-input"
         />
         <button
           type="button"
