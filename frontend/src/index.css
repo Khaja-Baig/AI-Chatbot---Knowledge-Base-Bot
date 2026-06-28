@@ -406,7 +406,7 @@ body {
    ================================================== */
 @media (max-width: 768px) {
   /* Sidebar Drawer slide-out */
-  .sidebar {
+  .sidebar-root {
     position: fixed;
     top: 0;
     left: 0;
@@ -415,7 +415,7 @@ body {
     box-shadow: 8px 0 24px rgba(0, 0, 0, 0.5);
   }
   
-  .sidebar.open {
+  .sidebar-root.open {
     transform: translateX(0);
   }
   

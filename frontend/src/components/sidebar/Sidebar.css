@@ -49,6 +49,7 @@
 
 .sidebar-root.collapsed {
   width: var(--sb-width-collapsed);
+  overflow: visible;
 }
 
 /* ==================================================
