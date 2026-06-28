@@ -167,33 +167,37 @@
 .sb-expanded-new-chat-btn {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--sb-space-sm);
   width: 100%;
-  padding: 10px 14px;
-  background: transparent;
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  font-weight: 500;
-  font-size: 0.875rem;
+  padding: 12px 16px;
+  background: var(--accent-color);
+  color: #ffffff !important;
+  border: none;
+  border-radius: 24px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
   cursor: pointer;
-  transition: background-color var(--sb-transition), border-color var(--sb-transition);
-  text-align: left;
+  box-shadow: var(--btn-shadow);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
 }
 
 .sb-expanded-new-chat-btn:hover {
-  background-color: var(--bg-hover);
-  border-color: var(--text-muted);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px 0 rgba(109, 40, 217, 0.25);
 }
 
 .sb-expanded-new-chat-btn:focus-visible {
   outline: none;
-  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.3), var(--btn-shadow);
 }
 
 .sb-expanded-new-chat-icon {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   line-height: 1;
+  font-weight: 700;
 }
 
 /* Conversation List Scroll Container */
@@ -302,15 +306,16 @@
   align-items: center;
   height: var(--sb-item-height);
   padding: var(--sb-item-padding);
-  border-radius: var(--sb-item-radius);
+  border-radius: 12px;
   cursor: pointer;
   position: relative;
   background: transparent;
   border: none;
   width: 100%;
   text-align: left;
-  transition: background-color var(--sb-transition);
+  transition: all var(--sb-transition);
   box-sizing: border-box;
+  margin-bottom: 2px;
 }
 
 .sb-conv-item:hover {
@@ -319,6 +324,9 @@
 
 .sb-conv-item.active {
   background-color: var(--bg-active-tab);
+  border-left: 4px solid var(--accent-color);
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
 }
 
 .sb-conv-content {
