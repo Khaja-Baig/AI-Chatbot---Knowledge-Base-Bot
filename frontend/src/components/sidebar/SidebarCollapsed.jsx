@@ -3,6 +3,7 @@ import SidebarIconBtn from './SidebarIconBtn';
 import UserProfile from './UserProfile';
 
 export default function SidebarCollapsed({
+  sidebarLogoUrl,
   onExpand,
   onNewChat,
   onToggleHistory,
@@ -16,7 +17,11 @@ export default function SidebarCollapsed({
     <div className="sb-collapsed-layout">
       {/* Brand Icon only */}
       <div className="sb-collapsed-brand">
-        NG
+        {sidebarLogoUrl ? (
+          <img src={sidebarLogoUrl} alt="Logo" className="sb-collapsed-logo-img" />
+        ) : (
+          'NG'
+        )}
       </div>
 
       {/* Button Actions stacked vertically */}

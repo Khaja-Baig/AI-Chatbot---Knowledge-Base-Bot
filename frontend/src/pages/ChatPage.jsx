@@ -5,6 +5,7 @@ import SessionSidebar from '../components/SessionSidebar';
 import ChatWindow from '../components/ChatWindow';
 import GuestUpgradePrompt from '../components/GuestUpgradePrompt';
 import { ChatStorage } from '../utils/sessionStorage';
+import BotAvatar from '../components/BotAvatar';
 
 export default function ChatPage() {
   const { user, logout } = useAuth();
@@ -256,6 +257,7 @@ export default function ChatPage() {
       ></div>
 
       <SessionSidebar
+        config={config}
         sessions={sessions}
         activeSessionId={activeSessionId}
         isOpen={isSidebarOpen}
@@ -284,6 +286,11 @@ export default function ChatPage() {
             <button className="menu-toggle-btn" onClick={() => setIsSidebarOpen(true)}>
               ☰
             </button>
+            <BotAvatar
+              avatarUrl={config.counselorAvatarUrl}
+              fallbackEmoji={config.counselorAvatar}
+              size={40}
+            />
             <div className="counselor-info">
               <h2>{config.counselorName || 'Guru'}</h2>
               <p>Online & Ready to Guide</p>

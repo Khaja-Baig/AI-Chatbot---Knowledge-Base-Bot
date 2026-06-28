@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { ChatStorage } from '../utils/sessionStorage';
+import BotAvatar from './BotAvatar';
 
 function parseMarkdown(text) {
   if (!text) return '';
@@ -196,29 +197,60 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
         <div className="chat-messages-inner">
           {messages.length === 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '50vh', color: 'var(--text-secondary)', textAlign: 'center', padding: '24px' }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '16px' }}>👋</div>
-              <h3 style={{ marginBottom: '8px', color: 'var(--text-primary)', fontWeight: 500 }}>Guru</h3>
+              <div style={{ marginBottom: '12px' }}>
+                <BotAvatar
+                  avatarUrl={config.counselorAvatarUrl}
+                  fallbackEmoji={config.counselorAvatar}
+                  size={64}
+                />
+              </div>
+              <h3 style={{ marginTop: '8px', marginBottom: '8px', color: 'var(--text-primary)', fontWeight: 500 }}>
+                {config.counselorName || 'Guru'}
+              </h3>
               <p style={{ maxWidth: '440px', fontSize: '0.85rem', lineHeight: '1.6', color: 'var(--text-secondary)' }}>
                 {config.greetingMessage || 'I am here to help you understand our courses, admissions process, placements, and campus life. Go ahead and ask me anything!'}
               </p>
             </div>
           ) : (
-            messages.map((msg, index) => (
-              <div
-                key={index}
-                className={`message-bubble ${msg.role}`}
-              >
-                {parseMarkdown(msg.text)}
-              </div>
-            ))
+            messages.map((msg, index) => {
+              if (msg.role === 'model') {
+                return (
+                  <div key={index} className="bot-message-row" style={{ display: 'flex', gap: '10px', alignSelf: 'flex-start', maxWidth: '85%' }}>
+                    <BotAvatar
+                      avatarUrl={config.counselorAvatarUrl}
+                      fallbackEmoji={config.counselorAvatar}
+                      size={28}
+                    />
+                    <div className="message-bubble model" style={{ maxWidth: '100%' }}>
+                      {parseMarkdown(msg.text)}
+                    </div>
+                  </div>
+                );
+              }
+              return (
+                <div
+                  key={index}
+                  className="message-bubble user"
+                >
+                  {parseMarkdown(msg.text)}
+                </div>
+              );
+            })
           )}
 
           {isTyping && (
-            <div className="message-bubble model">
-              <div className="typing-indicator">
-                <span className="dot"></span>
-                <span className="dot"></span>
-                <span className="dot"></span>
+            <div className="bot-message-row" style={{ display: 'flex', gap: '10px', alignSelf: 'flex-start', maxWidth: '85%' }}>
+              <BotAvatar
+                avatarUrl={config.counselorAvatarUrl}
+                fallbackEmoji={config.counselorAvatar}
+                size={28}
+              />
+              <div className="message-bubble model" style={{ maxWidth: '100%' }}>
+                <div className="typing-indicator">
+                  <span className="dot"></span>
+                  <span className="dot"></span>
+                  <span className="dot"></span>
+                </div>
               </div>
             </div>
           )}

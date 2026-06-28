@@ -5,6 +5,7 @@ import HistoryPopover from './sidebar/HistoryPopover';
 import './sidebar/Sidebar.css';
 
 export default function SessionSidebar({
+  config,
   sessions,
   activeSessionId,
   isOpen,
@@ -88,6 +89,7 @@ export default function SessionSidebar({
 
         {isCollapsed ? (
           <SidebarCollapsed
+            sidebarLogoUrl={config?.sidebarLogoUrl}
             onExpand={() => setIsCollapsed(false)}
             onNewChat={onNewChat}
             onToggleHistory={() => setShowHistoryPopover(prev => !prev)}
@@ -99,6 +101,7 @@ export default function SessionSidebar({
           />
         ) : (
           <SidebarExpanded
+            sidebarLogoUrl={config?.sidebarLogoUrl}
             sessions={sessions}
             activeSessionId={activeSessionId}
             onSelectSession={onSelectSession}

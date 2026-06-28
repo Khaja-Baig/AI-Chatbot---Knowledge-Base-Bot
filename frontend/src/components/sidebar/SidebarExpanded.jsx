@@ -4,6 +4,7 @@ import ConversationList from './ConversationList';
 import UserProfile from './UserProfile';
 
 export default function SidebarExpanded({
+  sidebarLogoUrl,
   sessions,
   activeSessionId,
   onSelectSession,
@@ -21,8 +22,14 @@ export default function SidebarExpanded({
       {/* Brand Header */}
       <header className="sb-expanded-header">
         <div className="sb-expanded-brand">
-          <div className="sb-expanded-brand-icon">NG</div>
-          <div className="sb-expanded-brand-text">NavGurukul AI</div>
+          {sidebarLogoUrl ? (
+            <img src={sidebarLogoUrl} alt="NavGurukul AI" className="sb-brand-logo-img" />
+          ) : (
+            <>
+              <div className="sb-expanded-brand-icon">NG</div>
+              <div className="sb-expanded-brand-text">NavGurukul AI</div>
+            </>
+          )}
         </div>
         <SidebarIconBtn
           icon={

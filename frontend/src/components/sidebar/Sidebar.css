@@ -136,6 +136,12 @@
   gap: var(--sb-space-sm);
 }
 
+.sb-brand-logo-img {
+  max-height: 32px;
+  max-width: 140px;
+  object-fit: contain;
+}
+
 .sb-expanded-brand-icon {
   font-weight: 800;
   font-size: 1.1rem;
@@ -435,6 +441,13 @@
   font-size: 1.1rem;
   color: var(--text-primary);
   flex-shrink: 0;
+}
+
+.sb-collapsed-logo-img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: 8px;
 }
 
 .sb-collapsed-actions {

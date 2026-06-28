@@ -6,6 +6,8 @@ const CONFIG_DOC_ID = 'chatbot';
 const DEFAULT_CONFIG = {
   counselorName: 'Guru',
   counselorAvatar: '🤖',
+  counselorAvatarUrl: '',
+  sidebarLogoUrl: '',
   greetingMessage: 'Hello! I am Guru, your NavGurukul Admissions Counselor. I can help you understand our courses, admissions process, eligibility, placements, and campus life. How can I help you today?',
   behaviorMode: 'warm',
   maxHistoryTurns: 10
@@ -26,7 +28,8 @@ export class ConfigController {
         return res.status(200).json(DEFAULT_CONFIG);
       }
 
-      return res.status(200).json(snap.data());
+      // Merge defaults in case new fields like counselorAvatarUrl are missing
+      return res.status(200).json({ ...DEFAULT_CONFIG, ...snap.data() });
     } catch (error) {
       console.error('Error fetching chatbot config:', error);
       return res.status(500).json({ error: 'Failed to retrieve chatbot configuration.' });
@@ -38,6 +41,15 @@ export class ConfigController {
    */
   static async updateConfig(req, res) {
     const newConfig = req.body;
+    
+    // Validate base64 string sizes to prevent massive uploads (max 512KB per image)
+    if (newConfig.counselorAvatarUrl && newConfig.counselorAvatarUrl.length > 700000) {
+      return res.status(400).json({ error: 'Avatar image is too large. Max size is 512KB.' });
+    }
+    if (newConfig.sidebarLogoUrl && newConfig.sidebarLogoUrl.length > 700000) {
+      return res.status(400).json({ error: 'Sidebar logo image is too large. Max size is 512KB.' });
+    }
+
     try {
       const docRef = db.collection('config').doc(CONFIG_DOC_ID);
       await docRef.set(newConfig, { merge: true });
@@ -45,7 +57,7 @@ export class ConfigController {
       const updatedSnap = await docRef.get();
       return res.status(200).json({
         success: true,
-        config: updatedSnap.data()
+        config: { ...DEFAULT_CONFIG, ...updatedSnap.data() }
       });
     } catch (error) {
       console.error('Error updating chatbot config:', error);
