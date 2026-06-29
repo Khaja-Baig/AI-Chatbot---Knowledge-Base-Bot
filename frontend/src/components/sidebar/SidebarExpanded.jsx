@@ -59,7 +59,7 @@ export default function SidebarExpanded({
       </section>
 
       {/* Conversations Heading */}
-      <h2 className="sb-expanded-list-title">Recent Conversations</h2>
+      <h2 className="sb-expanded-list-title">Recent</h2>
 
       {/* Scrollable Conversation List */}
       <ConversationList

@@ -1359,7 +1359,7 @@ body.light-theme .collapsed-history-btn:hover {
   position: absolute;
   left: 76px;
   top: 100px;
-  width: 280px;
+  width: 250px;
   height: 400px;
   background-color: var(--bg-sidebar);
   border: 1px solid var(--border-color);

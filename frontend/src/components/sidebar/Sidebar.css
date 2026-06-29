@@ -562,7 +562,7 @@
   position: fixed;
   left: 76px;
   top: 110px;
-  width: 320px;
+  width: 270px;
   max-height: 480px;
   background: var(--bg-sidebar);
   border: 1px solid var(--border-color);

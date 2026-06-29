@@ -28,7 +28,7 @@ export default function ConversationList({
     <div 
       className="sb-expanded-list-scroll"
       role="listbox"
-      aria-label="Recent Conversations"
+      aria-label="Recent"
     >
       {sessions.map((session) => (
         <ConversationItem

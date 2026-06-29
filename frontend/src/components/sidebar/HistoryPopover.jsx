@@ -14,11 +14,11 @@ export default function HistoryPopover({
       className="history-popover"
       ref={popoverRef}
       role="dialog"
-      aria-label="Recent Conversations"
+      aria-label="Recent"
       tabIndex="-1"
     >
       <div className="popover-header">
-        <h3 className="popover-title">Recent Conversations</h3>
+        <h3 className="popover-title">Recent</h3>
       </div>
       <div className="popover-content">
         {sessions.length === 0 ? (
