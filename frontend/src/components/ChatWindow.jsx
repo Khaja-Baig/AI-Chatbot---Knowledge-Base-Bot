@@ -390,7 +390,7 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
             messages.map((msg, index) => {
               if (msg.role === 'model') {
                 return (
-                  <div key={index} className="bot-message-row" style={{ display: 'flex', gap: '12px', alignSelf: 'flex-start', maxWidth: '85%' }}>
+                  <div key={index} className="bot-message-row" style={{ display: 'flex', gap: '12px', alignItems: 'center', alignSelf: 'flex-start', maxWidth: '85%' }}>
                     <BotAvatar
                       avatarUrl={config.counselorAvatarUrl}
                       fallbackEmoji={config.counselorAvatar}
@@ -414,7 +414,7 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
           )}
 
           {isTyping && (
-            <div className="bot-message-row" style={{ display: 'flex', gap: '12px', alignSelf: 'flex-start', maxWidth: '85%' }}>
+            <div className="bot-message-row" style={{ display: 'flex', gap: '12px', alignItems: 'center', alignSelf: 'flex-start', maxWidth: '85%' }}>
               <BotAvatar
                 avatarUrl={config.counselorAvatarUrl}
                 fallbackEmoji={config.counselorAvatar}

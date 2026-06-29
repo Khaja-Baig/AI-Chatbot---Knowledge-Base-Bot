@@ -24,7 +24,7 @@
   --bg-active-tab: rgba(109, 40, 217, 0.12);
   --card-shadow: 0 8px 30px -4px rgba(109, 40, 217, 0.05);
   --btn-shadow: 0 4px 14px 0 rgba(109, 40, 217, 0.1);
-  --bot-message-avatar-size: 44px;
+  --bot-message-avatar-size: 60px;
   color-scheme: light;
 }
 
@@ -55,13 +55,13 @@
 
 @media (max-width: 1024px) {
   :root {
-    --bot-message-avatar-size: 38px;
+    --bot-message-avatar-size: 50px;
   }
 }
 
 @media (max-width: 768px) {
   :root {
-    --bot-message-avatar-size: 32px;
+    --bot-message-avatar-size: 40px;
   }
 }
 
