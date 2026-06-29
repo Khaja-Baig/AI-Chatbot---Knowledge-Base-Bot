@@ -25,7 +25,7 @@ export default function LoginPage() {
   const [config, setConfig] = useState({
     counselorName: 'Guru',
     counselorAvatar: '🤖',
-    counselorAvatarUrl: ''
+    counselorAvatarUrl: undefined
   });
 
   useEffect(() => {

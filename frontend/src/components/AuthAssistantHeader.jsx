@@ -8,7 +8,9 @@ export default function AuthAssistantHeader({
 }) {
   const [imgError, setImgError] = useState(false);
   
-  const avatarToUse = (!imgError && (counselorAvatarUrl || '/guru_avatar.png')) || '';
+  const avatarToUse = counselorAvatarUrl === undefined
+    ? ''
+    : ((!imgError && (counselorAvatarUrl || '/guru_avatar.png')) || '');
   
   const isImageUrl = avatarToUse && (
     avatarToUse.startsWith('http://') || 

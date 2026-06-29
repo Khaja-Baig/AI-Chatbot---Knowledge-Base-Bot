@@ -27,7 +27,10 @@ export default function ChatPage() {
   const [config, setConfig] = useState({
     counselorName: 'Guru',
     greetingMessage: 'Hello! I am Guru, your NavGurukul Admissions Counselor. I can help you understand our courses, admissions process, eligibility, placements, and campus life. How can I help you today?',
-    behaviorMode: 'warm'
+    behaviorMode: 'warm',
+    counselorAvatar: '🤖',
+    counselorAvatarUrl: undefined,
+    sidebarLogoUrl: ''
   });
 
   // Handle light/dark theme class/attributes
