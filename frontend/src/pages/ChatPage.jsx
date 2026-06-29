@@ -258,7 +258,36 @@ export default function ChatPage() {
     setShowUpgradePrompt(false);
     // Reset counter to 4, prompt will reappear after 3 more exchanges
     setGuestMessageCount(4);
-  };
+  };  if (isLoading) {
+    return (
+      <div className="loading-container" style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        backgroundColor: 'var(--bg-primary)',
+        color: 'white'
+      }}>
+        <div className="spinner" style={{
+          width: '40px',
+          height: '40px',
+          border: '4px solid rgba(255, 255, 255, 0.1)',
+          borderTop: '4px solid var(--accent-color, #4f46e5)',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite',
+          marginBottom: '16px'
+        }}></div>
+        <p style={{ color: 'var(--text-secondary, #9ca3af)', fontSize: '0.9rem' }}>Loading chatbot...</p>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   return (
     <div className="app-container">
