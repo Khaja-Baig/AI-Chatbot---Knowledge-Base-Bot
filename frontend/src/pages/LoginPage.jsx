@@ -132,7 +132,19 @@ export default function LoginPage() {
       handleRedirect(res.user.role);
     } catch (err) {
       console.error(err);
-      setError(getFriendlyAuthError(err));
+      const code = err?.code || '';
+      const msg = err?.message || '';
+      const isPopupError = 
+        code === 'auth/popup-closed-by-user' || 
+        code === 'auth/cancelled-popup-request' || 
+        code === 'auth/popup-blocked' ||
+        msg.includes('popup-blocked') ||
+        msg.includes('popup-closed-by-user') ||
+        msg.includes('cancelled-popup-request');
+
+      if (!isPopupError) {
+        setError(getFriendlyAuthError(err));
+      }
       setIsLoading(false);
       setIsGoogleLoading(false);
     }
@@ -394,17 +406,7 @@ export default function LoginPage() {
 
                 {/* Password */}
                 <div className="auth-input-group">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '-6px' }}>
-                    <label htmlFor="login-password-mobile" className="auth-label">Password</label>
-                    <button
-                      type="button"
-                      onClick={() => changeMode('forgot')}
-                      className="auth-toggle-link"
-                      style={{ fontSize: '0.8rem' }}
-                    >
-                      Forgot password?
-                    </button>
-                  </div>
+                  <label htmlFor="login-password-mobile" className="auth-label">Password</label>
                   <PasswordInput
                     id="login-password-mobile"
                     placeholder="••••••••"
@@ -412,6 +414,15 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={isLoading}
                   />
+                  <div className="auth-forgot-link-wrapper">
+                    <button
+                      type="button"
+                      onClick={() => changeMode('forgot')}
+                      className="auth-toggle-link"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
                 </div>
 
                 <button
@@ -664,17 +675,7 @@ export default function LoginPage() {
 
               {/* Password */}
               <div className="auth-input-group">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '-6px' }}>
-                  <label htmlFor="login-password" className="auth-label">Password</label>
-                  <button
-                    type="button"
-                    onClick={() => changeMode('forgot')}
-                    className="auth-toggle-link"
-                    style={{ fontSize: '0.8rem' }}
-                  >
-                    Forgot password?
-                  </button>
-                </div>
+                <label htmlFor="login-password" className="auth-label">Password</label>
                 <PasswordInput
                   id="login-password"
                   placeholder="••••••••"
@@ -682,6 +683,15 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
                 />
+                <div className="auth-forgot-link-wrapper">
+                  <button
+                    type="button"
+                    onClick={() => changeMode('forgot')}
+                    className="auth-toggle-link"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
               </div>
 
               <button

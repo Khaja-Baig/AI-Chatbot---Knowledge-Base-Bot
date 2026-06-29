@@ -1552,6 +1552,11 @@ body.light-theme .collapsed-history-btn:hover {
   text-decoration: underline;
 }
 
+.auth-forgot-link-wrapper {
+  text-align: left;
+  margin-top: 6px;
+}
+
 .auth-divider {
   display: flex;
   align-items: center;
