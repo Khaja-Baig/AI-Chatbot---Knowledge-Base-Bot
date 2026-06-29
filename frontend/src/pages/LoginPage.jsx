@@ -28,6 +28,12 @@ export default function LoginPage() {
     counselorAvatarUrl: undefined
   });
 
+  // Force light theme for guest mode on login page
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', 'light');
+    document.body.classList.add('light-theme');
+  }, []);
+
   useEffect(() => {
     const fetchConfig = async () => {
       try {

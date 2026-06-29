@@ -36,14 +36,17 @@ export default function ChatPage() {
 
   // Handle light/dark theme class/attributes
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    if (theme === 'light') {
+    const activeTheme = user ? theme : 'light';
+    document.documentElement.setAttribute('data-theme', activeTheme);
+    if (activeTheme === 'light') {
       document.body.classList.add('light-theme');
     } else {
       document.body.classList.remove('light-theme');
     }
-    localStorage.setItem('theme', theme);
-  }, [theme]);
+    if (user) {
+      localStorage.setItem('theme', theme);
+    }
+  }, [theme, user]);
 
   // Save sidebar collapse choice
   useEffect(() => {
