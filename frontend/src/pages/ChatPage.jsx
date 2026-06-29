@@ -22,6 +22,7 @@ export default function ChatPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('sidebar-collapsed') === 'true');
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [sessionToDelete, setSessionToDelete] = useState(null);
 
   const [config, setConfig] = useState({
     counselorName: 'Guru',
@@ -170,8 +171,11 @@ export default function ChatPage() {
     }
   };
 
-  const handleDeleteSession = async (sessionId) => {
-    if (!confirm('Are you sure you want to delete this session?')) return;
+  const handleDeleteSession = (sessionId) => {
+    setSessionToDelete(sessionId);
+  };
+
+  const executeDeleteSession = async (sessionId) => {
     try {
       ChatStorage.removeDraft(sessionId);
 
@@ -399,6 +403,39 @@ export default function ChatPage() {
                 style={{ padding: '8px 16px', borderRadius: '6px', fontSize: '0.85rem' }}
               >
                 Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Chat Confirmation Modal */}
+      {sessionToDelete && (
+        <div className="modal-backdrop" onClick={() => setSessionToDelete(null)}>
+          <div className="confirmation-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="confirmation-modal-title">Delete Chat</h3>
+            <div className="confirmation-modal-text">
+              <p style={{ margin: 0, fontWeight: 500, marginBottom: '6px' }}>Are you sure you want to delete this chat?</p>
+              <p style={{ margin: 0, opacity: 0.8, fontSize: '0.85rem' }}>This action cannot be undone.</p>
+            </div>
+            <div className="confirmation-modal-actions">
+              <button 
+                className="btn-secondary" 
+                onClick={() => setSessionToDelete(null)}
+                style={{ padding: '8px 16px', borderRadius: '6px', fontSize: '0.85rem' }}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn-danger" 
+                onClick={async () => {
+                  const idToDelete = sessionToDelete;
+                  setSessionToDelete(null);
+                  await executeDeleteSession(idToDelete);
+                }}
+                style={{ padding: '8px 16px', borderRadius: '6px', fontSize: '0.85rem' }}
+              >
+                Delete
               </button>
             </div>
           </div>
