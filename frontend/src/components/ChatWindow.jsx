@@ -154,6 +154,7 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
   const [currentLoadingPhrase, setCurrentLoadingPhrase] = useState(loadingPhrases[0]);
   const [suggestedQuestions, setSuggestedQuestions] = useState([]);
   const messagesEndRef = useRef(null);
+  const chatMessagesRef = useRef(null);
 
   useEffect(() => {
     if (activeSessionId) {
@@ -171,7 +172,13 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
   }, [activeSessionId]);
 
   useEffect(() => {
-    scrollToBottom();
+    if (messages.length > 0 || isTyping) {
+      scrollToBottom();
+    } else {
+      if (chatMessagesRef.current) {
+        chatMessagesRef.current.scrollTop = 0;
+      }
+    }
   }, [messages, isTyping]);
 
   const fetchHistory = async () => {
@@ -301,7 +308,7 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
 
   return (
     <div className="chat-area">
-      <div className="chat-messages">
+      <div ref={chatMessagesRef} className="chat-messages">
         {/* Background decorations */}
         <div className="chat-bg-decorations">
           <div className="decor-doodle d1">✈️</div>
