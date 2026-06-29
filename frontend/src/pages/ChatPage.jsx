@@ -8,7 +8,7 @@ import { ChatStorage } from '../utils/sessionStorage';
 import BotAvatar from '../components/BotAvatar';
 
 export default function ChatPage() {
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const navigate = useNavigate();
 
   const [sessions, setSessions] = useState([]);
@@ -47,6 +47,8 @@ export default function ChatPage() {
   }, [isSidebarCollapsed]);
 
   useEffect(() => {
+    if (isLoading) return;
+
     const handleAuthTransition = async () => {
       const savedSessionId = ChatStorage.getActiveSession();
 
@@ -72,7 +74,7 @@ export default function ChatPage() {
     };
 
     handleAuthTransition();
-  }, [user]);
+  }, [user, isLoading]);
 
   const fetchSessions = async (preferredSessionId = null) => {
     try {
