@@ -180,7 +180,7 @@ export default function LoginPage() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: '100vh',
+      minHeight: '100dvh',
       backgroundColor: 'var(--bg-primary)',
       padding: '24px',
       position: 'relative',

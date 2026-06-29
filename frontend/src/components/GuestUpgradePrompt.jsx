@@ -48,11 +48,11 @@ export default function GuestUpgradePrompt({ onDismiss }) {
 
       <style>{`
         .upgrade-prompt-overlay {
-          position: absolute;
-          bottom: 90px;
+          position: fixed;
+          bottom: 100px;
           left: 50%;
           transform: translateX(-50%);
-          width: 90%;
+          width: calc(100% - 32px);
           max-width: 480px;
           background-color: var(--bg-sidebar, #f5f0e6);
           border: 1px solid var(--accent-color, #6d28d9);

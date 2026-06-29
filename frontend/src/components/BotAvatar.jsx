@@ -1,6 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function BotAvatar({ avatarUrl, fallbackEmoji = '🤖', size = 40, className = '' }) {
+  const [imgError, setImgError] = useState(false);
+
+  // Reset error state when avatarUrl changes
+  useEffect(() => {
+    setImgError(false);
+  }, [avatarUrl]);
+
   const containerStyle = {
     width: typeof size === 'number' ? `${size}px` : size,
     height: typeof size === 'number' ? `${size}px` : size,
@@ -13,6 +20,9 @@ export default function BotAvatar({ avatarUrl, fallbackEmoji = '🤖', size = 40
     backgroundColor: 'var(--bg-bubble-model, #1e1e24)',
     border: '1.5px solid var(--border-color)',
     boxShadow: '0 4px 12px -2px rgba(109, 40, 217, 0.08)',
+    fontSize: typeof size === 'number' ? `${size * 0.55}px` : `calc(${size} * 0.55)`,
+    lineHeight: '1',
+    userSelect: 'none',
   };
 
   // If avatarUrl is undefined, it means the config is still loading.
@@ -31,7 +41,7 @@ export default function BotAvatar({ avatarUrl, fallbackEmoji = '🤖', size = 40
 
   const finalAvatarUrl = avatarUrl || '/guru_avatar.png';
 
-  if (finalAvatarUrl) {
+  if (finalAvatarUrl && !imgError) {
     return (
       <div style={containerStyle} className={`bot-avatar-container ${className}`}>
         <img
@@ -42,14 +52,7 @@ export default function BotAvatar({ avatarUrl, fallbackEmoji = '🤖', size = 40
             height: '100%',
             objectFit: 'cover',
           }}
-          onError={(e) => {
-            e.target.style.display = 'none';
-            const parent = e.target.parentNode;
-            if (parent) {
-              parent.style.fontSize = typeof size === 'number' ? `${size * 0.55}px` : `calc(${size} * 0.55)`;
-              parent.innerHTML = fallbackEmoji;
-            }
-          }}
+          onError={() => setImgError(true)}
         />
       </div>
     );
@@ -58,11 +61,7 @@ export default function BotAvatar({ avatarUrl, fallbackEmoji = '🤖', size = 40
   // Fallback to emoji
   return (
     <div
-      style={{
-        ...containerStyle,
-        fontSize: typeof size === 'number' ? `${size * 0.55}px` : `calc(${size} * 0.55)`,
-        userSelect: 'none',
-      }}
+      style={containerStyle}
       className={`bot-avatar-container emoji-fallback ${className}`}
     >
       {fallbackEmoji}

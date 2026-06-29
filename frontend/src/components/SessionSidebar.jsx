@@ -25,6 +25,17 @@ export default function SessionSidebar({
   
   const historyButtonRef = useRef(null);
   const popoverRef = useRef(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile width
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Update popover position to align with history button top, constraining within viewport
   useEffect(() => {
@@ -83,12 +94,12 @@ export default function SessionSidebar({
     };
   }, [showHistoryPopover]);
 
-  // Close popover if sidebar is expanded
+  // Close popover if sidebar is expanded or on mobile
   useEffect(() => {
-    if (!isCollapsed) {
+    if (!isCollapsed || isMobile) {
       setShowHistoryPopover(false);
     }
-  }, [isCollapsed]);
+  }, [isCollapsed, isMobile]);
 
   // Focus popover on open
   useEffect(() => {
@@ -106,14 +117,16 @@ export default function SessionSidebar({
     }
   };
 
+  const useCollapsedView = isCollapsed && !isMobile;
+
   return (
     <>
       <div 
-        className={`sidebar-root ${isOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''}`}
+        className={`sidebar-root ${isOpen ? 'open' : ''} ${useCollapsedView ? 'collapsed' : ''}`}
         style={{ willChange: 'width' }}
       >
 
-        {isCollapsed ? (
+        {useCollapsedView ? (
           <SidebarCollapsed
             sidebarLogoUrl={config?.sidebarLogoUrl}
             onExpand={() => setIsCollapsed(false)}
@@ -134,17 +147,18 @@ export default function SessionSidebar({
             onNewChat={onNewChat}
             onDeleteSession={onDeleteSession}
             onRenameSession={onRenameSession}
-            onCollapse={() => setIsCollapsed(true)}
+            onCollapse={isMobile ? onClose : () => setIsCollapsed(true)}
             user={user}
             onOpenSettings={onOpenSettings}
             onLogoutClick={onLogoutClick}
             formatDate={formatDate}
+            isMobile={isMobile}
           />
         )}
       </div>
 
       {/* Floating Popover for Collapsed Chat History */}
-      {isCollapsed && showHistoryPopover && (
+      {useCollapsedView && showHistoryPopover && (
         <HistoryPopover
           sessions={sessions}
           activeSessionId={activeSessionId}

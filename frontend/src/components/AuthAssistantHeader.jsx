@@ -40,7 +40,7 @@ export default function AuthAssistantHeader({
   return (
     <div className="auth-assistant-header" style={{
       textAlign: 'center',
-      marginBottom: '24px',
+      marginBottom: '20px',
       flexShrink: 0,
       display: 'flex',
       flexDirection: 'column',
@@ -48,8 +48,8 @@ export default function AuthAssistantHeader({
       width: '100%'
     }}>
       {/* Avatar Container */}
-      <div style={{ marginBottom: '16px' }}>
-        <div style={{
+      <div className="auth-assistant-avatar-container" style={{ marginBottom: '12px' }}>
+        <div className="auth-assistant-avatar-wrapper" style={{
           width: '56px',
           height: '56px',
           borderRadius: '50%',
@@ -74,8 +74,8 @@ export default function AuthAssistantHeader({
       </div>
 
       {/* Greeting Title */}
-      <h1 style={{ 
-        fontSize: '1.35rem', 
+      <h1 className="auth-assistant-title" style={{ 
+        fontSize: '1.3rem', 
         fontWeight: 600, 
         color: 'var(--text-primary)', 
         marginBottom: '6px', 
@@ -86,9 +86,9 @@ export default function AuthAssistantHeader({
       </h1>
 
       {/* Greeting Subtitle */}
-      <p style={{ 
+      <p className="auth-assistant-subtitle" style={{ 
         color: 'var(--text-secondary)', 
-        fontSize: '0.85rem', 
+        fontSize: '0.82rem', 
         margin: 0, 
         lineHeight: 1.4,
         maxWidth: '320px'

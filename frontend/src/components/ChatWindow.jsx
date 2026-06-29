@@ -307,7 +307,7 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
   };
 
   return (
-    <div className="chat-area">
+    <>
       <div ref={chatMessagesRef} className="chat-messages">
         {/* Background decorations */}
         <div className="chat-bg-decorations">
@@ -490,6 +490,6 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
           </form>
         </div>
       </div>
-    </div>
+    </>
   );
 }
