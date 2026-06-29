@@ -1,10 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-export default function AuthAssistantHeader({ counselorName = 'Guru', counselorAvatar = '🤖', mode }) {
-  const isImageUrl = counselorAvatar && (
-    counselorAvatar.startsWith('http://') || 
-    counselorAvatar.startsWith('https://') || 
-    counselorAvatar.startsWith('/')
+export default function AuthAssistantHeader({ 
+  counselorName = 'Guru', 
+  counselorAvatar = '🤖', 
+  counselorAvatarUrl = '', 
+  mode 
+}) {
+  const [imgError, setImgError] = useState(false);
+  
+  const avatarToUse = (!imgError && (counselorAvatarUrl || '/guru_avatar.png')) || '';
+  
+  const isImageUrl = avatarToUse && (
+    avatarToUse.startsWith('http://') || 
+    avatarToUse.startsWith('https://') || 
+    avatarToUse.startsWith('/') ||
+    avatarToUse.startsWith('data:')
   );
 
   // Dynamic greetings based on mode
@@ -50,9 +60,10 @@ export default function AuthAssistantHeader({ counselorName = 'Guru', counselorA
         }}>
           {isImageUrl ? (
             <img 
-              src={counselorAvatar} 
+              src={avatarToUse} 
               alt={counselorName} 
               style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+              onError={() => setImgError(true)}
             />
           ) : (
             <span style={{ fontSize: '1.6rem', lineHeight: 1 }}>{counselorAvatar || '🤖'}</span>

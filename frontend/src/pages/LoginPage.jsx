@@ -24,7 +24,8 @@ export default function LoginPage() {
 
   const [config, setConfig] = useState({
     counselorName: 'Guru',
-    counselorAvatar: '🤖'
+    counselorAvatar: '🤖',
+    counselorAvatarUrl: ''
   });
 
   useEffect(() => {
@@ -36,7 +37,8 @@ export default function LoginPage() {
           setConfig(prev => ({
             ...prev,
             counselorName: data.counselorName || 'Guru',
-            counselorAvatar: data.counselorAvatar || '🤖'
+            counselorAvatar: data.counselorAvatar || '🤖',
+            counselorAvatarUrl: data.counselorAvatarUrl || ''
           }));
         }
       } catch (err) {
@@ -211,6 +213,7 @@ export default function LoginPage() {
         <AuthAssistantHeader
           counselorName={config.counselorName}
           counselorAvatar={config.counselorAvatar}
+          counselorAvatarUrl={config.counselorAvatarUrl}
           mode={mode}
         />
 
