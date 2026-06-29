@@ -247,10 +247,22 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
 
       if (res.ok) {
         const data = await res.json();
-        setMessages(prev => [
-          ...prev,
-          { role: 'model', text: data.response, timestamp: new Date().toISOString() }
-        ]);
+        if (data.responses && data.responses.length > 0) {
+          const newModelMsgs = data.responses.map(text => ({
+            role: 'model',
+            text,
+            timestamp: new Date().toISOString()
+          }));
+          setMessages(prev => [
+            ...prev,
+            ...newModelMsgs
+          ]);
+        } else {
+          setMessages(prev => [
+            ...prev,
+            { role: 'model', text: data.response, timestamp: new Date().toISOString() }
+          ]);
+        }
         setSuggestedQuestions(data.suggestedQuestions || []);
         if (onMessageSent) {
           onMessageSent(data.sessionId);
@@ -390,7 +402,7 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
             messages.map((msg, index) => {
               if (msg.role === 'model') {
                 return (
-                  <div key={index} className="bot-message-row" style={{ display: 'flex', gap: '12px', alignItems: 'center', alignSelf: 'flex-start', maxWidth: '85%' }}>
+                  <div key={index} className="bot-message-row" style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', alignSelf: 'flex-start', maxWidth: '85%' }}>
                     <BotAvatar
                       avatarUrl={config.counselorAvatarUrl}
                       fallbackEmoji={config.counselorAvatar}
@@ -414,7 +426,7 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
           )}
 
           {isTyping && (
-            <div className="bot-message-row" style={{ display: 'flex', gap: '12px', alignItems: 'center', alignSelf: 'flex-start', maxWidth: '85%' }}>
+            <div className="bot-message-row" style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', alignSelf: 'flex-start', maxWidth: '85%' }}>
               <BotAvatar
                 avatarUrl={config.counselorAvatarUrl}
                 fallbackEmoji={config.counselorAvatar}

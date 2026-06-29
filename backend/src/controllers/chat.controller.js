@@ -164,6 +164,114 @@ function detectUserLanguage(message) {
   };
 }
 
+/**
+ * Splits a long Markdown response into smaller, logically sound chunks
+ * based on headers, lists, and character counts.
+ */
+function splitResponse(text) {
+  if (!text) return [];
+
+  const lines = text.split(/\r?\n/);
+  const blocks = [];
+  let currentBlock = [];
+  let inList = false;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    // Check if this line starts a list item
+    const isListItem = /^[*\-+]\s/.test(trimmed) || /^\d+\.\s/.test(trimmed);
+    // Check if this line is a heading
+    const isHeading = trimmed.startsWith('#');
+
+    // If it's a heading or a blank line, it terminates the current block
+    if (isHeading || trimmed === '') {
+      if (currentBlock.length > 0) {
+        blocks.push({ text: currentBlock.join('\n'), type: inList ? 'list' : 'paragraph' });
+        currentBlock = [];
+      }
+      inList = false;
+      if (isHeading) {
+        blocks.push({ text: trimmed, type: 'heading' });
+      }
+    } else if (isListItem) {
+      // If we weren't in a list, terminate current block and start a new list block
+      if (!inList && currentBlock.length > 0) {
+        blocks.push({ text: currentBlock.join('\n'), type: 'paragraph' });
+        currentBlock = [];
+      }
+      inList = true;
+      currentBlock.push(trimmed);
+    } else {
+      // Regular paragraph line
+      if (inList) {
+        // If we were in a list, terminate list block
+        blocks.push({ text: currentBlock.join('\n'), type: 'list' });
+        currentBlock = [];
+        inList = false;
+      }
+      currentBlock.push(line);
+    }
+  }
+
+  if (currentBlock.length > 0) {
+    blocks.push({ text: currentBlock.join('\n'), type: inList ? 'list' : 'paragraph' });
+  }
+
+  const chunks = [];
+  let currentChunk = '';
+
+  for (const block of blocks) {
+    const blockText = block.text;
+    // We treat headings or bold title lines (starting with **) as start of a new section
+    const isNewSection = block.type === 'heading' || blockText.startsWith('**');
+
+    // If we have an existing chunk, and we hit a new section heading, or if adding this block exceeds our threshold
+    if (currentChunk && (isNewSection || currentChunk.length + blockText.length > 500)) {
+      chunks.push(currentChunk.trim());
+      currentChunk = '';
+    }
+
+    // Special handling: if it's a list block and it is extremely long, we can split it
+    if (block.type === 'list' && blockText.length > 600) {
+      const listItems = blockText.split('\n');
+      let subList = '';
+      for (const item of listItems) {
+        if (subList && (subList.length + item.length > 400)) {
+          if (currentChunk) {
+            chunks.push((currentChunk + '\n' + subList).trim());
+            currentChunk = '';
+          } else {
+            chunks.push(subList.trim());
+          }
+          subList = item;
+        } else {
+          subList = subList ? subList + '\n' + item : item;
+        }
+      }
+      if (subList) {
+        if (currentChunk) {
+          currentChunk += '\n' + subList;
+        } else {
+          currentChunk = subList;
+        }
+      }
+    } else {
+      if (currentChunk) {
+        currentChunk += '\n\n' + blockText;
+      } else {
+        currentChunk = blockText;
+      }
+    }
+  }
+
+  if (currentChunk) {
+    chunks.push(currentChunk.trim());
+  }
+
+  return chunks;
+}
+
 export class ChatController {
   /**
    * Get the targeted Firestore collection based on request authentication state.
@@ -271,10 +379,19 @@ export class ChatController {
       });
 
       // 6. Save message history back to database (includes ownership metadata)
+      const responseChunks = splitResponse(responseText);
+      const finalChunks = responseChunks.length > 0 ? responseChunks : [responseText];
+
+      const modelMessages = finalChunks.map(chunk => ({
+        role: 'model',
+        text: chunk,
+        timestamp: new Date().toISOString()
+      }));
+
       const updatedMessages = [
         ...chatHistory,
         { role: 'user', text: message, timestamp: new Date().toISOString() },
-        { role: 'model', text: responseText, timestamp: new Date().toISOString() }
+        ...modelMessages
       ];
 
       const savePayload = {
@@ -327,6 +444,7 @@ export class ChatController {
       // 7. Return payload to client
       return res.status(200).json({
         response: responseText,
+        responses: finalChunks,
         sessionId: activeSessionId,
         suggestedQuestions
       });
