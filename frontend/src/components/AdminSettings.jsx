@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { API_BASE_URL } from '../lib/api';
 
 export default function AdminSettings({ config, onUpdateConfig, authToken }) {
   const [counselorName, setCounselorName] = useState(config.counselorName || '');
@@ -97,7 +98,7 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
   const fetchIngestionMetadata = async () => {
     setIsLoadingMetadata(true);
     try {
-      const res = await fetch('http://localhost:5001/api/knowledge/ingestion-metadata', {
+      const res = await fetch(`${API_BASE_URL}/api/knowledge/ingestion-metadata`, {
         headers: {
           'Authorization': `Bearer ${authToken}`
         }
@@ -115,7 +116,7 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
 
   const fetchStatus = async () => {
     try {
-      const res = await fetch('http://localhost:5001/api/knowledge/status', {
+      const res = await fetch(`${API_BASE_URL}/api/knowledge/status`, {
         headers: {
           'Authorization': `Bearer ${authToken}`
         }
@@ -146,7 +147,7 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
     setIsIngesting(true);
     setIngestResult('Syncing database...');
     try {
-      const res = await fetch('http://localhost:5001/api/knowledge/ingest', {
+      const res = await fetch(`${API_BASE_URL}/api/knowledge/ingest`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${authToken}`
@@ -191,7 +192,7 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
     }));
 
     try {
-      const res = await fetch(`http://localhost:5001/api/knowledge/jobs/${encodeURIComponent(jobId)}`, {
+      const res = await fetch(`${API_BASE_URL}/api/knowledge/jobs/${encodeURIComponent(jobId)}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${authToken}`
@@ -233,7 +234,7 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
 
     const intervalId = setInterval(async () => {
       try {
-        const res = await fetch(`http://localhost:5001/api/knowledge/jobs/${jobId}`, {
+        const res = await fetch(`${API_BASE_URL}/api/knowledge/jobs/${jobId}`, {
           headers: {
             'Authorization': `Bearer ${authToken}`
           }
@@ -310,7 +311,7 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
       const formData = new FormData();
       formData.append('file', file);
 
-      const res = await fetch('http://localhost:5001/api/knowledge/upload', {
+      const res = await fetch(`${API_BASE_URL}/api/knowledge/upload`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${authToken}`
@@ -373,7 +374,7 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
     setFaqStatus({ type: 'success', message: 'Saving FAQ...' });
 
     try {
-      const res = await fetch('http://localhost:5001/api/knowledge/faq', {
+      const res = await fetch(`${API_BASE_URL}/api/knowledge/faq`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -410,7 +411,7 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
 
     setDeletingFile(fileName);
     try {
-      const res = await fetch('http://localhost:5001/api/knowledge/delete', {
+      const res = await fetch(`${API_BASE_URL}/api/knowledge/delete`, {
         method: 'DELETE',
         headers: { 
           'Content-Type': 'application/json',
@@ -439,7 +440,7 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
 
     setIsSearching(true);
     try {
-      const res = await fetch('http://localhost:5001/api/knowledge/query', {
+      const res = await fetch(`${API_BASE_URL}/api/knowledge/query`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -475,7 +476,7 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
     setIsLoadingContent(true);
     setEditStatus({ type: '', message: '' });
     try {
-      const res = await fetch(`http://localhost:5001/api/knowledge/sources/${encodeURIComponent(docName)}`, {
+      const res = await fetch(`${API_BASE_URL}/api/knowledge/sources/${encodeURIComponent(docName)}`, {
         headers: {
           'Authorization': `Bearer ${authToken}`
         }
@@ -508,7 +509,7 @@ export default function AdminSettings({ config, onUpdateConfig, authToken }) {
     setIsSavingContent(true);
     setEditStatus({ type: 'success', message: 'Saving changes...' });
     try {
-      const res = await fetch(`http://localhost:5001/api/knowledge/sources/${encodeURIComponent(editingDocName)}`, {
+      const res = await fetch(`${API_BASE_URL}/api/knowledge/sources/${encodeURIComponent(editingDocName)}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

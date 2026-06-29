@@ -1,0 +1,26 @@
+services:
+  # ChromaDB Service
+  - type: web
+    name: ai-chatbot-chroma
+    env: docker
+    dockerfilePath: ./chroma.Dockerfile
+    plan: free # Can be updated based on availability/choice
+    disk:
+      name: chroma-data
+      mountPath: /chroma/chroma
+      sizeGB: 1
+
+  # Node.js Backend API Service
+  - type: web
+    name: ai-chatbot-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: USE_MOCK_DATABASE
+        value: false
+      - key: CHROMA_URL
+        value: http://localhost:8000 # Will need override in Render dashboard to point to deployed ChromaDB internal host

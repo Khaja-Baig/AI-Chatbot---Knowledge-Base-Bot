@@ -9,6 +9,7 @@ import {
   updateProfile
 } from 'firebase/auth';
 import { auth, googleProvider } from '../lib/firebase';
+import { API_BASE_URL } from '../lib/api';
 
 const AuthContext = createContext(null);
 
@@ -134,7 +135,7 @@ export function AuthProvider({ children }) {
       const idTokenResult = await userCredential.user.getIdTokenResult(true);
 
       // 4. Register user document in Firestore database via backend
-      const regRes = await fetch('http://localhost:5001/api/auth/register', {
+      const regRes = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

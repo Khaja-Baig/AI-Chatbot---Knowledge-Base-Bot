@@ -5,6 +5,7 @@ import { getFriendlyAuthError } from '../utils/authErrors';
 import GoogleButton from '../components/GoogleButton';
 import PasswordInput from '../components/PasswordInput';
 import AuthAssistantHeader from '../components/AuthAssistantHeader';
+import { API_BASE_URL } from '../lib/api';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -45,7 +46,7 @@ export default function LoginPage() {
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-        const res = await fetch('http://localhost:5001/api/config');
+        const res = await fetch(`${API_BASE_URL}/api/config`);
         if (res.ok) {
           const data = await res.json();
           setConfig(prev => ({

@@ -6,6 +6,7 @@ import ChatWindow from '../components/ChatWindow';
 import GuestUpgradePrompt from '../components/GuestUpgradePrompt';
 import { ChatStorage } from '../utils/sessionStorage';
 import BotAvatar from '../components/BotAvatar';
+import { API_BASE_URL } from '../lib/api';
 
 export default function ChatPage() {
   const { user, logout, isLoading } = useAuth();
@@ -98,7 +99,7 @@ export default function ChatPage() {
       if (user?.token) {
         headers['Authorization'] = `Bearer ${user.token}`;
       }
-      const res = await fetch('http://localhost:5001/api/chat/sessions', { headers });
+      const res = await fetch(`${API_BASE_URL}/api/chat/sessions`, { headers });
       if (res.ok) {
         const data = await res.json();
         
@@ -158,7 +159,7 @@ export default function ChatPage() {
 
   const fetchConfig = async () => {
     try {
-      const res = await fetch('http://localhost:5001/api/config');
+      const res = await fetch(`${API_BASE_URL}/api/config`);
       if (res.ok) {
         const data = await res.json();
         setConfig(data);
@@ -203,7 +204,7 @@ export default function ChatPage() {
       if (user?.token) {
         headers['Authorization'] = `Bearer ${user.token}`;
       }
-      const res = await fetch(`http://localhost:5001/api/chat/sessions/${sessionId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/chat/sessions/${sessionId}`, {
         method: 'DELETE',
         headers
       });
@@ -235,7 +236,7 @@ export default function ChatPage() {
         if (user?.token) {
           headers['Authorization'] = `Bearer ${user.token}`;
         }
-        const res = await fetch(`http://localhost:5001/api/chat/sessions/${sessionId}`, {
+        const res = await fetch(`${API_BASE_URL}/api/chat/sessions/${sessionId}`, {
           method: 'PATCH',
           headers,
           body: JSON.stringify({ title: newTitle })

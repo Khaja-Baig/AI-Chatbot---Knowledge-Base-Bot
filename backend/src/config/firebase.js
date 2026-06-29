@@ -249,7 +249,15 @@ try {
     // regardless of which directory the command is run from
     const credEnvPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
     let credential;
-    if (credEnvPath) {
+    if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
+      try {
+        const serviceAccount = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+        credential = admin.credential.cert(serviceAccount);
+        console.log('🗝️ Loaded Firebase service account credentials from GOOGLE_SERVICE_ACCOUNT_JSON environment variable.');
+      } catch (err) {
+        console.error('❌ Failed to parse GOOGLE_SERVICE_ACCOUNT_JSON environment variable:', err.message);
+      }
+    } else if (credEnvPath) {
       const resolvedCredPath = path.resolve(__dirname, '../../', credEnvPath.replace(/^\.\//,''));
       if (fs.existsSync(resolvedCredPath)) {
         credential = admin.credential.cert(resolvedCredPath);

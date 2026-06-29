@@ -5,6 +5,7 @@ import AdminSettings from '../components/AdminSettings';
 import ChatWindow from '../components/ChatWindow';
 import '../components/sidebar/Sidebar.css';
 import UserProfile from '../components/sidebar/UserProfile';
+import { API_BASE_URL } from '../lib/api';
 
 export default function AdminShell() {
   const { user, logout } = useAuth();
@@ -78,7 +79,7 @@ export default function AdminShell() {
 
   const fetchConfig = async () => {
     try {
-      const res = await fetch('http://localhost:5001/api/config', {
+      const res = await fetch(`${API_BASE_URL}/api/config`, {
         headers: {
           'Authorization': `Bearer ${user?.token}`
         }
@@ -94,7 +95,7 @@ export default function AdminShell() {
 
   const fetchApiConfig = async () => {
     try {
-      const res = await fetch('http://localhost:5001/api/config/ai-config', {
+      const res = await fetch(`${API_BASE_URL}/api/config/ai-config`, {
         headers: {
           'Authorization': `Bearer ${user?.token}`
         }
@@ -110,7 +111,7 @@ export default function AdminShell() {
 
   const handleUpdateConfig = async (newConfig) => {
     try {
-      const res = await fetch('http://localhost:5001/api/config', {
+      const res = await fetch(`${API_BASE_URL}/api/config`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -138,7 +139,7 @@ export default function AdminShell() {
     e.preventDefault();
     setApiConfigStatus({ type: 'success', message: 'Saving API configuration...' });
     try {
-      const res = await fetch('http://localhost:5001/api/config/ai-config', {
+      const res = await fetch(`${API_BASE_URL}/api/config/ai-config`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

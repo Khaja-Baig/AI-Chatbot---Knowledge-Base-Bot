@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { ChatStorage } from '../utils/sessionStorage';
 import BotAvatar from './BotAvatar';
+import { API_BASE_URL } from '../lib/api';
 
 // Dynamic emoji selector for suggestion chips
 const getChipEmoji = (text) => {
@@ -187,7 +188,7 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
       if (user?.token) {
         headers['Authorization'] = `Bearer ${user.token}`;
       }
-      const res = await fetch(`http://localhost:5001/api/chat/sessions/${activeSessionId}`, { headers });
+      const res = await fetch(`${API_BASE_URL}/api/chat/sessions/${activeSessionId}`, { headers });
       if (res.ok) {
         const data = await res.json();
         setMessages(data.messages || []);
@@ -242,7 +243,7 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
       if (user?.token) {
         headers['Authorization'] = `Bearer ${user.token}`;
       }
-      const res = await fetch('http://localhost:5001/api/chat/message', {
+      const res = await fetch(`${API_BASE_URL}/api/chat/message`, {
         method: 'POST',
         headers,
         body: JSON.stringify({
