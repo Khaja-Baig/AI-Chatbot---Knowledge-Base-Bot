@@ -1775,3 +1775,253 @@ body.light-theme .collapsed-history-btn:hover {
   }
 }
 
+/* ==================================================
+   MOBILE BOTTOM SHEET & CONVERSATIONAL WIZARD
+   ================================================== */
+@media (max-width: 768px) {
+  /* Prevent full-screen blank card when using bottom sheet layout */
+  .login-page-container {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important; /* Center card vertically & horizontally */
+    padding: 16px !important;
+    overflow-y: auto !important; /* Allow window scrolling if viewport height is extremely small */
+    position: relative;
+    height: 100dvh !important;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%) !important; /* static premium background gradient */
+    box-sizing: border-box;
+  }
+
+  .auth-mobile-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 20% 25%, rgba(79, 70, 229, 0.06) 0%, transparent 60%),
+                radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.04) 0%, transparent 60%);
+    backdrop-filter: blur(8px);
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+  }
+
+  .auth-mobile-card {
+    background-color: var(--bg-sidebar, #ffffff);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 24px;
+    padding: 24px 20px; /* Reduced from 28px 24px */
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
+    z-index: 10;
+    width: 100%;
+    max-width: 360px; /* Tighter width */
+    box-sizing: border-box;
+    max-height: 92dvh;
+    overflow-y: auto; /* Handle internal scrolls safely when keyboard is up */
+    display: flex;
+    flex-direction: column;
+    animation: scaleInCard 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  /* Progress Dots styles */
+  .auth-step-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 16px; /* Reduced from 20px */
+  }
+
+  .auth-step-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--border-color, #e2e8f0);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .auth-step-dot.active {
+    background-color: var(--accent-color, #4f46e5);
+    width: 18px;
+    border-radius: 4px;
+  }
+
+  /* Wizard Transition Wrapper */
+  .auth-wizard-wrapper {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .auth-step-pane {
+    width: 100%;
+    animation: fadeSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  /* Clean spacing adjustments for mobile components */
+  .auth-mobile-card .auth-assistant-header {
+    margin-bottom: 10px; /* Reduced from 12px */
+  }
+
+  .auth-mobile-card .auth-assistant-avatar-wrapper {
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  .auth-mobile-card .auth-assistant-avatar-wrapper span {
+    font-size: 1.3rem !important;
+  }
+
+  .auth-mobile-card .auth-assistant-title {
+    font-size: 1.15rem !important;
+    margin-bottom: 4px !important;
+  }
+
+  .auth-mobile-card .auth-assistant-subtitle {
+    font-size: 0.78rem !important;
+    max-width: 280px !important;
+    line-height: 1.35 !important;
+  }
+
+  .auth-mobile-card .auth-form-body {
+    flex: none; /* Prevent stretching container height */
+    padding-right: 0;
+    margin-bottom: 12px; /* Reduced from 16px */
+    overflow-y: visible;
+    height: auto;
+    max-height: none;
+  }
+
+  .auth-mobile-card .auth-input-group {
+    margin-bottom: 10px; /* Reduced from 14px */
+    gap: 4px !important;
+  }
+
+  .auth-mobile-card .auth-label {
+    font-size: 0.76rem;
+    font-weight: 550;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+
+  .auth-mobile-card .auth-input {
+    border-radius: 10px;
+    padding: 10px 12px; /* Reduced from 12px 14px */
+    font-size: 0.9rem; /* Reduced from 0.95rem */
+    background-color: #f8fafc;
+    border: 1px solid var(--border-color, #e2e8f0);
+  }
+
+  .auth-mobile-card .auth-submit-btn {
+    border-radius: 10px;
+    padding: 11px; /* Reduced from 13px */
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-top: 4px;
+  }
+
+  .auth-mobile-card .auth-footer {
+    border-top: none;
+    padding-top: 0;
+    margin-top: 0;
+    gap: 10px !important; /* Tighter layout gap */
+  }
+
+  .auth-mobile-card .auth-toggle-text {
+    font-size: 0.8rem !important;
+  }
+
+  .auth-mobile-card .auth-toggle-link {
+    font-size: 0.8rem !important;
+  }
+
+  .auth-mobile-card .auth-divider {
+    margin: 10px 0 !important; /* Reduced from 14px */
+  }
+
+  .auth-mobile-card .auth-divider-text {
+    font-size: 0.75rem !important;
+  }
+
+  /* Top-left absolute back arrow navigation (Google style) */
+  .auth-card-back-arrow {
+    position: absolute;
+    top: 18px;
+    left: 18px;
+    background: none;
+    border: none;
+    color: var(--text-secondary, #64748b);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    border-radius: 50%;
+    transition: background-color 0.2s, color 0.2s;
+    outline: none;
+    z-index: 20;
+  }
+
+  .auth-card-back-arrow:hover {
+    background-color: var(--border-color, #e2e8f0);
+    color: var(--text-primary, #1e293b);
+  }
+
+  .auth-card-back-arrow:focus-visible {
+    box-shadow: 0 0 0 2px var(--accent-color, #4f46e5);
+  }
+
+  /* Circular Google SSO icon-only button on mobile */
+  /* Circular Google SSO icon-only button on mobile */
+  .auth-mobile-card .google-btn {
+    width: 40px; /* Tighter for compact layout */
+    height: 40px;
+    border-radius: 50%;
+    padding: 0;
+    margin: 2px auto 0 auto; /* Reduced margin */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .auth-mobile-card .google-btn span {
+    display: none !important;
+  }
+
+  .auth-mobile-card .auth-back-link-wrapper {
+    text-align: center;
+    margin-top: 8px; /* Reduced from inline 16px */
+  }
+
+  .auth-mobile-card .auth-back-link {
+    font-size: 0.78rem !important;
+  }
+}
+
+@keyframes scaleInCard {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+

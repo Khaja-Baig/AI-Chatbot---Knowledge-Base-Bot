@@ -4,7 +4,8 @@ export default function AuthAssistantHeader({
   counselorName = 'Guru', 
   counselorAvatar = '🤖', 
   counselorAvatarUrl = '', 
-  mode 
+  mode,
+  step
 }) {
   const [imgError, setImgError] = useState(false);
   
@@ -19,10 +20,15 @@ export default function AuthAssistantHeader({
     avatarToUse.startsWith('data:')
   );
 
-  // Dynamic greetings based on mode
+  // Dynamic greetings based on mode and steps
   const getGreeting = () => {
     if (mode === 'forgot') {
       return 'Reset Password';
+    }
+    if (mode === 'signup' && step) {
+      if (step === 1) return `Hi! What should I call you?`;
+      if (step === 2) return `And what is your email?`;
+      if (step === 3) return `Create a password`;
     }
     return `Hi! I'm ${counselorName}, your AI Counselor.`;
   };
@@ -30,6 +36,11 @@ export default function AuthAssistantHeader({
   const getSubtitle = () => {
     if (mode === 'forgot') {
       return 'Enter your email to receive a password reset link.';
+    }
+    if (mode === 'signup' && step) {
+      if (step === 1) return 'We\'ll use this name for your profile and chat experience.';
+      if (step === 2) return 'This will be your login username.';
+      if (step === 3) return 'Choose a secure password (at least 6 characters).';
     }
     if (mode === 'signup') {
       return 'Create an account to build your admissions knowledge profile.';

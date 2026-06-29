@@ -21,6 +21,8 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [flipState, setFlipState] = useState(''); // '' | 'half' | 'back'
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [signupStep, setSignupStep] = useState(1);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   const [config, setConfig] = useState({
     counselorName: 'Guru',
@@ -32,6 +34,12 @@ export default function LoginPage() {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', 'light');
     document.body.classList.add('light-theme');
+    
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
@@ -150,6 +158,7 @@ export default function LoginPage() {
   };
 
   const changeMode = (newMode) => {
+    setSignupStep(1);
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     
     if (prefersReducedMotion) {
@@ -174,6 +183,309 @@ export default function LoginPage() {
       });
     }, 200);
   };
+
+  if (isMobile) {
+    return (
+      <div className="login-page-container">
+        <div className="auth-mobile-backdrop" />
+        <div className="auth-mobile-card">
+          {/* Top-left back button for step navigation (Google style) */}
+          {mode === 'signup' && signupStep > 1 && (
+            <button 
+              type="button" 
+              onClick={() => {
+                setError('');
+                setSignupStep(prev => prev - 1);
+              }}
+              className="auth-card-back-arrow"
+              aria-label="Go back to previous step"
+              disabled={isLoading}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          )}
+          
+          <AuthAssistantHeader
+            counselorName={config.counselorName}
+            counselorAvatar={config.counselorAvatar}
+            counselorAvatarUrl={config.counselorAvatarUrl}
+            mode={mode}
+            step={mode === 'signup' ? signupStep : undefined}
+          />
+
+          {/* Progress dots for mobile signup onboarding */}
+          {mode === 'signup' && (
+            <div className="auth-step-dots">
+              <div className={`auth-step-dot ${signupStep === 1 ? 'active' : ''}`} />
+              <div className={`auth-step-dot ${signupStep === 2 ? 'active' : ''}`} />
+              <div className={`auth-step-dot ${signupStep === 3 ? 'active' : ''}`} />
+            </div>
+          )}
+
+          {/* Scrollable Form Body Container */}
+          <div className="auth-form-body">
+            {/* Error / Success Alerts */}
+            {error && (
+              <div className="auth-alert">
+                ⚠️ {error}
+              </div>
+            )}
+
+            {message && (
+              <div className="auth-alert-success">
+                ✅ {message}
+              </div>
+            )}
+
+
+
+            {/* Form Selection based on Mode */}
+            {mode === 'forgot' ? (
+              <form onSubmit={handleResetPassword} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div className="auth-input-group">
+                  <label htmlFor="forgot-email-mobile" className="auth-label">Email Address</label>
+                  <input
+                    id="forgot-email-mobile"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    disabled={isLoading}
+                    className="auth-input"
+                    required
+                    autoComplete="off"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="auth-submit-btn"
+                >
+                  {isLoading ? 'Sending...' : 'Send Reset Link'}
+                </button>
+              </form>
+            ) : mode === 'signup' ? (
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setError('');
+                  if (signupStep === 1) {
+                    if (!displayName.trim()) {
+                      return setError('Please enter your full name.');
+                    }
+                    setSignupStep(2);
+                  } else if (signupStep === 2) {
+                    if (!email.trim()) {
+                      return setError('Please enter your email address.');
+                    }
+                    if (!/\S+@\S+\.\S+/.test(email)) {
+                      return setError('Please enter a valid email address.');
+                    }
+                    setSignupStep(3);
+                  } else {
+                    handleEmailRegister(e);
+                  }
+                }} 
+                style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
+              >
+                <div className="auth-wizard-wrapper">
+                  {signupStep === 1 && (
+                    <div className="auth-step-pane">
+                      {/* Full Name */}
+                      <div className="auth-input-group">
+                        <label htmlFor="reg-name-mobile" className="auth-label">Full Name</label>
+                        <input
+                          id="reg-name-mobile"
+                          type="text"
+                          placeholder="John Doe"
+                          value={displayName}
+                          onChange={(e) => setDisplayName(e.target.value)}
+                          disabled={isLoading}
+                          className="auth-input"
+                          required
+                          autoFocus
+                          autoComplete="off"
+                        />
+                      </div>
+                      <button type="submit" className="auth-submit-btn" style={{ width: '100%' }}>
+                        Continue
+                      </button>
+                    </div>
+                  )}
+
+                  {signupStep === 2 && (
+                    <div className="auth-step-pane">
+                      {/* Email */}
+                      <div className="auth-input-group">
+                        <label htmlFor="reg-email-mobile" className="auth-label">Email Address</label>
+                        <input
+                          id="reg-email-mobile"
+                          type="email"
+                          placeholder="you@example.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          disabled={isLoading}
+                          className="auth-input"
+                          required
+                          autoFocus
+                          autoComplete="off"
+                        />
+                      </div>
+                      <button type="submit" className="auth-submit-btn" style={{ width: '100%' }}>
+                        Continue
+                      </button>
+                    </div>
+                  )}
+
+                  {signupStep === 3 && (
+                    <div className="auth-step-pane" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      {/* Password */}
+                      <PasswordInput
+                        id="reg-password-mobile"
+                        label="Password"
+                        placeholder="At least 6 characters"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        disabled={isLoading}
+                      />
+
+                      {/* Confirm Password */}
+                      <PasswordInput
+                        id="reg-confirm-password-mobile"
+                        label="Confirm Password"
+                        placeholder="Confirm your password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        disabled={isLoading}
+                      />
+                      
+                      <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="auth-submit-btn"
+                        style={{ width: '100%', marginTop: '8px' }}
+                      >
+                        {isLoading ? 'Creating Account...' : 'Sign Up'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleEmailLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* Email */}
+                <div className="auth-input-group">
+                  <label htmlFor="login-email-mobile" className="auth-label">Email Address</label>
+                  <input
+                    id="login-email-mobile"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={isLoading}
+                    className="auth-input"
+                    required
+                    autoComplete="off"
+                  />
+                </div>
+
+                {/* Password */}
+                <div className="auth-input-group">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '-6px' }}>
+                    <label htmlFor="login-password-mobile" className="auth-label">Password</label>
+                    <button
+                      type="button"
+                      onClick={() => changeMode('forgot')}
+                      className="auth-toggle-link"
+                      style={{ fontSize: '0.8rem' }}
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+                  <PasswordInput
+                    id="login-password-mobile"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="auth-submit-btn"
+                >
+                  {isLoading ? 'Signing In...' : 'Sign In'}
+                </button>
+              </form>
+            )}
+          </div>
+
+          {/* Docked Footer (Fixed Actions) */}
+          <div className="auth-footer">
+            {mode === 'forgot' ? (
+              <div style={{ textAlign: 'center' }}>
+                <button 
+                  onClick={() => changeMode('login')} 
+                  className="auth-toggle-link"
+                  style={{ fontSize: '0.85rem' }}
+                >
+                  Back to Sign In
+                </button>
+              </div>
+            ) : mode === 'signup' ? (
+              <div className="auth-toggle-text">
+                Already have an account?{' '}
+                <button 
+                  onClick={() => changeMode('login')} 
+                  className="auth-toggle-link"
+                >
+                  Sign In
+                </button>
+              </div>
+            ) : (
+              <div className="auth-toggle-text">
+                Don't have an account?{' '}
+                <button 
+                  onClick={() => changeMode('signup')} 
+                  className="auth-toggle-link"
+                >
+                  Sign Up
+                </button>
+              </div>
+            )}
+
+            {mode !== 'forgot' && (
+              <>
+                <div className="auth-divider">
+                  <div className="auth-divider-line"></div>
+                  <span className="auth-divider-text">or</span>
+                  <div className="auth-divider-line"></div>
+                </div>
+
+                <GoogleButton
+                  onClick={handleGoogleLogin}
+                  disabled={isLoading}
+                  loading={isGoogleLoading}
+                  label="Continue with Google"
+                />
+              </>
+            )}
+
+            <div className="auth-back-link-wrapper">
+              <Link to="/" className="auth-back-link">
+                <span>←</span> Back to Chat
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="login-page-container" style={{
