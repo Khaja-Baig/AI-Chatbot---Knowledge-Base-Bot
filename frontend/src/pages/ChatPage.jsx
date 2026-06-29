@@ -23,6 +23,7 @@ export default function ChatPage() {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState(null);
+  const [isVisualLoading, setIsVisualLoading] = useState(true);
 
   const [config, setConfig] = useState({
     counselorName: 'Guru',
@@ -78,6 +79,15 @@ export default function ChatPage() {
 
     handleAuthTransition();
   }, [user, isLoading]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      const timer = setTimeout(() => {
+        setIsVisualLoading(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading]);
 
   const fetchSessions = async (preferredSessionId = null) => {
     try {
@@ -258,7 +268,9 @@ export default function ChatPage() {
     setShowUpgradePrompt(false);
     // Reset counter to 4, prompt will reappear after 3 more exchanges
     setGuestMessageCount(4);
-  };  if (isLoading) {
+  };
+
+  if (isVisualLoading) {
     return (
       <div className="loading-container" style={{
         display: 'flex',
@@ -290,7 +302,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="app-container">
+    <div className="app-container" style={{ animation: 'fadeIn 0.4s ease-out' }}>
       <div 
         className={`sidebar-backdrop ${isSidebarOpen ? 'visible' : ''}`} 
         onClick={() => setIsSidebarOpen(false)}
