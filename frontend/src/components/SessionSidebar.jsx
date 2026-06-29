@@ -21,9 +21,35 @@ export default function SessionSidebar({
   onLogoutClick
 }) {
   const [showHistoryPopover, setShowHistoryPopover] = useState(false);
+  const [popoverTop, setPopoverTop] = useState(110);
   
   const historyButtonRef = useRef(null);
   const popoverRef = useRef(null);
+
+  // Update popover position to align with history button top, constraining within viewport
+  useEffect(() => {
+    const updatePosition = () => {
+      if (showHistoryPopover && historyButtonRef.current) {
+        const rect = historyButtonRef.current.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const popoverHeight = 480; // max-height of popover is 480px
+        
+        let calculatedTop = rect.top;
+        if (calculatedTop + popoverHeight > viewportHeight) {
+          calculatedTop = Math.max(16, viewportHeight - popoverHeight - 16);
+        }
+        setPopoverTop(calculatedTop);
+      }
+    };
+
+    updatePosition();
+    if (showHistoryPopover) {
+      window.addEventListener('resize', updatePosition);
+    }
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [showHistoryPopover]);
 
   // Close popover on click outside
   useEffect(() => {
@@ -126,6 +152,7 @@ export default function SessionSidebar({
           onClose={() => setShowHistoryPopover(false)}
           formatDate={formatDate}
           popoverRef={popoverRef}
+          style={{ top: `${popoverTop}px` }}
         />
       )}
     </>

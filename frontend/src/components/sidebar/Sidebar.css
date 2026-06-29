@@ -560,10 +560,11 @@
 /* Popover details preserved as is */
 .history-popover {
   position: fixed;
-  left: 76px;
+  left: 56px;
   top: 110px;
   width: 270px;
   max-height: 480px;
+  padding: 0;
   background: var(--bg-sidebar);
   border: 1px solid var(--border-color);
   border-radius: 12px;
@@ -574,6 +575,22 @@
   overflow: hidden;
   animation: popoverFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   outline: none;
+}
+
+.history-popover .popover-header {
+  padding: 16px 16px 8px 16px;
+  border-bottom: none;
+  display: flex;
+  align-items: center;
+}
+
+.history-popover .popover-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 [data-theme='light'] .history-popover {

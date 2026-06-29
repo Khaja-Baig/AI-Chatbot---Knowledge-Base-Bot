@@ -6,7 +6,8 @@ export default function HistoryPopover({
   onSelectSession,
   onClose,
   formatDate,
-  popoverRef
+  popoverRef,
+  style
 }) {
   return (
     <div
@@ -16,6 +17,7 @@ export default function HistoryPopover({
       role="dialog"
       aria-label="Recent"
       tabIndex="-1"
+      style={style}
     >
       <div className="popover-header">
         <h3 className="popover-title">Recent</h3>
