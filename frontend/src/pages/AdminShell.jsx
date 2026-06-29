@@ -17,6 +17,24 @@ export default function AdminShell() {
   });
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const handleTabClick = (tabId) => {
+    setActiveTab(tabId);
+    if (window.innerWidth <= 768) {
+      setIsSidebarOpen(false);
+    }
+  };
 
   // Chatbot Config state
   const [config, setConfig] = useState({
@@ -151,6 +169,8 @@ export default function AdminShell() {
     setAdminSessionId(`admin_test_${Date.now()}`);
   };
 
+  const useCollapsedView = isCollapsed && !isMobile;
+
   return (
     <div className="admin-layout-container" style={{
       display: 'flex',
@@ -158,12 +178,19 @@ export default function AdminShell() {
       width: '100vw',
       backgroundColor: 'var(--bg-primary)',
       fontFamily: 'var(--font-sans)',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      position: 'relative'
     }}>
       
+      {/* Backdrop for Mobile Admin Sidebar */}
+      <div 
+        className={`sidebar-backdrop ${isSidebarOpen ? 'visible' : ''}`} 
+        onClick={() => setIsSidebarOpen(false)}
+      ></div>
+      
       {/* Sidebar Nav */}
-      <div className={`sidebar-root ${isCollapsed ? 'collapsed' : ''}`}>
-        {!isCollapsed ? (
+      <div className={`sidebar-root ${isSidebarOpen ? 'open' : ''} ${useCollapsedView ? 'collapsed' : ''}`}>
+        {!useCollapsedView ? (
           <div className="sb-expanded-layout">
             {/* Brand Header */}
             <header className="sb-expanded-header">
@@ -174,23 +201,37 @@ export default function AdminShell() {
               <button 
                 className="sb-icon-btn"
                 onClick={() => {
-                  setIsCollapsed(true);
-                  localStorage.setItem('admin_sidebar_collapsed', 'true');
+                  if (isMobile) {
+                    setIsSidebarOpen(false);
+                  } else {
+                    setIsCollapsed(true);
+                    localStorage.setItem('admin_sidebar_collapsed', 'true');
+                  }
                 }}
-                title="Collapse sidebar"
+                title={isMobile ? "Close sidebar" : "Collapse sidebar"}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="9" y1="3" x2="9" y2="21"></line>
-                  <path d="M17 16l-4-4 4-4"></path>
-                </svg>
+                {isMobile ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="9" y1="3" x2="9" y2="21"></line>
+                    <path d="M17 16l-4-4 4-4"></path>
+                  </svg>
+                )}
               </button>
             </header>
 
             {/* Go back link styled identically to sidebar tabs */}
             <section className="sb-expanded-action-row" style={{ marginBottom: '20px' }}>
               <button
-                onClick={() => navigate('/')}
+                onClick={() => {
+                  navigate('/');
+                  if (isMobile) setIsSidebarOpen(false);
+                }}
                 className="sb-expanded-new-chat-btn"
                 title="Return to Public Chat"
                 style={{ width: '100%' }}
@@ -203,7 +244,7 @@ export default function AdminShell() {
             {/* Navigation Tabs */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, padding: '0 var(--sb-space-lg)' }}>
               <button
-                onClick={() => setActiveTab('dashboard')}
+                onClick={() => handleTabClick('dashboard')}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -227,7 +268,7 @@ export default function AdminShell() {
               </button>
 
               <button
-                onClick={() => setActiveTab('api_config')}
+                onClick={() => handleTabClick('api_config')}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -251,7 +292,7 @@ export default function AdminShell() {
               </button>
 
               <button
-                onClick={() => setActiveTab('chat')}
+                onClick={() => handleTabClick('chat')}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -275,7 +316,7 @@ export default function AdminShell() {
               </button>
 
               <button
-                onClick={() => setActiveTab('analytics')}
+                onClick={() => handleTabClick('analytics')}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -304,8 +345,14 @@ export default function AdminShell() {
             <UserProfile
               user={user}
               isCollapsed={false}
-              onOpenSettings={() => setShowSettingsModal(true)}
-              onLogoutClick={() => setShowLogoutModal(true)}
+              onOpenSettings={() => {
+                setShowSettingsModal(true);
+                if (isMobile) setIsSidebarOpen(false);
+              }}
+              onLogoutClick={() => {
+                setShowLogoutModal(true);
+                if (isMobile) setIsSidebarOpen(false);
+              }}
             />
           </div>
         ) : (
@@ -448,6 +495,27 @@ export default function AdminShell() {
         height: '100%',
         overflow: 'hidden'
       }}>
+        
+        {/* Mobile Admin Header */}
+        <div className="admin-mobile-header" style={{
+          display: isMobile ? 'flex' : 'none',
+          padding: '12px 16px',
+          borderBottom: '1px solid var(--border-color)',
+          alignItems: 'center',
+          gap: '12px',
+          backgroundColor: 'var(--bg-sidebar)',
+          flexShrink: 0
+        }}>
+          <button 
+            className="menu-toggle-btn" 
+            onClick={() => setIsSidebarOpen(true)}
+          >
+            ☰
+          </button>
+          <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.95rem' }}>
+            Admin Dashboard
+          </span>
+        </div>
         
         {/* View Content */}
         <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
