@@ -394,7 +394,7 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
                     <BotAvatar
                       avatarUrl={config.counselorAvatarUrl}
                       fallbackEmoji={config.counselorAvatar}
-                      size={32}
+                      size="var(--bot-message-avatar-size)"
                     />
                     <div className="message-bubble model" style={{ maxWidth: '100%' }}>
                       {parseMarkdown(msg.text)}
@@ -418,7 +418,7 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
               <BotAvatar
                 avatarUrl={config.counselorAvatarUrl}
                 fallbackEmoji={config.counselorAvatar}
-                size={32}
+                size="var(--bot-message-avatar-size)"
               />
               <div className="typing-row-container">
                 <div className="message-bubble model" style={{ maxWidth: '100%', display: 'inline-block' }}>

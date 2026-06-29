@@ -2,8 +2,8 @@ import React from 'react';
 
 export default function BotAvatar({ avatarUrl, fallbackEmoji = '🤖', size = 40, className = '' }) {
   const containerStyle = {
-    width: `${size}px`,
-    height: `${size}px`,
+    width: typeof size === 'number' ? `${size}px` : size,
+    height: typeof size === 'number' ? `${size}px` : size,
     borderRadius: '50%',
     display: 'flex',
     alignItems: 'center',
@@ -32,7 +32,7 @@ export default function BotAvatar({ avatarUrl, fallbackEmoji = '🤖', size = 40
             e.target.style.display = 'none';
             const parent = e.target.parentNode;
             if (parent) {
-              parent.style.fontSize = `${size * 0.55}px`;
+              parent.style.fontSize = typeof size === 'number' ? `${size * 0.55}px` : `calc(${size} * 0.55)`;
               parent.innerHTML = fallbackEmoji;
             }
           }}
@@ -46,7 +46,7 @@ export default function BotAvatar({ avatarUrl, fallbackEmoji = '🤖', size = 40
     <div
       style={{
         ...containerStyle,
-        fontSize: `${size * 0.55}px`,
+        fontSize: typeof size === 'number' ? `${size * 0.55}px` : `calc(${size} * 0.55)`,
         userSelect: 'none',
       }}
       className={`bot-avatar-container emoji-fallback ${className}`}

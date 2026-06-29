@@ -71,20 +71,6 @@ export default function SidebarExpanded({
         formatDate={formatDate}
       />
 
-      {/* Guru Buddy Encouragement Card */}
-      <div className="guru-sidebar-quote-card">
-        <div className="guru-sidebar-quote-card-header">
-          <div className="guru-sidebar-quote-card-avatar">
-            <img src="/guru_avatar.png" alt="Guru" />
-          </div>
-          <span className="guru-sidebar-quote-card-name">Guru</span>
-        </div>
-        <p className="guru-sidebar-quote-card-text">
-          Remember, Every expert was once a beginner. You got this! ✨
-        </p>
-        <span className="guru-sidebar-quote-card-tag">Namaste! 🙏</span>
-      </div>
-
       {/* Pinned User Profile Footer */}
       <UserProfile
         user={user}
