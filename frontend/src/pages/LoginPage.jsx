@@ -178,9 +178,11 @@ export default function LoginPage() {
   return (
     <div className="login-page-container" style={{
       display: 'flex',
+      flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100dvh',
+      justifyContent: 'flex-start',
+      height: '100dvh',
+      overflowY: 'auto',
       backgroundColor: 'var(--bg-primary)',
       padding: '24px',
       position: 'relative',
@@ -213,7 +215,7 @@ export default function LoginPage() {
         pointerEvents: 'none'
       }}></div>
 
-      <div className={`auth-card-container ${mode === 'signup' ? 'signup-mode' : ''}`}>
+      <div className={`auth-card-container ${mode === 'signup' ? 'signup-mode' : ''}`} style={{ margin: 'auto' }}>
         <div className={`auth-card ${flipState === 'half' ? 'flip-half' : flipState === 'back' ? 'flip-back' : ''}`}>
         {/* Dynamic AI Assistant Header */}
         <AuthAssistantHeader

@@ -1692,17 +1692,34 @@ body.light-theme .collapsed-history-btn:hover {
     background-color: transparent;
     box-shadow: none;
     backdrop-filter: none;
-    padding: 16px 0;
+    padding: 8px 0;
     overflow: visible;
   }
   .auth-form-body {
     overflow-y: visible;
     padding-right: 0;
+    gap: 12px;
+  }
+  .auth-input-group {
+    gap: 4px;
+  }
+  .auth-input {
+    padding: 10px 14px;
+    font-size: 0.85rem;
   }
   .auth-footer {
     border-top: 1px solid var(--border-color);
-    padding-top: 16px;
-    margin-top: 8px;
+    padding-top: 12px;
+    margin-top: 4px;
+    gap: 10px;
+  }
+  .auth-submit-btn {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+  .google-btn {
+    padding: 10px;
+    font-size: 0.9rem;
   }
 }
 
