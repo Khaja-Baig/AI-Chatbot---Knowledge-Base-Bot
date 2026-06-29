@@ -89,17 +89,19 @@ export default function ChatPage() {
         let validSessionId = null;
 
         if (user) {
-          if (preferredSessionId) {
-            const isDbSession = data.some(s => s.sessionId === preferredSessionId);
+          const preferredId = preferredSessionId || activeSessionId;
+
+          if (preferredId) {
+            const isDbSession = data.some(s => s.sessionId === preferredId);
             
             if (isDbSession) {
-              validSessionId = preferredSessionId;
+              validSessionId = preferredId;
               setSessions(data);
-            } else if (preferredSessionId.startsWith('session_user_')) {
+            } else if (preferredId.startsWith('session_user_')) {
               // Prepend placeholder for a fresh unsaved user session
-              validSessionId = preferredSessionId;
+              validSessionId = preferredId;
               const newChatPlaceholder = {
-                sessionId: preferredSessionId,
+                sessionId: preferredId,
                 updatedAt: new Date().toISOString(),
                 messageCount: 0,
                 lastMessage: 'New Chat'
@@ -115,21 +117,21 @@ export default function ChatPage() {
           if (validSessionId) {
             setActiveSessionId(validSessionId);
             ChatStorage.saveActiveSession(validSessionId);
-          } else if (data.length > 0) {
-            const firstId = data[0].sessionId;
-            setActiveSessionId(firstId);
-            ChatStorage.saveActiveSession(firstId);
           } else {
-            // No history, start fresh user session
+            // No valid session preferred (e.g. initial load, new tab, or after login).
+            // Always start a fresh "New Chat" session instead of opening the latest conversation!
             const newId = `session_user_${Date.now()}`;
             setActiveSessionId(newId);
             ChatStorage.saveActiveSession(newId);
-            setSessions([{
-              sessionId: newId,
-              updatedAt: new Date().toISOString(),
-              messageCount: 0,
-              lastMessage: 'New Chat'
-            }]);
+            setSessions([
+              {
+                sessionId: newId,
+                updatedAt: new Date().toISOString(),
+                messageCount: 0,
+                lastMessage: 'New Chat'
+              },
+              ...data
+            ]);
           }
         }
       }
