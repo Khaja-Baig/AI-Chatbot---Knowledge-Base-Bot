@@ -276,7 +276,7 @@ try {
 }
 
 // Check environment to decide if we initialize standard Firestore or Mock
-if (process.env.USE_MOCK_DATABASE === 'true' || (!process.env.FIRESTORE_EMULATOR_HOST && !process.env.GOOGLE_APPLICATION_CREDENTIALS)) {
+if (process.env.USE_MOCK_DATABASE === 'true' || (!process.env.FIRESTORE_EMULATOR_HOST && !process.env.GOOGLE_APPLICATION_CREDENTIALS && !process.env.GOOGLE_SERVICE_ACCOUNT_JSON)) {
   console.log('ℹ️ Firebase credentials or emulator host not fully configured in environment.');
   console.log('🔄 Automatically falling back to local JSON database for storage...');
   const localDbPath = path.join(__dirname, '../../data/local_firestore.json');
