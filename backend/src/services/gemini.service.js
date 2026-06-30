@@ -377,4 +377,44 @@ export class GeminiService {
       }
     }
   }
+
+  /**
+   * Generate a short (3-5 words) descriptive title for the chat session based on the first user message.
+   * @param {string} userMessage - The first message in the chat
+   * @returns {Promise<string>} The generated title
+   */
+  static async generateSessionTitle(userMessage) {
+    const key = await GeminiService.getApiKey();
+    if (!key) {
+      return userMessage.slice(0, 30).trim() + (userMessage.length > 30 ? '...' : '');
+    }
+
+    try {
+      const client = await GeminiService.getClient();
+      const prompt = `You are a helpful assistant. Generate a very short, clean, descriptive title (maximum 3 to 5 words) for a chat conversation that begins with this user message.
+The title must capture the topic or query of the user (e.g. "Admission Process", "Scholarship Eligibility", "Hostel Fees", "SOB Course Details", "General Greeting" etc.).
+Do NOT use markdown, quotes, bolding, asterisks, or any formatting. Respond only with the title itself.
+
+User Message: "${userMessage}"`;
+
+      const response = await client.models.generateContent({
+        model: MODEL_NAME,
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: {
+          temperature: 0.3,
+          maxOutputTokens: 20
+        }
+      });
+
+      const title = response.text ? response.text.replace(/["'**]+/g, '').trim() : '';
+      if (title && title.length < 50) {
+        return title;
+      }
+    } catch (err) {
+      console.error('Failed to generate session title with Gemini:', err);
+    }
+
+    return userMessage.slice(0, 30).trim() + (userMessage.length > 30 ? '...' : '');
+  }
 }
+

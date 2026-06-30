@@ -1,5 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 
+function stripMarkdown(text) {
+  if (!text) return '';
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '$1') // Bold
+    .replace(/\*(.*?)\*/g, '$1')   // Italic
+    .replace(/`(.*?)`/g, '$1')     // Inline Code
+    .replace(/#+\s+/g, '')         // Headers
+    .trim();
+}
+
 export default function ConversationItem({
   session,
   isActive,
@@ -12,7 +22,8 @@ export default function ConversationItem({
   const [editTitle, setEditTitle] = useState('');
   const inputRef = useRef(null);
 
-  const displayTitle = session.title || session.lastMessage || 'New Chat';
+  const rawTitle = session.title || session.firstMessage || session.lastMessage || 'New Chat';
+  const displayTitle = stripMarkdown(rawTitle);
 
   // Automatically focus and select input text when editing begins
   useEffect(() => {
@@ -70,7 +81,6 @@ export default function ConversationItem({
       role="option"
       aria-selected={isActive}
       tabIndex={0}
-      title={displayTitle}
     >
       <div className="sb-conv-content">
         <div className="sb-conv-title-row">

@@ -302,9 +302,11 @@ export class ChatController {
       const sessionSnap = await sessionDocRef.get();
       
       let chatHistory = [];
+      let existingTitle = null;
       if (sessionSnap.exists) {
         const sessionData = sessionSnap.data();
         chatHistory = sessionData.messages || [];
+        existingTitle = sessionData.title || null;
       }
 
       // 2. Perform vector search in ChromaDB
@@ -394,12 +396,24 @@ export class ChatController {
         ...modelMessages
       ];
 
+      // Auto-generate title if it does not exist yet
+      let currentTitle = existingTitle;
+      if (!currentTitle) {
+        try {
+          currentTitle = await GeminiService.generateSessionTitle(message);
+        } catch (titleErr) {
+          console.warn('Failed to generate session title, using fallback:', titleErr);
+          currentTitle = message.slice(0, 30).trim() + (message.length > 30 ? '...' : '');
+        }
+      }
+
       const savePayload = {
         sessionId: activeSessionId,
         chatId: activeSessionId,
         updatedAt: new Date().toISOString(),
         messages: updatedMessages,
-        ownerId: req.user ? req.user.uid : 'guest'
+        ownerId: req.user ? req.user.uid : 'guest',
+        title: currentTitle || null
       };
 
       await sessionDocRef.set(savePayload, { merge: true });
@@ -497,6 +511,9 @@ export class ChatController {
           title: data.title || null,
           updatedAt: data.updatedAt,
           messageCount: data.messages ? data.messages.length : 0,
+          firstMessage: data.messages && data.messages.length > 0
+            ? data.messages[0].text
+            : '',
           lastMessage: data.messages && data.messages.length > 0 
             ? data.messages[data.messages.length - 1].text 
             : ''
