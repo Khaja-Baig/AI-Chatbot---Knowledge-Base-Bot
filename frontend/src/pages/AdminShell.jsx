@@ -519,7 +519,13 @@ export default function AdminShell() {
         </div>
         
         {/* View Content */}
-        <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
+        <div style={{ 
+          flex: 1, 
+          overflow: activeTab === 'chat' ? 'hidden' : 'auto', 
+          position: 'relative',
+          display: activeTab === 'chat' ? 'flex' : 'block',
+          flexDirection: 'column'
+        }}>
           {activeTab === 'dashboard' && (
             <AdminSettings
               config={config}
@@ -630,7 +636,14 @@ export default function AdminShell() {
                   Restart Session
                 </button>
               </div>
-              <div style={{ flex: 1, position: 'relative', height: 'calc(100% - 53px)' }}>
+              <div style={{ 
+                flex: 1, 
+                position: 'relative', 
+                height: 'calc(100% - 53px)',
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden'
+              }}>
                 <ChatWindow
                   activeSessionId={adminSessionId}
                   config={config}
