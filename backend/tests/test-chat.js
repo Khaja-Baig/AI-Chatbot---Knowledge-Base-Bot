@@ -1,5 +1,4 @@
 // This comment is for testing purposes. Please ignore this.
-// This comment is also for testing purposes. Please ignore this.
 // Using global fetch (native in Node 20+)
 
 async function testChat() {
