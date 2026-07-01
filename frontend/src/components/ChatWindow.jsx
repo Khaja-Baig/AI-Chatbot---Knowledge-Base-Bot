@@ -333,7 +333,7 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
                   className="welcome-avatar-container"
                 />
               </div>
-              <h1 className="welcome-heading">👋 Namaste! I'm {config.counselorName || 'Guru'}</h1>
+              <h1 className="welcome-heading">👋 Whats Up?? I'm {config.counselorName || 'Guru'}</h1>
               <p className="welcome-subtitle">
                 Your NavGurukul Guide. Ask me anything about admissions, courses, placements, and campus life!
               </p>
