@@ -122,7 +122,45 @@ export default function KnowledgeBaseManager({ authToken }) {
     }
   };
 
+  const [isResyncing, setIsResyncing] = useState(false);
+
+
+  const handleRefreshAll = () => {
+    fetchStatus();
+    fetchIngestionMetadata();
+    if (activeTab === 'chunks') {
+      fetchChunks(chunksPage, chunksFilter);
+    }
+  };
+
+  const handleResyncDirectory = () => {
+    setConfirmModal({
+      open: true,
+      title: '⚡ Re-sync Entire Vector Database',
+      message: 'This will purge and re-ingest all raw files in the directory using 384d local embeddings. Continue?',
+      isDanger: false,
+      onConfirm: async () => {
+        setIsResyncing(true);
+        setConfirmModal({ open: false });
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/knowledge/ingest`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+          });
+          if (res.ok) {
+            handleRefreshAll();
+          }
+        } catch (err) {
+          console.error('Re-sync error:', err);
+        } finally {
+          setIsResyncing(false);
+        }
+      }
+    });
+  };
+
   // Job status polling helper
+
   const pollJobStatus = (jobId, type, fileName, onComplete) => {
     setActiveJobs(prev => {
       if (prev.some(j => j.jobId === jobId)) return prev;
@@ -447,7 +485,12 @@ export default function KnowledgeBaseManager({ authToken }) {
                 <h3 className="kb-card-title">Ingestion & Sync Health</h3>
                 <p className="kb-card-subtitle">Latest background indexing jobs and document health metadata.</p>
               </div>
-              <button className="btn-secondary" onClick={fetchStatus}>🔄 Refresh Stats</button>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button className="btn-secondary" onClick={handleRefreshAll}>🔄 Refresh Stats</button>
+                <button className="btn-primary" onClick={handleResyncDirectory} disabled={isResyncing}>
+                  {isResyncing ? 'Re-syncing...' : '⚡ Re-sync Directory'}
+                </button>
+              </div>
             </div>
 
             <div className="doc-table-container">
@@ -496,7 +539,12 @@ export default function KnowledgeBaseManager({ authToken }) {
               <h3 className="kb-card-title">Source Documents Directory</h3>
               <p className="kb-card-subtitle">Manage raw files powering your admissions counselor context.</p>
             </div>
-            <button className="btn-primary" onClick={() => setActiveTab('add')}>+ Add Document</button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button className="btn-secondary" onClick={handleResyncDirectory} disabled={isResyncing}>
+                {isResyncing ? 'Re-syncing...' : '⚡ Re-sync Directory'}
+              </button>
+              <button className="btn-primary" onClick={() => setActiveTab('add')}>+ Add Document</button>
+            </div>
           </div>
 
           <div className="doc-table-container">
@@ -917,7 +965,34 @@ export default function KnowledgeBaseManager({ authToken }) {
         </div>
       )}
 
+      {/* Confirmation Modal Drawer */}
+      {confirmModal.open && (
+        <div className="confirm-modal-backdrop" onClick={() => setConfirmModal({ open: false })}>
+          <div className="confirm-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px', width: '90%' }}>
+            <h3 style={{ margin: '0 0 12px 0', color: confirmModal.isDanger ? '#ef4444' : 'var(--text-primary)' }}>
+              {confirmModal.title}
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: '1.6', margin: '0 0 24px 0' }}>
+              {confirmModal.message}
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button className="btn-secondary" onClick={() => setConfirmModal({ open: false })}>
+                Cancel
+              </button>
+              <button
+                className={confirmModal.isDanger ? 'btn-danger' : 'btn-primary'}
+                style={confirmModal.isDanger ? { background: '#ef4444', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' } : {}}
+                onClick={() => confirmModal.onConfirm && confirmModal.onConfirm()}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
+
 
