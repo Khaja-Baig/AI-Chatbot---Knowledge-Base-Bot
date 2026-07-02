@@ -448,7 +448,7 @@ export class KnowledgeController {
       return res.status(200).json({
         success: true,
         message: `Successfully ingested ${totalChunks} chunks from ${files.length} documents.`,
-        mode: hasApiKey ? 'production' : 'mock-embeddings'
+        mode: 'local'
       });
     } catch (error) {
       console.error('Ingestion failed:', error);
