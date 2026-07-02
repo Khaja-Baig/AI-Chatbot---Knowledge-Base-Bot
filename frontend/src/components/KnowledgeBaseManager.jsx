@@ -17,6 +17,9 @@ export default function KnowledgeBaseManager({ authToken }) {
   const [chunksTotal, setChunksTotal] = useState(0);
   const [chunksFilter, setChunksFilter] = useState('');
   const [isLoadingChunks, setIsLoadingChunks] = useState(false);
+  const [selectedChunkIds, setSelectedChunkIds] = useState([]);
+  const [isDeletingBatch, setIsDeletingBatch] = useState(false);
+
 
   // Background Jobs
   const [activeJobs, setActiveJobs] = useState([]);
@@ -280,32 +283,53 @@ export default function KnowledgeBaseManager({ authToken }) {
     }
   };
 
-  // Upload handling
-  const processFile = async (file) => {
-    if (!file) return;
+  // Multi-file upload handling
+  const processFiles = async (fileList) => {
+    if (!fileList || fileList.length === 0) return;
+    const filesArray = Array.from(fileList);
     setIsUploading(true);
-    setUploadStatus({ type: 'success', message: `Uploading "${file.name}"...` });
+    setUploadStatus({
+      type: 'success',
+      message: `Uploading ${filesArray.length} file${filesArray.length > 1 ? 's' : ''}...`
+    });
+
     try {
       const formData = new FormData();
-      formData.append('file', file);
-      const res = await fetch(`${API_BASE_URL}/api/knowledge/upload`, {
+      filesArray.forEach(file => {
+        formData.append('files', file);
+      });
+
+      const res = await fetch(`${API_BASE_URL}/api/knowledge/upload-multiple`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${authToken}` },
         body: formData
       });
+
       const data = await res.json();
-      if (res.ok && data.jobId) {
+      if (res.ok && data.jobs && data.jobs.length > 0) {
         setIsUploading(false);
-        setUploadStatus({ type: 'success', message: `Upload complete. Indexing "${file.name}" in background...` });
-        pollJobStatus(data.jobId, 'upload', file.name, (err) => {
-          if (!err) setUploadStatus({ type: 'success', message: `Successfully indexed "${file.name}"!` });
+        setUploadStatus({
+          type: 'success',
+          message: `Uploaded ${data.jobs.length} file${data.jobs.length > 1 ? 's' : ''}. Sequential background indexing queued...`
         });
+
+        // Poll each file job
+        data.jobs.forEach(j => {
+          pollJobStatus(j.jobId, 'upload', j.fileName, (err) => {
+            if (!err) {
+              setUploadStatus({ type: 'success', message: `Successfully indexed "${j.fileName}"!` });
+            }
+          });
+        });
+      } else {
+        throw new Error(data.error || 'Upload failed');
       }
     } catch (err) {
       setIsUploading(false);
-      setUploadStatus({ type: 'error', message: 'Upload failed.' });
+      setUploadStatus({ type: 'error', message: 'Multi-file upload failed.' });
     }
   };
+
 
   // FAQ creation
   const handleCreateFaq = async (e) => {
@@ -344,7 +368,10 @@ export default function KnowledgeBaseManager({ authToken }) {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${authToken}` }
           });
-          if (res.ok) fetchChunks(chunksPage, chunksFilter);
+          if (res.ok) {
+            setSelectedChunkIds(prev => prev.filter(id => id !== chunkId));
+            fetchChunks(chunksPage, chunksFilter);
+          }
         } catch (err) {
           console.error('Error deleting chunk:', err);
         }
@@ -352,6 +379,62 @@ export default function KnowledgeBaseManager({ authToken }) {
       }
     });
   };
+
+  // Bulk chunk selection handlers
+  const handleToggleSelectChunk = (chunkId) => {
+    setSelectedChunkIds(prev =>
+      prev.includes(chunkId) ? prev.filter(id => id !== chunkId) : [...prev, chunkId]
+    );
+  };
+
+  const handleSelectAllPageChunks = () => {
+    const pageChunkIds = chunks.map(c => c.id);
+    const allSelected = pageChunkIds.length > 0 && pageChunkIds.every(id => selectedChunkIds.includes(id));
+    if (allSelected) {
+      setSelectedChunkIds(prev => prev.filter(id => !pageChunkIds.includes(id)));
+    } else {
+      setSelectedChunkIds(prev => Array.from(new Set([...prev, ...pageChunkIds])));
+    }
+  };
+
+  const handleClearChunkSelection = () => {
+    setSelectedChunkIds([]);
+  };
+
+  const handleDeleteSelectedChunks = () => {
+    if (selectedChunkIds.length === 0) return;
+    const count = selectedChunkIds.length;
+    setConfirmModal({
+      open: true,
+      title: 'Delete Selected Chunks',
+      message: `Are you sure you want to permanently purge ${count} selected vector chunk${count > 1 ? 's' : ''} from ChromaDB?`,
+      isDanger: true,
+      onConfirm: async () => {
+        setIsDeletingBatch(true);
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/knowledge/chunks/batch-delete`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ chunkIds: selectedChunkIds })
+          });
+          if (res.ok) {
+            setSelectedChunkIds([]);
+            fetchChunks(chunksPage, chunksFilter);
+            fetchStatus();
+          }
+        } catch (err) {
+          console.error('Error batch deleting chunks:', err);
+        } finally {
+          setIsDeletingBatch(false);
+          setConfirmModal({ open: false });
+        }
+      }
+    });
+  };
+
 
   // Single chunk edit (<200ms real-time update)
   const handleEditChunk = (chunk) => {
@@ -601,64 +684,143 @@ export default function KnowledgeBaseManager({ authToken }) {
       {/* VIEW 3: CHUNKS BROWSER */}
       {activeTab === 'chunks' && (
         <div>
-          <div className="kb-card-header" style={{ marginBottom: '16px' }}>
+          <div className="kb-card-header" style={{ marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
             <div>
               <h3 className="kb-card-title">Raw Vector Chunks Browser</h3>
               <p className="kb-card-subtitle">Showing {chunks.length} of {chunksTotal} chunks across all vector collections.</p>
             </div>
-            <div className="kb-search-bar">
-              <input
-                type="text"
-                className="kb-input"
-                placeholder="Filter by source name..."
-                value={chunksFilter}
-                onChange={(e) => {
-                  setChunksFilter(e.target.value);
-                  fetchChunks(1, e.target.value);
-                }}
-              />
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              {chunks.length > 0 && (
+                <button
+                  className="btn-secondary"
+                  onClick={handleSelectAllPageChunks}
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', cursor: 'pointer' }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={chunks.length > 0 && chunks.every(c => selectedChunkIds.includes(c.id))}
+                    onChange={() => {}}
+                    style={{ cursor: 'pointer' }}
+                  />
+                  <span>Select All Page ({chunks.length})</span>
+                </button>
+              )}
+
+              <div className="kb-search-bar">
+                <input
+                  type="text"
+                  className="kb-input"
+                  placeholder="Filter by source name..."
+                  value={chunksFilter}
+                  onChange={(e) => {
+                    setChunksFilter(e.target.value);
+                    fetchChunks(1, e.target.value);
+                  }}
+                />
+              </div>
             </div>
           </div>
+
+          {/* Bulk Actions Bar */}
+          {selectedChunkIds.length > 0 && (
+            <div style={{
+              display: 'flex',
+              justify: 'space-between',
+              alignItems: 'center',
+              background: 'var(--bg-card)',
+              border: '1.5px solid var(--accent-color)',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              marginBottom: '16px',
+              boxShadow: '0 4px 14px rgba(109, 40, 217, 0.12)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '1.1rem' }}>☑️</span>
+                <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>
+                  {selectedChunkIds.length} chunk{selectedChunkIds.length > 1 ? 's' : ''} selected
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button className="btn-secondary" onClick={handleClearChunkSelection}>
+                  Clear Selection
+                </button>
+                <button
+                  className="btn-danger"
+                  onClick={handleDeleteSelectedChunks}
+                  disabled={isDeletingBatch}
+                  style={{
+                    background: '#ef4444',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  {isDeletingBatch ? 'Deleting...' : `🗑️ Delete Selected (${selectedChunkIds.length})`}
+                </button>
+              </div>
+            </div>
+          )}
 
           {isLoadingChunks ? (
             <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>Loading vector chunks...</div>
           ) : chunks.length > 0 ? (
             <div>
               <div className="chunks-grid">
-                {chunks.map((chunk) => (
-                  <div key={chunk.id} className="chunk-card">
-                    <div className="chunk-header">
-                      <span className="chunk-id" title={chunk.id}>{chunk.id}</span>
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <button
-                          onClick={() => handleEditChunk(chunk)}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }}
-                          title="Edit chunk instantly (<200ms)"
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          onClick={() => handleDeleteChunk(chunk.id)}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }}
-                          title="Delete this chunk"
-                        >
-                          ❌
-                        </button>
+                {chunks.map((chunk) => {
+                  const isSelected = selectedChunkIds.includes(chunk.id);
+                  return (
+                    <div
+                      key={chunk.id}
+                      className="chunk-card"
+                      style={{
+                        borderColor: isSelected ? 'var(--accent-color)' : undefined,
+                        boxShadow: isSelected ? '0 0 0 2px var(--accent-color)' : undefined
+                      }}
+                    >
+                      <div className="chunk-header">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => handleToggleSelectChunk(chunk.id)}
+                            style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--accent-color)' }}
+                          />
+                          <span className="chunk-id" title={chunk.id}>{chunk.id}</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <button
+                            onClick={() => handleEditChunk(chunk)}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }}
+                            title="Edit chunk instantly (<200ms)"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            onClick={() => handleDeleteChunk(chunk.id)}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }}
+                            title="Delete this chunk"
+                          >
+                            ❌
+                          </button>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                        Source: <strong>{chunk.metadata?.source || 'Unknown'}</strong> | Category: {chunk.metadata?.category || 'general'}
+                        {chunk.metadata?.manuallyEdited && (
+                          <span style={{ color: 'var(--accent-color)', fontWeight: 600, marginLeft: '6px' }}>[Edited]</span>
+                        )}
+                      </div>
+                      <div className="chunk-text">
+                        {chunk.text}
                       </div>
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                      Source: <strong>{chunk.metadata?.source || 'Unknown'}</strong> | Category: {chunk.metadata?.category || 'general'}
-                      {chunk.metadata?.manuallyEdited && (
-                        <span style={{ color: 'var(--accent-color)', fontWeight: 600, marginLeft: '6px' }}>[Edited]</span>
-                      )}
-                    </div>
-                    <div className="chunk-text">
-                      {chunk.text}
-                    </div>
-                  </div>
-                ))}
-
+                  );
+                })}
               </div>
+
 
               {/* Pagination Bar */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px' }}>
@@ -704,8 +866,9 @@ export default function KnowledgeBaseManager({ authToken }) {
             <input
               ref={fileInputRef}
               type="file"
+              multiple
               accept=".pdf,.docx,.txt,.md,.csv,.json"
-              onChange={(e) => e.target.files?.[0] && processFile(e.target.files[0])}
+              onChange={(e) => e.target.files && e.target.files.length > 0 && processFiles(e.target.files)}
               style={{ display: 'none' }}
             />
 
@@ -714,13 +877,14 @@ export default function KnowledgeBaseManager({ authToken }) {
               onDragEnter={(e) => { e.preventDefault(); setDragActive(true); }}
               onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
               onDragLeave={() => setDragActive(false)}
-              onDrop={(e) => { e.preventDefault(); setDragActive(false); e.dataTransfer.files?.[0] && processFile(e.dataTransfer.files[0]); }}
+              onDrop={(e) => { e.preventDefault(); setDragActive(false); e.dataTransfer.files && e.dataTransfer.files.length > 0 && processFiles(e.dataTransfer.files); }}
               onClick={() => fileInputRef.current?.click()}
             >
               <span style={{ fontSize: '2rem', marginBottom: '8px' }}>📄</span>
-              <div className="dropzone-text">{isUploading ? 'Uploading...' : 'Click or Drag File Here'}</div>
-              <div className="dropzone-hint">Supports PDF, DOCX, TXT, MD, CSV, JSON</div>
+              <div className="dropzone-text">{isUploading ? 'Uploading Files...' : 'Click or Drag Multiple Files Here'}</div>
+              <div className="dropzone-hint">Supports PDF, DOCX, TXT, MD, CSV, JSON (Select multiple files simultaneously)</div>
             </div>
+
 
             {uploadStatus.message && (
               <div className={`notification ${uploadStatus.type}`} style={{ marginTop: '16px' }}>

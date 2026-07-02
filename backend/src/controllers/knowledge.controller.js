@@ -593,6 +593,65 @@ export class KnowledgeController {
   }
 
   /**
+   * Save multiple uploaded documents and process background chunking/embedding sequentially.
+   */
+  static async uploadMultipleDocuments(req, res) {
+    const files = req.files || (req.file ? [req.file] : []);
+    if (!files || files.length === 0) {
+      return res.status(400).json({ error: 'No files uploaded. Please upload files via multipart form-data.' });
+    }
+
+    const jobs = [];
+    const initiatedBy = req.user?.email || req.user?.uid || 'admin-api';
+
+    try {
+      for (const file of files) {
+        const fileName = file.originalname;
+        const filePath = file.path;
+
+        let text = '';
+        try {
+          if (fileName.toLowerCase().endsWith('.pdf')) {
+            text = await DocumentService.parsePdf(filePath);
+          } else if (fileName.toLowerCase().endsWith('.docx')) {
+            text = await DocumentService.parseDocx(filePath);
+          } else {
+            text = fs.readFileSync(filePath, 'utf8');
+          }
+        } catch (parseErr) {
+          console.error(`Error parsing uploaded file "${fileName}":`, parseErr);
+          if (fs.existsSync(filePath)) {
+            try { fs.unlinkSync(filePath); } catch (e) {}
+          }
+          continue;
+        }
+
+        const jobId = JobQueue.createJob('upload', fileName, initiatedBy);
+        jobs.push({ jobId, fileName });
+
+        // Run background ingestion for this file
+        setImmediate(() => {
+          KnowledgeController.processIngestionInBackground(jobId, fileName, text, {
+            initiatedBy,
+            diffEnabled: false,
+            isUpload: true
+          });
+        });
+      }
+
+      return res.status(202).json({
+        success: true,
+        message: `Successfully received ${jobs.length} files. Ingestion jobs created.`,
+        jobs
+      });
+    } catch (err) {
+      console.error('Multiple file upload failed:', err);
+      return res.status(500).json({ error: 'Failed to process uploaded documents.', details: err.message });
+    }
+  }
+
+
+  /**
    * Save Question & Answer FAQ to text file and embed/ingest into vector DB.
    */
   static async createFaq(req, res) {
@@ -926,6 +985,31 @@ export class KnowledgeController {
       return res.status(500).json({ error: 'Failed to delete chunk.', details: error.message });
     }
   }
+
+  /**
+   * Delete multiple chunks by IDs from ChromaDB in a single batch.
+   */
+  static async deleteChunksBatch(req, res) {
+    const { chunkIds } = req.body;
+    if (!chunkIds || !Array.isArray(chunkIds) || chunkIds.length === 0) {
+      return res.status(400).json({ error: 'Valid chunkIds array is required.' });
+    }
+
+    try {
+      const collection = await ChromaService.getOrCreateCollection(COLLECTION_NAME);
+      await collection.delete({ ids: chunkIds });
+      console.log(`🗑️ Batch deleted ${chunkIds.length} chunks from ChromaDB.`);
+      return res.status(200).json({
+        success: true,
+        message: `Successfully deleted ${chunkIds.length} chunks from database.`,
+        deletedCount: chunkIds.length
+      });
+    } catch (error) {
+      console.error('Error deleting chunks batch:', error);
+      return res.status(500).json({ error: 'Failed to delete selected chunks.', details: error.message });
+    }
+  }
+
 
   /**
    * Update a single chunk's text and re-generate its embedding in real-time (<200ms).
