@@ -31,7 +31,7 @@ export default function ChatPage() {
     greetingMessage: 'Hello! I am Guru, your NavGurukul Admissions Counselor. I can help you understand our courses, admissions process, eligibility, placements, and campus life. How can I help you today?',
     behaviorMode: 'warm',
     counselorAvatar: '🤖',
-    counselorAvatarUrl: undefined,
+    counselorAvatarUrl: '/guru_avatar.png',
     sidebarLogoUrl: ''
   });
 
@@ -60,12 +60,16 @@ export default function ChatPage() {
     const handleAuthTransition = async () => {
       const savedSessionId = ChatStorage.getActiveSession();
 
+      // Fetch config and sessions concurrently for maximum speed
+      const configPromise = fetchConfig();
+      let sessionsPromise = Promise.resolve();
+
       if (user) {
         // Clear any guest session ID from sessionStorage
         sessionStorage.removeItem('guestSessionId');
         
         // Fetch sessions and try to restore preferredSessionId
-        await fetchSessions(savedSessionId);
+        sessionsPromise = fetchSessions(savedSessionId);
       } else {
         setSessions([]);
         
@@ -78,7 +82,8 @@ export default function ChatPage() {
           ChatStorage.saveActiveSession(freshId);
         }
       }
-      fetchConfig();
+
+      await Promise.all([configPromise, sessionsPromise]);
     };
 
     handleAuthTransition();
@@ -86,10 +91,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (!isLoading) {
-      const timer = setTimeout(() => {
-        setIsVisualLoading(false);
-      }, 500);
-      return () => clearTimeout(timer);
+      setIsVisualLoading(false);
     }
   }, [isLoading]);
 

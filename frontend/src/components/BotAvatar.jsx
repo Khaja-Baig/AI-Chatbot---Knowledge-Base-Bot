@@ -25,20 +25,6 @@ export default function BotAvatar({ avatarUrl, fallbackEmoji = '🤖', size = 40
     userSelect: 'none',
   };
 
-  // If avatarUrl is undefined, it means the config is still loading.
-  // Render a neutral placeholder to prevent a flash of the incorrect fallback image.
-  if (avatarUrl === undefined) {
-    return (
-      <div 
-        style={{
-          ...containerStyle,
-          backgroundColor: 'var(--bg-active-tab, rgba(255, 255, 255, 0.05))',
-        }} 
-        className={`bot-avatar-container loading-placeholder ${className}`} 
-      />
-    );
-  }
-
   const finalAvatarUrl = avatarUrl || '/guru_avatar.png';
 
   if (finalAvatarUrl && !imgError) {

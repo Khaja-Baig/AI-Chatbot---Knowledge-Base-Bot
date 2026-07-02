@@ -28,7 +28,7 @@ export default function LoginPage() {
   const [config, setConfig] = useState({
     counselorName: 'Guru',
     counselorAvatar: '🤖',
-    counselorAvatarUrl: undefined
+    counselorAvatarUrl: '/guru_avatar.png'
   });
 
   // Force light theme for guest mode on login page

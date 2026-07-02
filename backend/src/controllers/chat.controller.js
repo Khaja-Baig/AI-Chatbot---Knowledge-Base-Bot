@@ -309,22 +309,27 @@ export class ChatController {
         existingTitle = sessionData.title || null;
       }
 
-      // 2. Perform vector search in ChromaDB
+      // 2. Perform vector search in ChromaDB (with 1.5s timeout to prevent latency if vector DB is offline/slow)
       let ragContextText = 'No specific documents found.';
       try {
-        // Generate embedding for query
-        const queryEmbedding = await GeminiService.generateEmbedding(message);
-        
-        // Retrieve top 4 relevant chunks
-        const matchedChunks = await ChromaService.query(KNOWLEDGE_COLLECTION, queryEmbedding, 4);
-        
-        if (matchedChunks && matchedChunks.length > 0) {
-          ragContextText = matchedChunks
-            .map((chunk, index) => `[Doc ${index + 1} - Source: ${chunk.metadata.source}]\n${chunk.text}`)
-            .join('\n\n');
-        }
+        const fetchRagContext = async () => {
+          const queryEmbedding = await GeminiService.generateEmbedding(message);
+          const matchedChunks = await ChromaService.query(KNOWLEDGE_COLLECTION, queryEmbedding, 4);
+          if (matchedChunks && matchedChunks.length > 0) {
+            return matchedChunks
+              .map((chunk, index) => `[Doc ${index + 1} - Source: ${chunk.metadata.source}]\n${chunk.text}`)
+              .join('\n\n');
+          }
+          return 'No specific documents found.';
+        };
+
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Vector search timeout (1.5s limit reached)')), 1500)
+        );
+
+        ragContextText = await Promise.race([fetchRagContext(), timeoutPromise]);
       } catch (err) {
-        console.warn('⚠️ Vector search failed or skipped (likely due to mock mode):', err.message);
+        console.warn('⚠️ Vector search skipped or timed out:', err.message);
         ragContextText = 'Using fallback generic rules. Vector DB query skipped.';
       }
 
@@ -396,16 +401,10 @@ export class ChatController {
         ...modelMessages
       ];
 
-      // Auto-generate title if it does not exist yet
-      let currentTitle = existingTitle;
-      if (!currentTitle) {
-        try {
-          currentTitle = await GeminiService.generateSessionTitle(message);
-        } catch (titleErr) {
-          console.warn('Failed to generate session title, using fallback:', titleErr);
-          currentTitle = message.slice(0, 30).trim() + (message.length > 30 ? '...' : '');
-        }
-      }
+      // Fast title handling: return immediate default title, generate AI title asynchronously in background
+      const needsAiTitle = !existingTitle;
+      const fallbackTitle = message.slice(0, 30).trim() + (message.length > 30 ? '...' : '');
+      const currentTitle = existingTitle || fallbackTitle;
 
       const savePayload = {
         sessionId: activeSessionId,
@@ -413,10 +412,24 @@ export class ChatController {
         updatedAt: new Date().toISOString(),
         messages: updatedMessages,
         ownerId: req.user ? req.user.uid : 'guest',
-        title: currentTitle || null
+        title: currentTitle
       };
 
       await sessionDocRef.set(savePayload, { merge: true });
+
+      // Trigger AI title generation asynchronously in background without blocking response
+      if (needsAiTitle) {
+        (async () => {
+          try {
+            const aiTitle = await GeminiService.generateSessionTitle(message);
+            if (aiTitle) {
+              await sessionDocRef.set({ title: aiTitle }, { merge: true });
+            }
+          } catch (tErr) {
+            console.warn('Background session title generation skipped/failed:', tErr.message);
+          }
+        })();
+      }
 
       // Determine suggested follow-up questions based on message and response content
       let suggestedQuestions = [];
