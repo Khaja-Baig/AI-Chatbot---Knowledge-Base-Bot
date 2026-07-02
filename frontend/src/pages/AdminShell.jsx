@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import AdminSettings from '../components/AdminSettings';
+import ChatbotConfigPanel from '../components/ChatbotConfigPanel';
+import KnowledgeBaseManager from '../components/KnowledgeBaseManager';
 import ChatWindow from '../components/ChatWindow';
 import '../components/sidebar/Sidebar.css';
 import UserProfile from '../components/sidebar/UserProfile';
 import { API_BASE_URL } from '../lib/api';
+
 
 export default function AdminShell() {
   const { user, logout } = useAuth();
@@ -245,6 +247,30 @@ export default function AdminShell() {
             {/* Navigation Tabs */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, padding: '0 var(--sb-space-lg)' }}>
               <button
+                onClick={() => handleTabClick('chatbot_config')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  justifyContent: 'flex-start',
+                  width: '100%',
+                  padding: '12px 16px',
+                  border: 'none',
+                  borderRadius: '8px',
+                  backgroundColor: activeTab === 'chatbot_config' ? 'var(--bg-active-tab)' : 'transparent',
+                  color: activeTab === 'chatbot_config' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  fontWeight: activeTab === 'chatbot_config' ? 600 : 500,
+                  fontSize: '0.9rem',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>🎨</span> 
+                Counselor Persona
+              </button>
+
+              <button
                 onClick={() => handleTabClick('dashboard')}
                 style={{
                   display: 'flex',
@@ -264,8 +290,8 @@ export default function AdminShell() {
                   transition: 'all 0.2s'
                 }}
               >
-                <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>📊</span> 
-                Knowledge Base
+                <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>🧠</span> 
+                Knowledge Base (Vector DB)
               </button>
 
               <button
@@ -342,6 +368,7 @@ export default function AdminShell() {
               </button>
             </div>
 
+
             {/* Pinned User Profile Footer */}
             <UserProfile
               user={user}
@@ -396,6 +423,26 @@ export default function AdminShell() {
             {/* Collapsed Navigation Tabs */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, alignItems: 'center' }}>
               <button
+                onClick={() => setActiveTab('chatbot_config')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '40px',
+                  height: '40px',
+                  border: 'none',
+                  borderRadius: '50%',
+                  backgroundColor: activeTab === 'chatbot_config' ? 'var(--bg-active-tab)' : 'transparent',
+                  color: activeTab === 'chatbot_config' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                title="Counselor Persona"
+              >
+                <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>🎨</span> 
+              </button>
+
+              <button
                 onClick={() => setActiveTab('dashboard')}
                 style={{
                   display: 'flex',
@@ -410,9 +457,9 @@ export default function AdminShell() {
                   cursor: 'pointer',
                   transition: 'all 0.2s'
                 }}
-                title="Knowledge Base"
+                title="Knowledge Base (Vector DB)"
               >
-                <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>📊</span> 
+                <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>🧠</span> 
               </button>
 
               <button
@@ -526,13 +573,19 @@ export default function AdminShell() {
           display: activeTab === 'chat' ? 'flex' : 'block',
           flexDirection: 'column'
         }}>
-          {activeTab === 'dashboard' && (
-            <AdminSettings
+          {activeTab === 'chatbot_config' && (
+            <ChatbotConfigPanel
               config={config}
               onUpdateConfig={handleUpdateConfig}
+            />
+          )}
+
+          {activeTab === 'dashboard' && (
+            <KnowledgeBaseManager
               authToken={user?.token}
             />
           )}
+
 
           {activeTab === 'api_config' && (
             <div className="admin-settings-container">

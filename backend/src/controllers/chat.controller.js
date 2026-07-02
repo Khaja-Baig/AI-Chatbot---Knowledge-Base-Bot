@@ -1,6 +1,8 @@
 import { db } from '../config/firebase.js';
 import { GeminiService } from '../services/gemini.service.js';
+import { LocalEmbeddingService } from '../services/localEmbedding.service.js';
 import { ChromaService } from '../services/chroma.service.js';
+
 
 const KNOWLEDGE_COLLECTION = 'admissions_knowledge';
 
@@ -309,11 +311,11 @@ export class ChatController {
         existingTitle = sessionData.title || null;
       }
 
-      // 2. Perform vector search in ChromaDB (with 1.5s timeout to prevent latency if vector DB is offline/slow)
+      // 2. Perform vector search in ChromaDB using zero-cost local embeddings
       let ragContextText = 'No specific documents found.';
       try {
         const fetchRagContext = async () => {
-          const queryEmbedding = await GeminiService.generateEmbedding(message);
+          const queryEmbedding = await LocalEmbeddingService.generateEmbedding(message);
           const matchedChunks = await ChromaService.query(KNOWLEDGE_COLLECTION, queryEmbedding, 4);
           if (matchedChunks && matchedChunks.length > 0) {
             return matchedChunks
@@ -324,7 +326,7 @@ export class ChatController {
         };
 
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Vector search timeout (1.5s limit reached)')), 1500)
+          setTimeout(() => reject(new Error('Vector search timeout (3.0s limit reached)')), 3000)
         );
 
         ragContextText = await Promise.race([fetchRagContext(), timeoutPromise]);
@@ -332,6 +334,7 @@ export class ChatController {
         console.warn('⚠️ Vector search skipped or timed out:', err.message);
         ragContextText = 'Using fallback generic rules. Vector DB query skipped.';
       }
+
 
       // 3. Format history for Gemini SDK
       // Format expects: Array<{ role: 'user'|'model', parts: [{ text: string }] }>

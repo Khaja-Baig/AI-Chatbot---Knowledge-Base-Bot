@@ -3,9 +3,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { randomUUID, createHash } from 'crypto';
 import { db } from '../config/firebase.js';
-import { sleep, computeBatchDelay } from '../utils/rateLimit.utils.js';
 import { DocumentService } from '../services/document.service.js';
 import { GeminiService } from '../services/gemini.service.js';
+import { LocalEmbeddingService } from '../services/localEmbedding.service.js';
 import { ChromaService } from '../services/chroma.service.js';
 import { JobQueue } from '../utils/jobQueue.js';
 
@@ -24,10 +24,8 @@ export class KnowledgeController {
     const chunks = DocumentService.chunkText(textContent, 800, 150);
     if (chunks.length === 0) return 0;
 
-    const apiKey = await GeminiService.getApiKey();
-    const hasApiKey = !!apiKey;
-
-    const { embeddingProvider, embeddingModel } = await GeminiService.getEmbeddingInfo();
+    const embeddingProvider = 'local';
+    const embeddingModel = 'all-MiniLM-L6-v2';
 
     // Stable source ID lookup or creation
     let sourceId = randomUUID();
@@ -67,40 +65,15 @@ export class KnowledgeController {
     }
 
     const items = [];
-    const retryQueue = [];
-    let succeededCount = 0;
-    let failedCount = 0;
     const docStartTime = Date.now();
 
-    const CONTROLLER_DELAY_MS = Math.round(computeBatchDelay() / 2);
+    // Generate local 384d embeddings instantly in batch
+    const embeddings = await LocalEmbeddingService.generateEmbeddingsBatch(chunks);
 
     for (let j = 0; j < chunks.length; j++) {
       const chunkText = chunks[j];
       const chunkId = `${fileName.replace(/\s+/g, '_')}_chunk_${j}`;
       const chunkHash = createHash('sha256').update(chunkText).digest('hex').slice(0, 16);
-
-      let embedding;
-      if (hasApiKey) {
-        try {
-          embedding = await GeminiService.generateEmbedding(chunkText);
-          succeededCount++;
-        } catch (err) {
-          console.warn(`[indexTextContent] "${fileName}" chunk ${j} failed initial attempt — queued for retry: ${err.message}`);
-          retryQueue.push({ chunkText, chunkId, chunkIndex: j, chunkHash });
-          continue;
-        }
-      } else {
-        // Mock embedding
-        embedding = new Array(768).fill(0.0).map((_, idx) => {
-          let hash = 0;
-          for (let k = 0; k < chunkText.length; k++) {
-            hash = (hash << 5) - hash + chunkText.charCodeAt(k);
-            hash |= 0;
-          }
-          return Math.sin(hash + idx) * 0.1;
-        });
-        succeededCount++;
-      }
 
       items.push({
         id: chunkId,
@@ -116,62 +89,21 @@ export class KnowledgeController {
           chunkHash,
           timestamp: new Date().toISOString()
         },
-        embedding
+        embedding: embeddings[j]
       });
-
-      // Pace between embeddings (only for larger documents)
-      if (chunks.length > 5 && j < chunks.length - 1) {
-        await sleep(CONTROLLER_DELAY_MS);
-      }
     }
 
     if (items.length > 0) {
       await ChromaService.addDocuments(COLLECTION_NAME, items);
     }
 
-    // Process retry queue (second pass)
-    if (retryQueue.length > 0) {
-      console.log(`[indexTextContent] Second pass: retrying ${retryQueue.length} failed chunks for "${fileName}"`);
-      for (const retryItem of retryQueue) {
-        await sleep(CONTROLLER_DELAY_MS);
-        try {
-          const embedding = await GeminiService.generateEmbedding(retryItem.chunkText);
-          await ChromaService.addDocuments(COLLECTION_NAME, [{
-            id: retryItem.chunkId,
-            text: retryItem.chunkText,
-            metadata: {
-              source: fileName,
-              sourceId,
-              category: fileName.toLowerCase().includes('requirement') ? 'requirements' :
-                        fileName.toLowerCase().includes('instruction') ? 'instructions' :
-                        fileName.toLowerCase().includes('conversation') ? 'examples' :
-                        (fileName.toLowerCase().includes('structure') || fileName.toLowerCase().includes('knowledge')) ? 'knowledge_structure' : 'general',
-              chunkIndex: retryItem.chunkIndex,
-              chunkHash: retryItem.chunkHash,
-              timestamp: new Date().toISOString()
-            },
-            embedding
-          }]);
-          succeededCount++;
-          console.log(`[indexTextContent] Recovered "${fileName}" chunk ${retryItem.chunkIndex}`);
-        } catch (err) {
-          failedCount++;
-          console.error(`[indexTextContent] "${fileName}" chunk ${retryItem.chunkIndex} permanently failed: ${err.message}`);
-        }
-      }
-    }
-
     // Write final status to Firestore
-    const finalStatus =
-      failedCount === 0 ? 'Completed' :
-      succeededCount > 0 ? 'Completed with Warnings' : 'Failed';
-
     try {
       await db.collection('ingestion_metadata').doc(sourceId).update({
-        status: finalStatus,
+        status: 'Completed',
         completedBy: initiatedBy,
-        successfulChunks: succeededCount,
-        failedChunks: failedCount,
+        successfulChunks: chunks.length,
+        failedChunks: 0,
         processingTimeMs: Date.now() - docStartTime,
         lastIndexedAt: new Date().toISOString()
       });
@@ -179,7 +111,7 @@ export class KnowledgeController {
       console.error(`⚠️ Failed to update metadata for ${fileName}:`, err);
     }
 
-    return succeededCount;
+    return chunks.length;
   }
 
   /**
@@ -187,6 +119,7 @@ export class KnowledgeController {
    * Supports optional smart diffing when updating an existing document.
    */
   static async processIngestionInBackground(jobId, fileName, textContent, options = {}) {
+
     const initiatedBy = options.initiatedBy || 'system-api';
     const isDiff = !!options.diffEnabled;
     const oldFileName = options.oldFileName || fileName;
@@ -248,9 +181,8 @@ export class KnowledgeController {
     };
 
     try {
-      const apiKey = await GeminiService.getEmbeddingApiKey();
-      const hasApiKey = !!apiKey;
-      const { embeddingProvider, embeddingModel } = await GeminiService.getEmbeddingInfo();
+      const embeddingProvider = 'local';
+      const embeddingModel = 'all-MiniLM-L6-v2';
 
       const chunks = DocumentService.chunkText(textContent, 800, 150);
       if (chunks.length === 0) {
@@ -346,7 +278,7 @@ export class KnowledgeController {
           const chunkHash = createHash('sha256').update(chunkText).digest('hex').slice(0, 16);
 
           const matched = existingMap.get(chunkHash);
-          if (matched && matched.embedding) {
+          if (matched && matched.embedding && matched.embedding.length === 384) {
             if (matched.id === chunkId && matched.chunkIndex === j && oldFileName === fileName) {
               keptIds.add(chunkId);
               succeededCount++;
@@ -407,41 +339,12 @@ export class KnowledgeController {
         progress: { done: succeededCount, total: chunks.length }
       });
 
-      const CONTROLLER_DELAY_MS = Math.round(computeBatchDelay() / 2);
-      const retryQueue = [];
-      const totalToEmbed = chunksToEmbed.length;
+      if (chunksToEmbed.length > 0) {
+        console.log(`[Job ${jobId}] Generating local embeddings for ${chunksToEmbed.length} chunks...`);
+        const textsToEmbed = chunksToEmbed.map(c => c.text);
+        const embeddings = await LocalEmbeddingService.generateEmbeddingsBatch(textsToEmbed);
 
-      for (let idx = 0; idx < totalToEmbed; idx++) {
-        if (JobQueue.getJob(jobId)?.cancelled) {
-          await handleCancellation();
-          return;
-        }
-
-        const item = chunksToEmbed[idx];
-        let embedding;
-
-        if (hasApiKey) {
-          try {
-            embedding = await GeminiService.generateEmbedding(item.text);
-            succeededCount++;
-          } catch (err) {
-            console.warn(`[Job ${jobId}] Chunk ${item.index} failed embedding: ${err.message}. Queuing for retry.`);
-            retryQueue.push(item);
-            continue;
-          }
-        } else {
-          embedding = new Array(768).fill(0.0).map((_, idx) => {
-            let hash = 0;
-            for (let k = 0; k < item.text.length; k++) {
-              hash = (hash << 5) - hash + item.text.charCodeAt(k);
-              hash |= 0;
-            }
-            return Math.sin(hash + idx) * 0.1;
-          });
-          succeededCount++;
-        }
-
-        await ChromaService.addDocuments(COLLECTION_NAME, [{
+        const itemsToInsert = chunksToEmbed.map((item, i) => ({
           id: item.id,
           text: item.text,
           metadata: {
@@ -452,55 +355,22 @@ export class KnowledgeController {
             chunkHash: item.hash,
             timestamp: new Date().toISOString()
           },
-          embedding
-        }]);
+          embedding: embeddings[i]
+        }));
+
+        await ChromaService.addDocuments(COLLECTION_NAME, itemsToInsert);
+        succeededCount += itemsToInsert.length;
 
         JobQueue.updateJob(jobId, {
-          progress: { done: succeededCount }
+          progress: { done: succeededCount, total: chunks.length }
         });
-
-        if (totalToEmbed > 5 && idx < totalToEmbed - 1) {
-          await sleep(CONTROLLER_DELAY_MS);
-        }
       }
 
-      if (retryQueue.length > 0) {
-        console.log(`[Job ${jobId}] Second pass: retrying ${retryQueue.length} failed chunks...`);
-        for (const item of retryQueue) {
-          if (JobQueue.getJob(jobId)?.cancelled) {
-            await handleCancellation();
-            return;
-          }
-          if (totalToEmbed > 5) await sleep(CONTROLLER_DELAY_MS);
-          try {
-            const embedding = await GeminiService.generateEmbedding(item.text);
-            await ChromaService.addDocuments(COLLECTION_NAME, [{
-              id: item.id,
-              text: item.text,
-              metadata: {
-                source: fileName,
-                sourceId,
-                category,
-                chunkIndex: item.index,
-                chunkHash: item.hash,
-                timestamp: new Date().toISOString()
-              },
-              embedding
-            }]);
-            succeededCount++;
-            JobQueue.updateJob(jobId, { progress: { done: succeededCount } });
-          } catch (err) {
-            failedCount++;
-            console.error(`[Job ${jobId}] Chunk ${item.index} permanently failed: ${err.message}`);
-          }
-        }
-      }
-
-      const finalStatus = failedCount === 0 ? 'Completed' : (succeededCount > 0 ? 'Completed with Warnings' : 'Failed');
+      const finalStatus = 'Completed';
       
       JobQueue.updateJob(jobId, {
-        status: finalStatus === 'Completed' || finalStatus === 'Completed with Warnings' ? 'completed' : 'failed',
-        error: finalStatus === 'Failed' ? 'All chunks failed embedding.' : null,
+        status: 'completed',
+        error: null,
         progress: { done: succeededCount, total: chunks.length }
       });
 
@@ -509,7 +379,7 @@ export class KnowledgeController {
           status: finalStatus,
           completedBy: initiatedBy,
           successfulChunks: succeededCount,
-          failedChunks: failedCount,
+          failedChunks: 0,
           processingTimeMs: Date.now() - docStartTime,
           lastIndexedAt: new Date().toISOString()
         });
@@ -528,6 +398,7 @@ export class KnowledgeController {
       });
       deleteBackup();
     }
+
   }
 
   /**
@@ -627,22 +498,7 @@ export class KnowledgeController {
     }
 
     try {
-      const apiKey = await GeminiService.getApiKey();
-      const hasApiKey = !!apiKey;
-      let queryEmbedding;
-
-      if (hasApiKey) {
-        queryEmbedding = await GeminiService.generateEmbedding(queryText);
-      } else {
-        queryEmbedding = new Array(768).fill(0.0).map((_, idx) => {
-          let hash = 0;
-          for (let k = 0; k < queryText.length; k++) {
-            hash = (hash << 5) - hash + queryText.charCodeAt(k);
-            hash |= 0;
-          }
-          return Math.sin(hash + idx) * 0.1;
-        });
-      }
+      const queryEmbedding = await LocalEmbeddingService.generateEmbedding(queryText);
 
       const collection = await ChromaService.getOrCreateCollection(COLLECTION_NAME);
       const results = await collection.query({
@@ -671,6 +527,7 @@ export class KnowledgeController {
       return res.status(500).json({ error: 'Failed to search vector store.', details: error.message });
     }
   }
+
 
   /**
    * Save an uploaded document to raw folder and run chunking/embedding pipeline in the background.
@@ -976,4 +833,130 @@ export class KnowledgeController {
       return res.status(500).json({ error: 'Failed to retrieve ingestion metadata.' });
     }
   }
+
+  /**
+   * List paginated chunks from ChromaDB.
+   */
+  static async listChunks(req, res) {
+    try {
+      const page = parseInt(req.query.page, 10) || 1;
+      const limit = parseInt(req.query.limit, 10) || 20;
+      const sourceFilter = req.query.source || null;
+
+      const collection = await ChromaService.getOrCreateCollection(COLLECTION_NAME);
+      const getOptions = {};
+      if (sourceFilter) {
+        getOptions.where = { source: sourceFilter };
+      }
+
+      const allData = await collection.get(getOptions);
+
+      if (!allData || !allData.ids) {
+        return res.status(200).json({ chunks: [], total: 0, page, limit, totalPages: 0 });
+      }
+
+      const total = allData.ids.length;
+      const totalPages = Math.ceil(total / limit);
+      const startIndex = (page - 1) * limit;
+      const endIndex = Math.min(startIndex + limit, total);
+
+      const chunks = [];
+      for (let i = startIndex; i < endIndex; i++) {
+        chunks.push({
+          id: allData.ids[i],
+          text: allData.documents ? allData.documents[i] : '',
+          metadata: allData.metadatas ? allData.metadatas[i] : {}
+        });
+      }
+
+      return res.status(200).json({
+        chunks,
+        total,
+        page,
+        limit,
+        totalPages
+      });
+    } catch (error) {
+      console.error('Error listing chunks from ChromaDB:', error);
+      return res.status(500).json({ error: 'Failed to fetch vector chunks.', details: error.message });
+    }
+  }
+
+  /**
+   * Delete a single chunk by ID from ChromaDB.
+   */
+  static async deleteChunk(req, res) {
+    const { chunkId } = req.params;
+    if (!chunkId) {
+      return res.status(400).json({ error: 'chunkId parameter is required.' });
+    }
+
+    try {
+      const collection = await ChromaService.getOrCreateCollection(COLLECTION_NAME);
+      await collection.delete({ ids: [chunkId] });
+      return res.status(200).json({ success: true, message: `Chunk "${chunkId}" deleted successfully.` });
+    } catch (error) {
+      console.error('Error deleting chunk:', error);
+      return res.status(500).json({ error: 'Failed to delete chunk.', details: error.message });
+    }
+  }
+
+  /**
+   * Update a single chunk's text and re-generate its embedding in real-time (<200ms).
+   */
+  static async updateChunk(req, res) {
+    const { chunkId } = req.params;
+    const { text } = req.body;
+
+    if (!chunkId) {
+      return res.status(400).json({ error: 'chunkId parameter is required.' });
+    }
+    if (text === undefined || typeof text !== 'string' || !text.trim()) {
+      return res.status(400).json({ error: 'Valid text parameter (string) is required.' });
+    }
+
+    try {
+      const collection = await ChromaService.getOrCreateCollection(COLLECTION_NAME);
+
+      // Fetch current chunk to preserve metadata
+      const existing = await collection.get({ ids: [chunkId] });
+      const currentMeta = (existing && existing.metadatas && existing.metadatas[0]) ? existing.metadatas[0] : {};
+
+      // Update metadata
+      const updatedMeta = {
+        ...currentMeta,
+        manuallyEdited: true,
+        lastEditedAt: new Date().toISOString()
+      };
+
+      // Generate 1 single embedding via local model
+      const embedding = await LocalEmbeddingService.generateEmbedding(text);
+
+
+      // Update in ChromaDB
+      await collection.update({
+        ids: [chunkId],
+        documents: [text],
+        embeddings: [embedding],
+        metadatas: [updatedMeta]
+      });
+
+      console.log(`⚡ Instant chunk update completed for ID "${chunkId}"`);
+
+      return res.status(200).json({
+        success: true,
+        message: `Chunk updated and re-embedded successfully in real time.`,
+        chunk: {
+          id: chunkId,
+          text,
+          metadata: updatedMeta
+        }
+      });
+    } catch (error) {
+      console.error('Error updating single chunk:', error);
+      return res.status(500).json({ error: 'Failed to update chunk.', details: error.message });
+    }
+  }
 }
+
+

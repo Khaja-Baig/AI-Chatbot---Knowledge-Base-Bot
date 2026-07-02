@@ -20,4 +20,11 @@ router.delete('/delete', KnowledgeController.deleteDocument);
 router.get('/sources/:sourceName', KnowledgeController.getSourceContent);
 router.put('/sources/:sourceName', KnowledgeController.updateSourceContent);
 
+// Chunk management
+router.get('/chunks', KnowledgeController.listChunks);
+router.delete('/chunks/:chunkId', KnowledgeController.deleteChunk);
+router.put('/chunks/:chunkId', KnowledgeController.updateChunk);
+
 export default router;
+
+
