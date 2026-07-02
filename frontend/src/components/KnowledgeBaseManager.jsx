@@ -782,21 +782,70 @@ export default function KnowledgeBaseManager({ authToken }) {
       {/* Floating Active Jobs Progress Tray */}
       {activeJobs.length > 0 && (
         <div className="kb-job-tray">
-          <div style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase' }}>
-            ⚙️ Ingestion Jobs ({activeJobs.length})
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              ⚙️ Ingestion Jobs ({activeJobs.length})
+            </span>
           </div>
-          {activeJobs.map(job => (
-            <div key={job.jobId} style={{ fontSize: '0.8rem' }}>
-              <div>📄 {job.fileName} ({job.status})</div>
-              {job.progress?.total > 0 && (
-                <div style={{ width: '100%', height: '6px', background: 'rgba(0,0,0,0.1)', borderRadius: '3px', marginTop: '4px' }}>
-                  <div style={{ width: `${Math.round((job.progress.done / job.progress.total) * 100)}%`, height: '100%', background: 'var(--accent-color)' }}></div>
+          {activeJobs.map(job => {
+            const percent = job.progress?.total > 0 ? Math.round((job.progress.done / job.progress.total) * 100) : 0;
+            const isProcessing = job.status === 'processing' || job.status === 'Processing';
+
+            return (
+              <div key={job.jobId} style={{ marginBottom: '10px', fontSize: '0.82rem', background: 'var(--bg-card)', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '180px' }} title={job.fileName}>
+                    📄 {job.fileName}
+                  </div>
+                  {isProcessing && (
+                    <button
+                      onClick={() => cancelJob(job.jobId)}
+                      style={{
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        color: '#ef4444',
+                        border: '1px solid rgba(239, 68, 68, 0.2)',
+                        borderRadius: '4px',
+                        padding: '2px 8px',
+                        fontSize: '0.72rem',
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        transition: 'all 0.2s'
+                      }}
+                      title="Cancel background ingestion job"
+                    >
+                      🛑 Stop
+                    </button>
+                  )}
                 </div>
-              )}
-            </div>
-          ))}
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                  <span style={{ textTransform: 'capitalize', fontWeight: 500 }}>
+                    {job.status} {job.progress?.total > 0 ? `(${job.progress.done}/${job.progress.total} chunks)` : ''}
+                  </span>
+                  <span style={{ fontWeight: 700, color: 'var(--accent-color)' }}>
+                    {job.progress?.total > 0 ? `${percent}%` : (isProcessing ? 'Indexing...' : '')}
+                  </span>
+                </div>
+
+                {isProcessing && (
+                  <div style={{ width: '100%', height: '6px', background: 'var(--border-color)', borderRadius: '3px', marginTop: '6px', overflow: 'hidden' }}>
+                    <div
+                      style={{
+                        width: job.progress?.total > 0 ? `${percent}%` : '40%',
+                        height: '100%',
+                        background: 'var(--accent-color)',
+                        borderRadius: '3px',
+                        transition: 'width 0.3s ease'
+                      }}
+                    ></div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
+
 
       {/* Slide-in / Modal Edit Drawer */}
       {editingDocName && (

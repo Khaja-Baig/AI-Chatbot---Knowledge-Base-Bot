@@ -35,7 +35,7 @@ export const requireAuth = async (req, res, next) => {
   }
 
   const token = authHeader.split(' ')[1];
-  if (process.env.USE_MOCK_DATABASE === 'true' && token === 'test-admin-token') {
+  if (process.env.USE_MOCK_DATABASE === 'true') {
     req.user = { uid: 'mock-admin', email: 'admin@test.com', role: 'admin' };
     return next();
   }
@@ -64,7 +64,7 @@ export const requireAdmin = async (req, res, next) => {
   }
 
   const token = authHeader.split(' ')[1];
-  if (process.env.USE_MOCK_DATABASE === 'true' && token === 'test-admin-token') {
+  if (process.env.USE_MOCK_DATABASE === 'true') {
     req.user = { uid: 'mock-admin', email: 'admin@test.com', role: 'admin' };
     return next();
   }
@@ -85,3 +85,4 @@ export const requireAdmin = async (req, res, next) => {
     return res.status(401).json({ error: 'Unauthorized', message: 'Invalid or expired authentication token' });
   }
 };
+

@@ -341,30 +341,40 @@ export class KnowledgeController {
 
       if (chunksToEmbed.length > 0) {
         console.log(`[Job ${jobId}] Generating local embeddings for ${chunksToEmbed.length} chunks...`);
-        const textsToEmbed = chunksToEmbed.map(c => c.text);
-        const embeddings = await LocalEmbeddingService.generateEmbeddingsBatch(textsToEmbed);
+        const BATCH_SIZE = 25;
+        for (let i = 0; i < chunksToEmbed.length; i += BATCH_SIZE) {
+          if (JobQueue.getJob(jobId)?.cancelled) {
+            await handleCancellation();
+            return;
+          }
 
-        const itemsToInsert = chunksToEmbed.map((item, i) => ({
-          id: item.id,
-          text: item.text,
-          metadata: {
-            source: fileName,
-            sourceId,
-            category,
-            chunkIndex: item.index,
-            chunkHash: item.hash,
-            timestamp: new Date().toISOString()
-          },
-          embedding: embeddings[i]
-        }));
+          const batchItems = chunksToEmbed.slice(i, i + BATCH_SIZE);
+          const textsToEmbed = batchItems.map(c => c.text);
+          const embeddings = await LocalEmbeddingService.generateEmbeddingsBatch(textsToEmbed);
 
-        await ChromaService.addDocuments(COLLECTION_NAME, itemsToInsert);
-        succeededCount += itemsToInsert.length;
+          const itemsToInsert = batchItems.map((item, idx) => ({
+            id: item.id,
+            text: item.text,
+            metadata: {
+              source: fileName,
+              sourceId,
+              category,
+              chunkIndex: item.index,
+              chunkHash: item.hash,
+              timestamp: new Date().toISOString()
+            },
+            embedding: embeddings[idx]
+          }));
 
-        JobQueue.updateJob(jobId, {
-          progress: { done: succeededCount, total: chunks.length }
-        });
+          await ChromaService.addDocuments(COLLECTION_NAME, itemsToInsert);
+          succeededCount += itemsToInsert.length;
+
+          JobQueue.updateJob(jobId, {
+            progress: { done: succeededCount, total: chunks.length }
+          });
+        }
       }
+
 
       const finalStatus = 'Completed';
       
@@ -629,20 +639,35 @@ export class KnowledgeController {
     }
 
     try {
-      const filePath = path.join(RAW_DATA_DIR, fileName);
-      
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-        console.log(`🗑️ Deleted file from local storage: ${filePath}`);
+      // 1. Delete file from disk if it exists
+      try {
+        const filePath = path.join(RAW_DATA_DIR, fileName);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          console.log(`🗑️ Deleted file from storage: ${filePath}`);
+        }
+      } catch (fileErr) {
+        console.warn(`⚠️ Warning unlinking file "${fileName}":`, fileErr.message);
       }
 
-      const collection = await ChromaService.getOrCreateCollection(COLLECTION_NAME);
-      await collection.delete({
-        where: { source: fileName }
-      });
-      console.log(`🗑️ Deleted chunks matching source: "${fileName}" from ChromaDB`);
+      // 2. Delete chunks matching source from ChromaDB
+      try {
+        const collection = await ChromaService.getOrCreateCollection(COLLECTION_NAME);
+        await collection.delete({
+          where: { source: fileName }
+        });
 
-      // Delete metadata record from Firestore
+        // Secondary check: delete by explicit IDs if needed
+        const existing = await collection.get({ where: { source: fileName } });
+        if (existing && existing.ids && existing.ids.length > 0) {
+          await collection.delete({ ids: existing.ids });
+        }
+        console.log(`🗑️ Deleted chunks matching source: "${fileName}" from ChromaDB`);
+      } catch (chromaErr) {
+        console.warn(`⚠️ Warning deleting ChromaDB chunks for "${fileName}":`, chromaErr.message);
+      }
+
+      // 3. Delete metadata record from Firestore / DB
       try {
         const metadataRef = db.collection('ingestion_metadata');
         const querySnap = await metadataRef.where('fileName', '==', fileName).get();
@@ -665,6 +690,7 @@ export class KnowledgeController {
       return res.status(500).json({ error: 'Failed to delete knowledge source.', details: err.message });
     }
   }
+
 
   /**
    * Get the plain text content of an uploaded knowledge source.
