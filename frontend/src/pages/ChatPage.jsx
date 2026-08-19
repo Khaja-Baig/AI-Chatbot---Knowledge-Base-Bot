@@ -13,7 +13,7 @@ export default function ChatPage() {
   const navigate = useNavigate();
 
   const [sessions, setSessions] = useState([]);
-  const [activeSessionId, setActiveSessionId] = useState(null);
+  const [activeSessionId, setActiveSessionId] = useState(() => ChatStorage.getActiveSession());
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [guestMessageCount, setGuestMessageCount] = useState(0);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
@@ -67,12 +67,12 @@ export default function ChatPage() {
       if (user) {
         // Clear any guest session ID from sessionStorage
         sessionStorage.removeItem('guestSessionId');
-        
+
         // Fetch sessions and try to restore preferredSessionId
         sessionsPromise = fetchSessions(savedSessionId);
       } else {
         setSessions([]);
-        
+
         // Restore guest session if it is a valid guest session ID
         if (savedSessionId && savedSessionId.startsWith('session_guest_')) {
           setActiveSessionId(savedSessionId);
@@ -104,7 +104,7 @@ export default function ChatPage() {
       const res = await fetch(`${API_BASE_URL}/api/chat/sessions`, { headers });
       if (res.ok) {
         const data = await res.json();
-        
+
         let validSessionId = null;
 
         if (user) {
@@ -112,7 +112,7 @@ export default function ChatPage() {
 
           if (preferredId) {
             const isDbSession = data.some(s => s.sessionId === preferredId);
-            
+
             if (isDbSession) {
               validSessionId = preferredId;
               setSessions(data);
@@ -259,7 +259,7 @@ export default function ChatPage() {
     if (!activeSessionId) {
       setActiveSessionId(sessionId);
     }
-    
+
     // Track message counts for guests
     if (!user) {
       const nextCount = guestMessageCount + 1;
@@ -309,8 +309,8 @@ export default function ChatPage() {
 
   return (
     <div className="app-container" style={{ animation: 'fadeIn 0.4s ease-out' }}>
-      <div 
-        className={`sidebar-backdrop ${isSidebarOpen ? 'visible' : ''}`} 
+      <div
+        className={`sidebar-backdrop ${isSidebarOpen ? 'visible' : ''}`}
         onClick={() => setIsSidebarOpen(false)}
       ></div>
 
@@ -354,7 +354,7 @@ export default function ChatPage() {
               <p>Online & Ready to Guide</p>
             </div>
           </div>
-          
+
           <div className="header-right-group" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             {user?.role === 'admin' && (
               <button
@@ -411,14 +411,14 @@ export default function ChatPage() {
                       <div className="setting-desc">Switch between light and dark modes.</div>
                     </div>
                     <div className="theme-options">
-                      <button 
+                      <button
                         className={`theme-opt-btn ${theme === 'light' ? 'active' : ''}`}
                         onClick={() => setTheme('light')}
                       >
                         <div className="theme-opt-preview light"></div>
                         <span>Light</span>
                       </button>
-                      <button 
+                      <button
                         className={`theme-opt-btn ${theme === 'dark' ? 'active' : ''}`}
                         onClick={() => setTheme('dark')}
                       >
@@ -441,15 +441,15 @@ export default function ChatPage() {
             <h3 className="confirmation-modal-title">Confirm Logout</h3>
             <p className="confirmation-modal-text">Are you sure you want to log out?</p>
             <div className="confirmation-modal-actions">
-              <button 
-                className="btn-secondary" 
+              <button
+                className="btn-secondary"
                 onClick={() => setShowLogoutModal(false)}
                 style={{ padding: '8px 16px', borderRadius: '6px', fontSize: '0.85rem' }}
               >
                 Cancel
               </button>
-              <button 
-                className="btn-danger" 
+              <button
+                className="btn-danger"
                 onClick={async () => {
                   setShowLogoutModal(false);
                   await logout();
@@ -473,15 +473,15 @@ export default function ChatPage() {
               <p style={{ margin: 0, opacity: 0.8, fontSize: '0.85rem' }}>This action cannot be undone.</p>
             </div>
             <div className="confirmation-modal-actions">
-              <button 
-                className="btn-secondary" 
+              <button
+                className="btn-secondary"
                 onClick={() => setSessionToDelete(null)}
                 style={{ padding: '8px 16px', borderRadius: '6px', fontSize: '0.85rem' }}
               >
                 Cancel
               </button>
-              <button 
-                className="btn-danger" 
+              <button
+                className="btn-danger"
                 onClick={async () => {
                   const idToDelete = sessionToDelete;
                   setSessionToDelete(null);

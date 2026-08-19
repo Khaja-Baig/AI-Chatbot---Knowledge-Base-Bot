@@ -27,13 +27,13 @@ const loadingPhrases = [
 
 function parseMarkdown(text) {
   if (!text) return '';
-  
+
   // Split the response by newlines to preserve paragraph formatting
   const lines = text.split('\n');
-  
+
   return lines.map((line, idx) => {
     let remaining = line;
-    
+
     // Check if the line is a list item (starts with a bullet point like * or -)
     let isBullet = false;
     const trimmed = line.trim();
@@ -51,22 +51,22 @@ function parseMarkdown(text) {
       numberVal = numMatch[1];
       remaining = numMatch[2];
     }
-    
+
     // Simple inline parser for bold markdown: **text**
     const parts = [];
     const boldRegex = /\*\*(.*?)\*\*/g;
     let match;
     let lastIndex = 0;
-    
+
     while ((match = boldRegex.exec(remaining)) !== null) {
       if (match.index > lastIndex) {
         parts.push(remaining.substring(lastIndex, match.index));
       }
       parts.push(
-        <strong 
-          key={match.index} 
-          style={{ 
-            color: 'var(--accent-color)', 
+        <strong
+          key={match.index}
+          style={{
+            color: 'var(--accent-color)',
             fontWeight: '700',
             background: 'var(--bg-hover)',
             padding: '2px 6px',
@@ -78,19 +78,19 @@ function parseMarkdown(text) {
       );
       lastIndex = boldRegex.lastIndex;
     }
-    
+
     if (lastIndex < remaining.length) {
       parts.push(remaining.substring(lastIndex));
     }
-    
+
     if (isBullet) {
       return (
-        <li 
-          key={idx} 
-          style={{ 
-            marginLeft: '12px', 
-            listStyleType: 'none', 
-            marginBottom: '8px', 
+        <li
+          key={idx}
+          style={{
+            marginLeft: '12px',
+            listStyleType: 'none',
+            marginBottom: '8px',
             lineHeight: '1.6',
             display: 'flex',
             gap: '8px',
@@ -105,8 +105,8 @@ function parseMarkdown(text) {
 
     if (isNumbered) {
       return (
-        <div 
-          key={idx} 
+        <div
+          key={idx}
           style={{
             display: 'flex',
             gap: '10px',
@@ -115,7 +115,7 @@ function parseMarkdown(text) {
             lineHeight: '1.6'
           }}
         >
-          <span 
+          <span
             style={{
               background: 'var(--bg-active-tab)',
               color: 'var(--accent-color)',
@@ -137,7 +137,7 @@ function parseMarkdown(text) {
         </div>
       );
     }
-    
+
     // Return regular line with some spacing if it is not empty
     return (
       <div key={idx} style={{ marginBottom: '10px', minHeight: '1.2em', lineHeight: '1.6' }}>
@@ -148,20 +148,34 @@ function parseMarkdown(text) {
 }
 
 export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(() => Boolean(activeSessionId));
   const [currentLoadingPhrase, setCurrentLoadingPhrase] = useState(loadingPhrases[0]);
   const [suggestedQuestions, setSuggestedQuestions] = useState([]);
   const messagesEndRef = useRef(null);
   const chatMessagesRef = useRef(null);
+  const isInitialLoadRef = useRef(true);
+  const shouldScrollToUserMsgRef = useRef(false);
+  const lastUserMsgRef = useRef(null);
 
   useEffect(() => {
+    isInitialLoadRef.current = true;
+    if (authLoading) {
+      if (activeSessionId) {
+        setIsLoadingHistory(true);
+      }
+      return;
+    }
+
     if (activeSessionId) {
-      fetchHistory();
+      setIsLoadingHistory(true);
+      fetchHistory(activeSessionId);
       setInputValue(ChatStorage.getDraft(activeSessionId));
     } else {
+      setIsLoadingHistory(false);
       setMessages([]);
       setInputValue('');
       setSuggestedQuestions([
@@ -170,27 +184,61 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
         "Is the program free of cost?"
       ]);
     }
-  }, [activeSessionId]);
+  }, [activeSessionId, authLoading, user]);
+
+  const jumpToBottom = () => {
+    if (chatMessagesRef.current) {
+      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
+    }
+  };
 
   useEffect(() => {
-    if (messages.length > 0 || isTyping) {
-      scrollToBottom();
-    } else {
+    if (messages.length === 0) {
       if (chatMessagesRef.current) {
         chatMessagesRef.current.scrollTop = 0;
       }
+      return;
     }
-  }, [messages, isTyping]);
 
-  const fetchHistory = async () => {
+    if (isInitialLoadRef.current) {
+      jumpToBottom();
+      requestAnimationFrame(jumpToBottom);
+      setTimeout(jumpToBottom, 50);
+      isInitialLoadRef.current = false;
+      return;
+    }
+
+    if (shouldScrollToUserMsgRef.current) {
+      shouldScrollToUserMsgRef.current = false;
+      requestAnimationFrame(() => {
+        if (lastUserMsgRef.current && chatMessagesRef.current) {
+          const containerRect = chatMessagesRef.current.getBoundingClientRect();
+          const msgRect = lastUserMsgRef.current.getBoundingClientRect();
+          const targetScrollTop = chatMessagesRef.current.scrollTop + (msgRect.top - containerRect.top) - 16;
+          chatMessagesRef.current.scrollTo({
+            top: Math.max(0, targetScrollTop),
+            behavior: 'smooth'
+          });
+        }
+      });
+    }
+  }, [messages]);
+
+  const fetchHistory = async (targetSessionId = activeSessionId) => {
+    if (!targetSessionId) {
+      setIsLoadingHistory(false);
+      return;
+    }
+    setIsLoadingHistory(true);
     try {
       const headers = {};
       if (user?.token) {
         headers['Authorization'] = `Bearer ${user.token}`;
       }
-      const res = await fetch(`${API_BASE_URL}/api/chat/sessions/${activeSessionId}`, { headers });
+      const res = await fetch(`${API_BASE_URL}/api/chat/sessions/${targetSessionId}`, { headers });
       if (res.ok) {
         const data = await res.json();
+        isInitialLoadRef.current = true;
         setMessages(data.messages || []);
         setSuggestedQuestions([]); // Clear old suggestions for old threads
       } else {
@@ -210,29 +258,29 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
         "What is the admission process?",
         "Is the program free of cost?"
       ]);
+    } finally {
+      setIsLoadingHistory(false);
     }
-  };
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const sendMessageText = async (text) => {
     if (isTyping) return;
-    
+
     setInputValue('');
     if (activeSessionId) {
       ChatStorage.removeDraft(activeSessionId);
     }
     setSuggestedQuestions([]); // Hide current suggestions
-    
+
+    shouldScrollToUserMsgRef.current = true;
+
     // Add user message to state
     const tempMessages = [
       ...messages,
       { role: 'user', text: text, timestamp: new Date().toISOString() }
     ];
     setMessages(tempMessages);
-    
+
     // Pick a random loading phrase
     const randomIndex = Math.floor(Math.random() * loadingPhrases.length);
     setCurrentLoadingPhrase(loadingPhrases[randomIndex]);
@@ -282,10 +330,10 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
       console.error('Error sending message:', err);
       setMessages(prev => [
         ...prev,
-        { 
-          role: 'model', 
-          text: '❌ Connection issue. Please check that the server is online.', 
-          timestamp: new Date().toISOString() 
+        {
+          role: 'model',
+          text: '❌ Connection issue. Please check that the server is online.',
+          timestamp: new Date().toISOString()
         }
       ]);
     } finally {
@@ -307,6 +355,14 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
     await sendMessageText(inputValue);
   };
 
+  let lastUserMsgIndex = -1;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].role === 'user') {
+      lastUserMsgIndex = i;
+      break;
+    }
+  }
+
   return (
     <>
       <div ref={chatMessagesRef} className="chat-messages">
@@ -319,7 +375,41 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
         </div>
 
         <div className="chat-messages-inner">
-          {messages.length === 0 ? (
+          {isLoadingHistory ? (
+            <div className="chat-skeleton-container">
+              <div className="skeleton-row bot">
+                <BotAvatar
+                  avatarUrl={config.counselorAvatarUrl}
+                  fallbackEmoji={config.counselorAvatar}
+                  size="var(--bot-message-avatar-size)"
+                />
+                <div className="skeleton-bubble">
+                  <div className="skeleton-line" style={{ width: '75%' }}></div>
+                  <div className="skeleton-line" style={{ width: '90%' }}></div>
+                  <div className="skeleton-line" style={{ width: '45%' }}></div>
+                </div>
+              </div>
+
+              <div className="skeleton-row user">
+                <div className="skeleton-bubble">
+                  <div className="skeleton-line" style={{ width: '65%' }}></div>
+                  <div className="skeleton-line" style={{ width: '85%' }}></div>
+                </div>
+              </div>
+
+              <div className="skeleton-row bot">
+                <BotAvatar
+                  avatarUrl={config.counselorAvatarUrl}
+                  fallbackEmoji={config.counselorAvatar}
+                  size="var(--bot-message-avatar-size)"
+                />
+                <div className="skeleton-bubble">
+                  <div className="skeleton-line" style={{ width: '80%' }}></div>
+                  <div className="skeleton-line" style={{ width: '50%' }}></div>
+                </div>
+              </div>
+            </div>
+          ) : messages.length === 0 ? (
             <div className="welcome-container">
               <div className="welcome-avatar-wrapper">
                 <span className="decor-element star1">⭐</span>
@@ -337,10 +427,10 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
               <p className="welcome-subtitle">
                 Your NavGurukul Guide. Ask me anything about admissions, courses, placements, and campus life!
               </p>
-              
+
               <div className="welcome-prompt-grid">
-                <div 
-                  className="welcome-prompt-card" 
+                <div
+                  className="welcome-prompt-card"
                   onClick={() => sendMessageText("Tell me about NavGurukul courses and branches")}
                 >
                   <div className="welcome-prompt-card-icon">🎓</div>
@@ -349,9 +439,9 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
                     <p>Software development, Business & graphic design</p>
                   </div>
                 </div>
-                
-                <div 
-                  className="welcome-prompt-card" 
+
+                <div
+                  className="welcome-prompt-card"
                   onClick={() => sendMessageText("What is the admission process for NavGurukul?")}
                 >
                   <div className="welcome-prompt-card-icon">🚀</div>
@@ -360,9 +450,9 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
                     <p>Learn eligibility, steps & interview details</p>
                   </div>
                 </div>
-                
-                <div 
-                  className="welcome-prompt-card" 
+
+                <div
+                  className="welcome-prompt-card"
                   onClick={() => sendMessageText("Tell me about NavGurukul placement support and package stats")}
                 >
                   <div className="welcome-prompt-card-icon">💼</div>
@@ -371,9 +461,9 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
                     <p>Hiring partners, job records & packages</p>
                   </div>
                 </div>
-                
-                <div 
-                  className="welcome-prompt-card" 
+
+                <div
+                  className="welcome-prompt-card"
                   onClick={() => sendMessageText("What is Campus Life like at NavGurukul?")}
                 >
                   <div className="welcome-prompt-card-icon">🏠</div>
@@ -383,8 +473,8 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
                   </div>
                 </div>
 
-                <div 
-                  className="welcome-prompt-card" 
+                <div
+                  className="welcome-prompt-card"
                   onClick={() => sendMessageText("What are the fees and are there scholarships?")}
                 >
                   <div className="welcome-prompt-card-icon">💰</div>
@@ -394,8 +484,8 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
                   </div>
                 </div>
 
-                <div 
-                  className="welcome-prompt-card" 
+                <div
+                  className="welcome-prompt-card"
                   onClick={() => sendMessageText("Can you answer some Frequently Asked Questions?")}
                 >
                   <div className="welcome-prompt-card-icon">❓</div>
@@ -426,6 +516,7 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
                 <div
                   key={index}
                   className="message-bubble user"
+                  ref={index === lastUserMsgIndex ? lastUserMsgRef : null}
                 >
                   {parseMarkdown(msg.text)}
                 </div>
@@ -487,14 +578,14 @@ export default function ChatWindow({ activeSessionId, config, onMessageSent }) {
               disabled={!inputValue.trim() || isTyping}
               aria-label="Send message"
             >
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="3" 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
                 style={{ width: '18px', height: '18px' }}
               >
                 <line x1="12" y1="19" x2="12" y2="5"></line>
