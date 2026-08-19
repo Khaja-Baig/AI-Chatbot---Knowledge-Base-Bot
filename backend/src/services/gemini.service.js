@@ -5,7 +5,7 @@ import { withRetry } from '../utils/rateLimit.utils.js';
 
 dotenv.config();
 
-const MODEL_NAME = process.env.GEMINI_CHAT_MODEL || 'gemini-2.5-flash';
+const MODEL_NAME = process.env.GEMINI_CHAT_MODEL || 'gemini-3.5-flash-lite';
 const EMBEDDING_MODEL = 'gemini-embedding-001';
 
 let apiKeyCache = {
@@ -15,6 +15,31 @@ let apiKeyCache = {
 let googleGenAIClient = null;
 let googleGenAIEmbedClient = null;
 let mockCounter = 0;
+
+// Circuit-breaker: tracks when quota is exhausted so we skip API calls
+// and don't waste the limited free-tier budget on doomed requests.
+let quotaExhaustedUntil = 0;
+
+/**
+ * Parse the retryDelay (in seconds) from a Gemini 429 error body.
+ * Returns milliseconds to wait, or a default if not found.
+ */
+function parseRetryDelayMs(error) {
+  try {
+    const raw = typeof error === 'string' ? error : (error?.message || '');
+    // Gemini returns JSON in error.message for ApiError
+    const jsonStr = raw.startsWith('{') ? raw : raw.substring(raw.indexOf('{'));
+    const parsed = JSON.parse(jsonStr);
+    const details = parsed?.error?.details || [];
+    const retryInfo = details.find(d => d['@type']?.includes('RetryInfo'));
+    if (retryInfo?.retryDelay) {
+      // retryDelay is like "42s" or "42.163712303s"
+      const seconds = parseFloat(retryInfo.retryDelay);
+      if (!isNaN(seconds)) return Math.ceil(seconds) * 1000;
+    }
+  } catch (_) {}
+  return 45000; // safe default: 45 seconds
+}
 
 export class GeminiService {
   /**
@@ -254,8 +279,14 @@ export class GeminiService {
       return this.getMockResponse(lastMessage);
     }
 
-    const maxRetries = 2;
-    let delayMs = 1000;
+    // Circuit-breaker: if quota is known to be exhausted, skip immediately
+    if (Date.now() < quotaExhaustedUntil) {
+      const waitSec = Math.ceil((quotaExhaustedUntil - Date.now()) / 1000);
+      console.warn(`⏸️ Quota circuit-breaker active. Skipping Gemini call. Resets in ~${waitSec}s. Using mock response.`);
+      return this.getMockResponse(lastMessage);
+    }
+
+    const maxRetries = 1; // only 1 retry — quota errors don't benefit from many retries
 
     for (let attempt = 1; attempt <= maxRetries + 1; attempt++) {
       try {
@@ -270,17 +301,30 @@ export class GeminiService {
           }
         });
 
+        // Successful call — reset circuit-breaker if it was set
+        if (quotaExhaustedUntil > 0) {
+          quotaExhaustedUntil = 0;
+          console.log('✅ Gemini API call succeeded. Circuit-breaker reset.');
+        }
         return response.text;
       } catch (error) {
-        console.warn(`⚠️ Gemini API call failed (attempt ${attempt}/${maxRetries + 1}):`, error.message || error);
-        
-        // If we still have retries, wait and try again
+        const errMsg = error.message || String(error);
+        const is429 = errMsg.includes('429') || errMsg.includes('RESOURCE_EXHAUSTED') || errMsg.includes('quota');
+        console.warn(`⚠️ Gemini API call failed (attempt ${attempt}/${maxRetries + 1}):`, errMsg);
+
+        if (is429) {
+          // Parse the actual retry delay Gemini recommends
+          const retryAfterMs = parseRetryDelayMs(errMsg);
+          quotaExhaustedUntil = Date.now() + retryAfterMs;
+          console.warn(`🔴 Quota exhausted. Circuit-breaker set for ${Math.ceil(retryAfterMs / 1000)}s. Falling back to mock.`);
+          return this.getMockResponse(lastMessage);
+        }
+
         if (attempt <= maxRetries) {
+          const delayMs = 1500 * attempt;
           console.log(`🔄 Retrying in ${delayMs}ms...`);
           await new Promise(resolve => setTimeout(resolve, delayMs));
-          delayMs *= 2; // Exponential backoff
         } else {
-          // All retries exhausted - fallback gracefully to mock response instead of throwing
           console.error('❌ All Gemini API attempts failed. Falling back gracefully to mock counselor response...');
           return this.getMockResponse(lastMessage);
         }
@@ -295,8 +339,13 @@ export class GeminiService {
    */
   static async generateSessionTitle(userMessage) {
     const key = await GeminiService.getApiKey();
-    if (!key) {
-      return userMessage.slice(0, 30).trim() + (userMessage.length > 30 ? '...' : '');
+    const fallbackTitle = userMessage.slice(0, 30).trim() + (userMessage.length > 30 ? '...' : '');
+    if (!key) return fallbackTitle;
+
+    // Circuit-breaker: skip title generation if quota is currently exhausted
+    if (Date.now() < quotaExhaustedUntil) {
+      console.log('⏸️ Quota circuit-breaker active. Skipping session title generation, using fallback.');
+      return fallbackTitle;
     }
 
     try {
@@ -321,10 +370,18 @@ User Message: "${userMessage}"`;
         return title;
       }
     } catch (err) {
-      console.error('Failed to generate session title with Gemini:', err);
+      const errMsg = err.message || String(err);
+      const is429 = errMsg.includes('429') || errMsg.includes('RESOURCE_EXHAUSTED') || errMsg.includes('quota');
+      if (is429) {
+        const retryAfterMs = parseRetryDelayMs(errMsg);
+        quotaExhaustedUntil = Date.now() + retryAfterMs;
+        console.warn(`⏸️ Session title: quota exhausted. Circuit-breaker set for ${Math.ceil(retryAfterMs / 1000)}s.`);
+      } else {
+        console.error('Failed to generate session title with Gemini:', err);
+      }
     }
 
-    return userMessage.slice(0, 30).trim() + (userMessage.length > 30 ? '...' : '');
+    return fallbackTitle;
   }
 }
 
